@@ -3,12 +3,12 @@ import colors from 'vuetify/es5/util/colors'
 export default {
   // Global page headers (https://go.nuxtjs.dev/config-head)
   head: {
-    link: [{rel: 'icon', type: 'image/x-icon', href: '/favicon.ico'}],
+    link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
     meta: [
-      {charset: 'utf-8'},
-      {name: 'viewport', content: 'width=device-width, initial-scale=1'},
-      {hid: 'description', name: 'description', content: ''},
-      {name: 'format-detection', content: 'telephone=no'},
+      { charset: 'utf-8' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { hid: 'description', name: 'description', content: '' },
+      { name: 'format-detection', content: 'telephone=no' },
     ],
   },
 
@@ -28,13 +28,12 @@ export default {
   buildModules: ['@nuxt/typescript-build', '@nuxtjs/composition-api/module', '@nuxtjs/vuetify'],
 
   modules: [
-    '@nuxtjs/axios',
     'cookie-universal-nuxt',
     [
       '@nuxtjs/google-analytics',
       {
         ua: process.env.GA_ID,
-        debug: {sendHitTask: true},
+        debug: { sendHitTask: true },
       },
     ],
     '@nuxtjs/apollo',
@@ -49,7 +48,6 @@ export default {
         },
       },
     ],
-    '@nuxtjs/sitemap',
   ],
 
   // Apollo client setup
@@ -116,23 +114,19 @@ export default {
     analyze: false,
     build: {},
     filenames: {
-      chunk: ({isDev}) => (isDev ? '[name].js' : '[id].[contenthash].js'),
+      chunk: ({ isDev }) => (isDev ? '[name].js' : '[id].[contenthash].js'),
     },
 
     extractCSS: false,
-    extend(config, ctx) {
-      // Run ESLint on save
-      if (ctx.isDev && ctx.isClient) {
-        config.module.rules.push({
-          enforce: 'pre',
-          test: /\.(js|vue|ts)$/,
-          loader: 'eslint-loader',
-          exclude: /(node_modules)/,
-          options: {fix: true},
-        })
-      }
-    },
-    transpile: ['@vue/apollo-composable'],
+    extend(config, ctx) {},
+    transpile: [
+      'tslib',
+      '@apollo/client',
+      '@apollo/client/core',
+      '@vue/apollo-composable',
+      '@vue/apollo-option',
+      'ts-invariant',
+    ],
   },
 
   env: {
@@ -140,5 +134,5 @@ export default {
     baseURL: process.env.BASE_URL,
   },
 
-  server: {port: 3000, host: process.env.SERVER_HOST},
+  server: { port: 3000, host: process.env.SERVER_HOST },
 }

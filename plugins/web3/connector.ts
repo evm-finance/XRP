@@ -7,7 +7,7 @@ export interface Web3ErrorInterface {
 }
 export interface ConnectorInterface {
   id: string
-  provider: ethers.providers.Web3Provider | null
+  provider: any
   account: string | null
   chainId: number | null
   active: boolean

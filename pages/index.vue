@@ -1,6 +1,6 @@
 <template>
   <v-row no-gutters justify="center">
-    <vue-particles />
+    <!--    <vue-particles />-->
 
     <v-col cols="12" style="z-index: 1">
       <v-row justify="center" class="text-center">
@@ -44,7 +44,7 @@
         <v-col cols="12" class="justify-center">
           <v-row justify="center">
             <v-col v-for="item in items" :key="item.header" cols="12" sm="6" md="4">
-              <outline-glow color="black">
+              <outline-glow>
                 <v-avatar size="40" class="mt-5">
                   <v-icon size="30" color="primary">{{ item.icon }}</v-icon>
                 </v-avatar>
@@ -67,10 +67,9 @@ import { State } from '~/types/state'
 import { useMetaTags } from '~/composables/useMetaTags'
 import OutlineGlow from '~/components/common/ui/custom/OutlineGlow.vue'
 import DefiNodeTree from '~/components/common/DefiNodeTree.vue'
-import VueParticles from '~/components/common/ui/custom/VueParticless.vue'
 
 export default defineComponent({
-  components: { VueParticles, DefiNodeTree, OutlineGlow },
+  components: { DefiNodeTree, OutlineGlow },
   setup() {
     // STATE
     const items = ref([

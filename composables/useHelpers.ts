@@ -32,10 +32,11 @@ export function useHelpers() {
 
       return new Promise<T>((resolve) => {
         const timeoutPromise = new Promise<void>((resolve) => {
+          // @ts-ignore
           timeoutId = setTimeout(resolve, wait)
         })
         timeoutPromise.then(async () => {
-          // eslint-disable-next-line node/no-callback-literal
+          // eslint-disable-next-line n/no-callback-literal
           resolve(await callback(...args))
         })
       })

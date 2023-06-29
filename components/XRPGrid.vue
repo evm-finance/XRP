@@ -1,10 +1,10 @@
 <template>
   <div>
     <v-card tile outlined height="1300">
-      <v-skeleton-loader v-if="loading" type="table-tbody,table-tbody,table-tbody" />
+      <v-skeleton-loader v-if="loadingRef" type="table-tbody,table-tbody,table-tbody" />
       <client-only>
         <v-data-table
-          v-if="!loading"
+          v-if="!loadingRef"
           hide-default-footer
           :headers="cols"
           :items="screenerDataFormatted"
@@ -26,7 +26,7 @@
 
           <template #item.events="{ item }">
             <span v-for="(i, d) in item.XRPLedger.eventsCount" :key="d">
-              <v-chip class="mx-2" label :color="eventColor(d)" small outlined v-text="`${d}  ${i}`" />
+              <v-chip class="mx-2" label :color="eventColor(d)" small outlined>{{ `${d}  ${i}` }}</v-chip>
             </span>
           </template>
         </v-data-table>
@@ -36,25 +36,33 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, useContext } from '@nuxtjs/composition-api'
-import useXrpScrerener from '~/composables/useXrpScrerener'
+import { computed, defineComponent, PropType, toRefs, useContext } from '@nuxtjs/composition-api'
+import { Block } from '~/types/apollo/main/types'
 
-type Props = {}
+type Props = {
+  blocks: Block[]
+  loading: boolean
+  currentTime: number
+}
 export default defineComponent<Props>({
-  props: {},
-  setup() {
+  props: {
+    blocks: { type: Array as PropType<Block[]>, default: () => [] },
+    loading: { type: Boolean, default: true },
+    currentTime: { type: Number, default: 0 },
+  },
+  setup(props) {
     // COMPOSABLE
     const { $copyAddressToClipboard } = useContext()
-    const { blocks, loading, currentTime, testUpdate } = useXrpScrerener()
-
+    const loadingRef = toRefs(props).loading
+    const currentTimeRef = toRefs(props).currentTime
     const screenerDataFormatted = computed(() =>
-      blocks.value.map((elem) => ({
+      props.blocks.map((elem) => ({
         ...elem,
         hashShort: `${elem.XRPLedger.ledgerHash.slice(0, 10)}........${elem.XRPLedger.ledgerHash.slice(
           elem.XRPLedger.ledgerHash.length - 10,
           elem.XRPLedger.ledgerHash.length
         )}`,
-        secondsAgo: `${(currentTime.value - elem.minedAt).toFixed(0)} Seconds ago`,
+        secondsAgo: `${(currentTimeRef.value - elem.minedAt).toFixed(0)} Seconds ago`,
       }))
     )
 
@@ -70,6 +78,7 @@ export default defineComponent<Props>({
         TrustSet: 'orange',
       }
 
+      // @ts-ignore
       return Object.hasOwn(colors, event) ? colors[event] : 'grey'
     }
 
@@ -125,11 +134,10 @@ export default defineComponent<Props>({
     return {
       screenerDataFormatted,
       cols,
-      loading,
+      loadingRef,
       copyAddressToClipboard: $copyAddressToClipboard,
       eventColor,
       rowClass,
-      testUpdate,
     }
   },
 })

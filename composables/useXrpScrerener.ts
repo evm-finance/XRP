@@ -1,7 +1,8 @@
 import { ref, computed, watch } from '@nuxtjs/composition-api'
 import { useQuery, useSubscription } from '@vue/apollo-composable/dist'
 import { Block } from '@/types/apollo/main/types'
-import { BlocksXrpGQL, BlocksStreamGQL } from '~/apollo/main/token.query.graphql'
+import { BlocksSubscriptionGQL, BlocksXrpGQL } from '~/apollo/queries'
+import emitter from '~/types/emitter'
 
 type BlockObserver = Block & {
   updateOption?: { status: boolean; color: string | null }
@@ -20,7 +21,7 @@ export default function () {
     pollInterval: 60000,
   })
 
-  const { result: liveBlock } = useSubscription(BlocksStreamGQL, () => ({ network: 'ripple' }), {
+  const { result: liveBlock } = useSubscription(BlocksSubscriptionGQL, () => ({ network: 'ripple' }), {
     fetchPolicy: 'no-cache',
   })
 
@@ -39,8 +40,9 @@ export default function () {
   })
 
   watch(liveBlock, (val: any) => {
-    const newData: BlockObserver[] = val?.block ?? []
+    const newData: BlockObserver[] | Block[] = val?.block ?? []
     addNewRecords(newData)
+    emitter.emit('onNewBlock', newData)
   })
 
   function addNewRecords(newRecords: BlockObserver[]) {
@@ -51,7 +53,7 @@ export default function () {
     }))
     blocks.value = [...newRecords, ...blocks.value]
     currentTime.value = new Date().getTime() / 1000
-    if (blocks.value.length > 4) {
+    if (blocks.value.length > 25) {
       blocks.value.splice(-newRecords.length)
     }
 

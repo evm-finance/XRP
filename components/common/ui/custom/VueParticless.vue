@@ -1,3 +1,4 @@
+<!--
 <template>
   <client-only>
     <Particles id="tsparticles" :particles-init="particlesInit" :options="options" />
@@ -295,3 +296,4 @@ export default defineComponent({
   },
 })
 </script>
+-->
