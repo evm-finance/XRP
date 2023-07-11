@@ -22,12 +22,12 @@ export default function (tokenListType: Ref<'uniswap' | 'verse'> = ref('uniswap'
   const pageSize = ref<number>(20)
   const pageNumber = ref<number>(0)
   const sources = ref<SwapTokenInterface[]>([
-    {
-      name: 'Your Wallet',
-      source: UniswapTokenSource.UserBalances,
-      image: $imageUrlBySymbol('wallet'),
-      active: true,
-    },
+    // {
+    //   name: 'Your Wallet',
+    //   source: UniswapTokenSource.UserBalances,
+    //   image: $imageUrlBySymbol('wallet'),
+    //   active: true,
+    // },
     {
       name: 'CoinGecko',
       source: UniswapTokenSource.CoinGecko,

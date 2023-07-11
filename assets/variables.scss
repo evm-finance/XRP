@@ -170,11 +170,11 @@ input:focus {
 // V-Scroller
 
 //DATA TABLE
-.theme--light .v-card .v-data-table__wrapper::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-  background-color: #e6e6e6;
-}
+//.theme--light .v-card .v-data-table__wrapper::-webkit-scrollbar {
+//  width: 10px;
+//  height: 10px;
+//  background-color: #e6e6e6;
+//}
 
 .theme--light .v-card .v-data-table__wrapper::-webkit-scrollbar-track {
   background: #e6e6e6;
@@ -206,6 +206,9 @@ input:focus {
 //.v-data-table.row-height-50 td
 //{
 //  height: 50px !important;
+//}
+//.v-data-table > .v-data-table__wrapper > table > tbody > tr > td {
+//  height: 20px
 //}
 
 

@@ -39,9 +39,9 @@
         </v-row>
         <v-row>
           <v-col>
-            <v-carousel height="160" hide-delimiter-background :show-arrows="false" delimiter-icon="mdi-dot">
+            <v-carousel height="200" hide-delimiter-background :show-arrows="false" delimiter-icon="mdi-dot">
               <v-carousel-item v-for="(slide, slideIndex) in item.sliced" :key="slideIndex">
-                <v-simple-table>
+                <v-simple-table dense>
                   <template #default>
                     <tbody>
                       <tr v-for="(token, tokenIndex) in slide" :key="tokenIndex">
@@ -174,7 +174,7 @@ export default defineComponent<Props>({
   },
 })
 </script>
-<style>
+<style lang="css">
 .v-carousel__controls__item.v-btn.v-btn--icon {
   background-color: #ebece9; /* Background color of non-active ones */
   height: 8px; /* Height you want */

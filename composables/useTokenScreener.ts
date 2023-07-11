@@ -38,12 +38,9 @@ export default function (networkId: Ref<string>, dex: Ref<string>, sortBy: Ref<s
       sortBy: sortBy.value,
       sort: sort.value,
     }),
-    { fetchPolicy: 'no-cache', pollInterval: 60000 }
+    { fetchPolicy: 'no-cache', pollInterval: 60000, errorPolicy: 'all' }
   )
-  const {
-    // balanceMulticall,
-    poolBalanceMulticall,
-  } = useERC20()
+  const { poolBalanceMulticall } = useERC20()
 
   const screenerData = computed<Pool[]>(() => result.value?.poolScreener ?? [])
   const addresses = computed<string[]>(() => screenerData.value.map((a) => a.address))

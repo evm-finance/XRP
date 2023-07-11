@@ -18,7 +18,9 @@ export default {
   plugins: [
     '~/plugins/initConfigs.ts',
     '~/plugins/helper.ts',
+    // '~/plugins/errorhandler.apollo.js',
     '~/plugins/apolloClient.ts',
+
     '~/plugins/web3/web3.ts',
     '~/plugins/typer.client.ts',
   ],
@@ -59,6 +61,7 @@ export default {
         websocketsOnly: false,
       },
     },
+    errorHandler: '@/plugins/errorhandler.apollo.js',
   },
 
   // Axios module configuration (https://go.nuxtjs.dev/config-axios)
@@ -129,6 +132,17 @@ export default {
     ],
   },
 
+  hooks: {
+    render: {
+      errorMiddleware(app) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        app.use((error, req, res, next) => {
+          res.writeHead(307, { Location: '/about' })
+          res.end()
+        })
+      },
+    },
+  },
   env: {
     amChartLicense: process.env.AMCHARTS_LICENSE,
     baseURL: process.env.BASE_URL,
