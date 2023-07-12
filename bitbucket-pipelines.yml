@@ -67,7 +67,7 @@ pipelines:
             - pip3 install awscli
             - pip3 install awscli
             - eval $(aws ecr get-login --no-include-email --region "${AWS_REGION}" | sed 's;https://;;g')
-            - docker build -t  $IMAGE_NAME --build-arg BASE_GRAPHQL_SERVER_URL=$BASE_GRAPHQL_SERVER_URL  --build-arg BASE_GRAPHQL_WEBSOCKET_URL=BASE_GRAPHQL_WEBSOCKET_URL    --build-arg AMCHARTS_LICENSE=$AMCHARTS_LICENSE --build-arg BASE_URL=$BASE_URL  --build-arg GA_ID=$GA_ID .
+            - docker build -t  $IMAGE_NAME --build-arg BASE_GRAPHQL_SERVER_URL=$BASE_GRAPHQL_SERVER_URL  --build-arg BASE_GRAPHQL_WEBSOCKET_URL=$BASE_GRAPHQL_WEBSOCKET_URL  --build-arg AMCHARTS_LICENSE=$AMCHARTS_LICENSE --build-arg BASE_URL=$BASE_URL  --build-arg GA_ID=$GA_ID .
             - docker push $IMAGE_NAME
 
       - step:
