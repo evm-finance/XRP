@@ -64,8 +64,6 @@ export default defineComponent<Props>({
         data.push({ date: new Date().setSeconds(i - 30), value: visits })
       }
 
-      console.log(data, ledgers.value)
-
       chart.data = ledgers.value
 
       const dateAxis = chart.xAxes.push(new am4charts.DateAxis())

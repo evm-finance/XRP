@@ -73,7 +73,7 @@ import { GasStats } from '~/types/apollo/main/types'
 export default defineComponent({
   setup() {
     // COMPOSABLE
-    const { result } = useQuery(GasGQL, null, { fetchPolicy: 'no-cache', pollInterval: 30000 })
+    const { result } = useQuery(GasGQL, null, { fetchPolicy: 'no-cache' })
     const gasData = computed(() => result.value?.gas ?? []) as Ref<GasStats[]>
     const ethMainNetInfo = computed(() => gasData.value.find((elem) => elem.symbol === 'ETH'))
 

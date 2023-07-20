@@ -158,8 +158,8 @@ export default defineComponent({
       },
       {
         id: 'maksym_z',
-        name: 'Maksym "Max" Zhakun',
-        jobTitle: 'Web Engineer',
+        name: 'Max Zhakun',
+        jobTitle: 'Software Engineer',
         thumbnailUrl: 'maksym',
         bioIsVisible: false,
         socials: [
@@ -173,48 +173,6 @@ export default defineComponent({
           },
         ],
         bio: 'Max is a brilliant developer with complete usage of latest software components and tools.  He is lead system architect of the Quantify Crypto platform, deciding the necessary technology and techniques the system requires.  His full knowledge of databases, AWS servers, networking, programming languages, communication protocols and standards is demonstrated on our platform.',
-      },
-      {
-        id: 'annalese_bq',
-        name: 'Annalese a.k.a "Bitcoin Queen"',
-        jobTitle: 'Head of Business Development',
-        thumbnailUrl: 'annalese',
-        bioIsVisible: false,
-        socials: [
-          {
-            icon: 'twitter',
-            link: 'https://twitter.com/TheBTCQueen',
-          },
-        ],
-        bio: 'Annalese- otherwise known as "Bitcoin Queen" is a crypto community advocate for the city of Miami. She has a BA in business administration with a minor in health administration and communications. Annalese came across bitcoin for the first time in 2017 through a mutual friend, who later became her business partner in building a local media company with a blockchain focus. She has worked closely with both local and national organizations curating conferences and events. Aside from crypto, she enjoys spending time with her trusty companion- Trunks the pitbull',
-      },
-      {
-        id: 'joseph_n',
-        name: 'Joseph Nisivoccia',
-        jobTitle: 'Customer Outreach and Sales',
-        thumbnailUrl: 'joseph',
-        bioIsVisible: false,
-        socials: [
-          {
-            icon: 'linkedin',
-            link: 'https://www.linkedin.com/in/joe-nisivoccia-a76859ab/',
-          },
-        ],
-        bio: 'Hey there, my name is Joe Nisivoccia. My professional background has been in B2B and B2C sales for the past 4 years for some of the most innovative, disruptive software and financial services companies in the US. As a member of the 2020 Scotsman’s Guide, I was ranked within the top 500 individual mortgage loan originators with Better Mortgage - recently voted LinkedIn’s #1 Startup of 2020! In my spare time, I’m an avid sports fan (NFL, MLB and NBA) and enjoy spending time outdoors. I plan on providing Quantify Crypto’s potential clients and investors a level of customer care and market & product insight second to none in the emerging digital asset space.',
-      },
-      {
-        id: 'angela_b',
-        name: 'Angela Barry',
-        jobTitle: 'Manager',
-        thumbnailUrl: 'angela',
-        bioIsVisible: false,
-        socials: [
-          {
-            icon: 'linkedin',
-            link: 'https://www.linkedin.com/in/angela-barry-638a2a155/',
-          },
-        ],
-        bio: 'With a Master of Science in Digital Currency, she’s an expert on the workings of blockchain technology and tracks its regulatory framework. Angela has a bachelor’s degree in economics bringing over 15 years of research talent and supports our team with a diverse skillset.',
       },
     ])
     const advisors = ref<TeamMember[]>([

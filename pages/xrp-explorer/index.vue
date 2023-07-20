@@ -54,9 +54,9 @@ export default defineComponent({
         for (const key in obj.XRPLedger.eventsCount) {
           // eslint-disable-next-line no-prototype-builtins
           if (sumObject.hasOwnProperty(key)) {
-            sumObject[key] += obj.XRPLedger.eventsCount[key]
+            sumObject[key] += obj.XRPLedger?.eventsCount[key]
           } else {
-            sumObject[key] = obj.XRPLedger.eventsCount[key]
+            sumObject[key] = obj.XRPLedger?.eventsCount[key]
           }
         }
       }

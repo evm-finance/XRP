@@ -25,6 +25,8 @@ export default {
     '~/plugins/typer.client.ts',
   ],
 
+  ssr: true,
+  target: 'server',
   components: true,
 
   buildModules: ['@nuxt/typescript-build', '@nuxtjs/composition-api/module', '@nuxtjs/vuetify'],
