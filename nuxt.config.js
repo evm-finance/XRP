@@ -124,14 +124,7 @@ export default {
     extractCSS: false,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     extend(config, ctx) {},
-    transpile: [
-      'tslib',
-      '@apollo/client',
-      '@apollo/client/core',
-      '@vue/apollo-composable',
-      '@vue/apollo-option',
-      'ts-invariant',
-    ],
+    transpile: ['@apollo/client/core', '@vue/apollo-composable', 'ts-invariant'],
   },
 
   hooks: {

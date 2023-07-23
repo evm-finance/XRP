@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "pgrep -f npm | xargs kill -9 && nuxt",
+    "dev": "pgrep -f yarn | xargs kill -9 && nuxt",
     "build": "nuxt build",
     "start": "nuxt start",
     "generate": "nuxt generate",
