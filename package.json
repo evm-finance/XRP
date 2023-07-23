@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "nuxt",
+    "dev": "pgrep -f npm | xargs kill -9 && nuxt",
     "build": "nuxt build",
     "start": "nuxt start",
     "generate": "nuxt generate",
@@ -70,6 +70,8 @@
     "nuxt-compress": "^5.0.0",
     "prettier": "^2.7.1",
     "ts-jest": "^27.1.5",
-    "vue-jest": "^4.0.1"
+    "vue-jest": "^4.0.1",
+    "postcss": "^8.1.9",
+    "postcss-import": "12.0.1"
   }
 }
