@@ -69,7 +69,7 @@
                     <tr>
                       <td class="grey--text">Transaction Fee:</td>
                       <td>
-                        0.157085003937486727 ETH <v-chip color="grey" class="ml-2" label outlined small> $315</v-chip>
+                        {{ tx.gasFees }} ETH <v-chip color="grey" class="ml-2" label outlined small> $315</v-chip>
                       </td>
                     </tr>
 
