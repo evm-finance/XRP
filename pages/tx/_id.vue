@@ -152,11 +152,15 @@ import { EvmTransaction } from '~/types/graph'
 export default defineComponent({
   components: {},
   setup() {
-    const { result } = useQuery(
+    const { result, error, onError } = useQuery(
       EvmTransactionGQL,
       () => ({ chainId: 1, hash: '0x100364c3733e65f044bac70534e8b17187ed64fa89d8b45883ff081f67379178' }),
       { fetchPolicy: 'no-cache' }
     )
+    onError((e) => {
+      console.log('EEEEEE', e)
+    })
+    console.log(result.value, error.value)
     const txData = computed<EvmTransaction>(() => result.value?.evmTransaction ?? null)
     const txDataFormatted = computed(() => ({ ...txData.value, some: 'value' }))
     return { tx: txDataFormatted }

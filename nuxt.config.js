@@ -38,7 +38,10 @@ export default {
         debug: { sendHitTask: true },
       },
     ],
+
+    '@nuxtjs/composition-api/module',
     '@nuxtjs/apollo',
+
     [
       'nuxt-compress',
       {
@@ -123,12 +126,12 @@ export default {
     extractCSS: false,
     extend(config, ctx) {},
     transpile: [
-      'tslib',
-      '@apollo/client',
+      // 'tslib',
+      // '@apollo/client',
       '@apollo/client/core',
       '@vue/apollo-composable',
-      '@vue/apollo-option',
       'ts-invariant',
+      // '@vue/apollo-option',
     ],
   },
 
@@ -138,7 +141,7 @@ export default {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars,n/handle-callback-err
         app.use((error, req, res, next) => {
           console.error(error)
-          res.writeHead(307, { Location: req.url })
+          res.writeHead(307, { Location: '/about' })
           res.end()
         })
       },
