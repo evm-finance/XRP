@@ -20,20 +20,19 @@
                     <tr>
                       <td class="grey--text">Status:</td>
                       <td>
-                        <v-chip color="green" small label outlined>{{ tx.isPending }}</v-chip>
+                        <v-chip color="green" small label outlined>{{ tx.status }}</v-chip>
                       </td>
                     </tr>
                     <tr>
                       <td class="grey--text">Block:</td>
-                      <td><v-icon color="green" size="18" class="mr-1">mdi-check-circle-outline</v-icon> 17687982</td>
+                      <td>
+                        <v-icon color="green" size="18" class="mr-1">mdi-check-circle-outline</v-icon> {{ tx.block }}
+                      </td>
                     </tr>
 
                     <tr>
                       <td class="grey--text">Timestamp:</td>
-                      <td>
-                        <v-icon size="18" class="mr-1"> mdi-clock-time-four-outline</v-icon> 14 mins ago (Jul-13-2023
-                        11:55:59 PM +UTC)
-                      </td>
+                      <td><v-icon size="18" class="mr-2"> mdi-clock-time-four-outline</v-icon>{{ tx.dateTime }}</td>
                     </tr>
                   </tbody>
                 </template>
@@ -46,12 +45,12 @@
                   <tbody>
                     <tr>
                       <td class="grey--text" style="width: 300px">From:</td>
-                      <td>0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5</td>
+                      <td>{{ tx.from }}</td>
                     </tr>
 
                     <tr>
                       <td class="grey--text">To:</td>
-                      <td>0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5</td>
+                      <td>{{ tx.to }}</td>
                     </tr>
                   </tbody>
                 </template>
@@ -64,10 +63,7 @@
                   <tbody>
                     <tr>
                       <td class="grey--text" style="width: 300px">Value:</td>
-                      <td>
-                        <v-icon size="16" color="grey">mdi-ethereum</v-icon> 0.157085003937486727 ETH
-                        <v-chip color="grey" class="ml-2" label outlined small> $315</v-chip>
-                      </td>
+                      <td><v-icon size="16" color="grey">mdi-ethereum</v-icon> {{ tx.value }}</td>
                     </tr>
 
                     <tr>
@@ -152,17 +148,13 @@ import { EvmTransaction } from '~/types/graph'
 export default defineComponent({
   components: {},
   setup() {
-    const { result, error, onError } = useQuery(
-      EvmTransactionGQL,
-      () => ({ chainId: 1, hash: '0x100364c3733e65f044bac70534e8b17187ed64fa89d8b45883ff081f67379178' }),
-      { fetchPolicy: 'no-cache' }
-    )
-    onError((e) => {
-      console.log('EEEEEE', e)
-    })
+    const { result, error } = useQuery(EvmTransactionGQL, () => ({
+      chainId: 1,
+      hash: '0x100364c3733e65f044bac70534e8b17187ed64fa89d8b45883ff081f67379178',
+    }))
     console.log(result.value, error.value)
     const txData = computed<EvmTransaction>(() => result.value?.evmTransaction ?? null)
-    const txDataFormatted = computed(() => ({ ...txData.value, some: 'value' }))
+    const txDataFormatted = computed(() => ({ ...txData.value, dateTime: new Date(txData.value.timestamp * 1000) }))
     return { tx: txDataFormatted }
   },
   head: {},

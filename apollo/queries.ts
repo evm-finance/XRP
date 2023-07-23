@@ -45,6 +45,9 @@ export const EvmTransactionGQL = gql`
   query EvmTransactionGQL($chainId: Int!, $hash: String!) {
     evmTransaction(chainId: $chainId, hash: $hash) {
       chainId
+      timestamp
+      block
+      status
       from
       gasFees
       gssLimit
@@ -54,7 +57,7 @@ export const EvmTransactionGQL = gql`
       to
       txDataHex
       value
-      Input {
+      input {
         methodSigDataStr
         inputsSigDataStr
         inputsMap

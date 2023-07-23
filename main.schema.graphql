@@ -159,15 +159,18 @@ type EthGasStatsResult {
 }
 
 type EvmTransaction {
-  Input: TxInput!
+  block: Int!
   chainId: Int!
   from: String!
   gasFees: Float!
   gssLimit: Float!
   hash: String!
+  input: TxInput!
   isPending: Boolean!
   logEvents: TransactionEvents!
   nonce: Float!
+  status: String!
+  timestamp: Int!
   to: String!
   txDataHex: String!
   value: String!
