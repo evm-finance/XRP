@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@amcharts/amcharts4": "^4.10.25",
-    "@nuxtjs/apollo": "^4.0.1-rc.5",
+    "@nuxtjs/apollo": "^3.0.7",
     "@nuxtjs/composition-api": "^0.33.1",
     "@uniswap/sdk": "^3.0.3",
     "@uniswap/smart-order-router": "^ 2.8.1",
@@ -70,6 +70,6 @@
     "nuxt-compress": "^5.0.0",
     "prettier": "^2.7.1",
     "ts-jest": "^27.1.5",
-    "vue-jest": "^3.0.7"
+    "vue-jest": "^4.0.1"
   }
 }
