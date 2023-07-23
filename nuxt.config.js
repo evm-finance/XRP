@@ -64,7 +64,6 @@ export default {
         websocketsOnly: false,
       },
     },
-    errorHandler: '@/plugins/errorhandler.apollo.js',
   },
 
   // Axios module configuration (https://go.nuxtjs.dev/config-axios)

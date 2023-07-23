@@ -1,8 +1,18 @@
-import { ref, computed, watch } from '@nuxtjs/composition-api'
-import { useQuery, useSubscription } from '@vue/apollo-composable/dist'
+import {
+  ref,
+  computed,
+  // watch
+} from '@nuxtjs/composition-api'
+import {
+  useQuery,
+  // useSubscription
+} from '@vue/apollo-composable/dist'
 import { Block } from '@/types/apollo/main/types'
-import { BlocksSubscriptionGQL, BlocksXrpGQL } from '~/apollo/queries'
-import emitter from '~/types/emitter'
+import {
+  // BlocksSubscriptionGQL,
+  BlocksXrpGQL,
+} from '~/apollo/queries'
+// import emitter from '~/types/emitter'
 
 type BlockObserver = Block & {
   updateOption?: { status: boolean; color: string | null }
@@ -21,9 +31,10 @@ export default function () {
     pollInterval: 60000,
   })
 
-  const { result: liveBlock } = useSubscription(BlocksSubscriptionGQL, () => ({ network: 'ripple' }), {
-    fetchPolicy: 'no-cache',
-  })
+  // const { result: liveBlock } = useSubscription(BlocksSubscriptionGQL, () => ({ network: 'ripple' }), {
+  //   fetchPolicy: 'no-cache',
+  // })
+  // console.log(liveBlock, 'LLLLLLLLLLL')
 
   const nextPage = () => pageNumber.value++
 
@@ -39,11 +50,11 @@ export default function () {
     currentTime.value = new Date().getTime() / 1000
   })
 
-  watch(liveBlock, (val: any) => {
-    const newData: BlockObserver[] | Block[] = val?.block ?? []
-    addNewRecords(newData)
-    emitter.emit('onNewBlock', newData)
-  })
+  // watch(liveBlock, (val: any) => {
+  //   const newData: BlockObserver[] | Block[] = val?.block ?? []
+  //   addNewRecords(newData)
+  //   emitter.emit('onNewBlock', newData)
+  // })
 
   function addNewRecords(newRecords: BlockObserver[]) {
     clearTimeout(updateTimeout)
