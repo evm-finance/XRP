@@ -24,12 +24,12 @@ RUN apk --no-cache add curl
 # copy the app, note .dockerignore
 COPY . /usr/src/evm-finance/
 
-RUN npm install
+RUN yarn install
 
 # build necessary, even if no static files are needed,
 # since it builds the server as well
-RUN npm run build
+RUN yarn run build
 
 
 # start the app
-CMD [ "npm", "start" ]
+CMD [ "yarn", "start" ]
