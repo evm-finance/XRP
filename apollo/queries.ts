@@ -40,3 +40,37 @@ export const BlocksSubscriptionGQL = gql`
     }
   }
 `
+
+export const EvmTransactionGQL = gql`
+  query EvmTransactionGQL($chainId: Int!, $hash: String!) {
+    evmTransaction(chainId: $chainId, hash: $hash) {
+      chainId
+      from
+      gasFees
+      gssLimit
+      hash
+      isPending
+      nonce
+      to
+      txDataHex
+      value
+      Input {
+        methodSigDataStr
+        inputsSigDataStr
+        inputsMap
+        argsMap
+      }
+      logEvents {
+        items {
+          network
+          contract
+          name
+          topic
+          address
+          signature
+          allFunctionParams
+        }
+      }
+    }
+  }
+`

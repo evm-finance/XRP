@@ -158,6 +158,21 @@ type EthGasStatsResult {
   suggestBaseFee: Float!
 }
 
+type EvmTransaction {
+  Input: TxInput!
+  chainId: Int!
+  from: String!
+  gasFees: Float!
+  gssLimit: Float!
+  hash: String!
+  isPending: Boolean!
+  logEvents: TransactionEvents!
+  nonce: Float!
+  to: String!
+  txDataHex: String!
+  value: String!
+}
+
 type GasStats {
   blockExplorer: String!
   gas: EthGasStatsResult!
@@ -277,6 +292,7 @@ type Query {
   blocks(network: String!): [Block!]!
   chains: [Chain!]!
   dailyChart(coinGeckoID: String! = ""): [DailyChart!]!
+  evmTransaction(chainId: Int!, hash: String!): EvmTransaction!
   fiatPrices(addresses: [String!]!, platform: String! = "ethereum"): Map!
   gas: [GasStats!]!
   globalStats: GlobalStats!
@@ -449,6 +465,13 @@ type TxDetail {
   tokenLogoUrl: String!
   tokenSymbolName: String!
   value: String!
+}
+
+type TxInput {
+  argsMap: JSONMap
+  inputsMap: JSONMap
+  inputsSigDataStr: String!
+  methodSigDataStr: String!
 }
 
 type UniswapToken {

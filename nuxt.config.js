@@ -135,9 +135,10 @@ export default {
   hooks: {
     render: {
       errorMiddleware(app) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars,n/handle-callback-err
         app.use((error, req, res, next) => {
-          res.writeHead(307, { Location: '/about' })
+          console.error(error)
+          res.writeHead(307, { Location: req.url })
           res.end()
         })
       },

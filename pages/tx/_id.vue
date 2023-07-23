@@ -9,19 +9,19 @@
         <v-row justify="center" class="my-1">
           <v-col>
             <v-card tile outlined>
-              <v-simple-table class="">
+              <v-simple-table v-if="tx" class="">
                 <template #default>
                   <tbody>
                     <tr>
                       <td class="grey--text" style="width: 300px">Transaction Hash:</td>
-                      <td>
-                        0x8444890f84d1b18d099e57c8ef257183e7f8a9e1e1f4bbb52f1026d2265c1af9 <v-icon>mid-copy</v-icon>
-                      </td>
+                      <td>{{ tx.hash }} <v-icon>mid-copy</v-icon></td>
                     </tr>
 
                     <tr>
                       <td class="grey--text">Status:</td>
-                      <td><v-chip color="green" small label outlined>Success</v-chip></td>
+                      <td>
+                        <v-chip color="green" small label outlined>{{ tx.isPending }}</v-chip>
+                      </td>
                     </tr>
                     <tr>
                       <td class="grey--text">Block:</td>
@@ -118,94 +118,48 @@
           <!--              </v-card>-->
           <!--            </v-col>-->
         </v-row>
-        <v-row>
-          <v-col cols="12">
-            <v-card tile outlined>
-              <v-card-title> <span class="text-h6">Transaction</span></v-card-title>
-              <v-divider />
-              <v-data-table
-                v-if="ledger"
-                hide-default-footer
-                :headers="cols"
-                :items-per-page="200"
-                :items="ledger.XRPTransactions.items"
-                class="elevation-0 row-height-50"
-                mobile-breakpoint="0"
-              >
-                <template #item.hash="{ item }">
-                  <span>{{ item.hash }}</span>
-                </template>
-              </v-data-table>
-            </v-card>
-          </v-col>
-        </v-row>
+        <!--        <v-row>-->
+        <!--          <v-col cols="12">-->
+        <!--            <v-card tile outlined>-->
+        <!--              <v-card-title> <span class="text-h6">Transaction</span></v-card-title>-->
+        <!--              <v-divider />-->
+        <!--              <v-data-table-->
+        <!--                v-if="ledger"-->
+        <!--                hide-default-footer-->
+        <!--                :headers="cols"-->
+        <!--                :items-per-page="200"-->
+        <!--                :items="ledger.XRPTransactions.items"-->
+        <!--                class="elevation-0 row-height-50"-->
+        <!--                mobile-breakpoint="0"-->
+        <!--              >-->
+        <!--                <template #item.hash="{ item }">-->
+        <!--                  <span>{{ item.hash }}</span>-->
+        <!--                </template>-->
+        <!--              </v-data-table>-->
+        <!--            </v-card>-->
+        <!--          </v-col>-->
+        <!--        </v-row>-->
       </v-col>
     </v-row>
   </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, useRoute, useRouter } from '@nuxtjs/composition-api'
-import { Block } from '~/types/apollo/main/types'
+import { computed, defineComponent } from '@nuxtjs/composition-api'
+import { useQuery } from '@vue/apollo-composable/dist'
+import { EvmTransactionGQL } from '~/apollo/queries'
+import { EvmTransaction } from '~/types/graph'
 export default defineComponent({
   components: {},
   setup() {
-    const route = useRoute()
-    const router = useRouter()
-    // const ledgerIndex = computed(() => route.value.params?.id ?? 0)
-    // const { result } = useQuery(BlockGQL, () => ({ network: 'ripple', blockNumber: ledgerIndex.value }), {
-    //   fetchPolicy: 'no-cache',
-    // })
-    const ledger = computed<Block | null>(() => null)
-    const navigateToLedger = (ledger: number) => router.push(`/xrp-explorer/ledger/${ledger}`)
-    const cols = computed(() => {
-      return [
-        {
-          text: 'Hash',
-          align: 'left',
-          value: 'hash',
-          width: '100',
-          class: ['px-4', 'text-truncate'],
-          cellClass: ['px-4', 'text-truncate', 'grey--text'],
-          sortable: false,
-        },
-
-        {
-          text: 'From',
-          align: 'left',
-          value: 'account',
-          width: '100',
-          sortable: false,
-          class: ['px-2', 'text-truncate', 'grey--text'],
-          cellClass: ['px-2', 'text-truncate', 'grey--text'],
-        },
-
-        {
-          text: 'To',
-          align: 'left',
-          value: 'destination',
-          class: ['px-2', 'text-truncate'],
-          cellClass: ['px-2', 'text-truncate', 'grey--text'],
-          width: '200',
-          sortable: false,
-        },
-
-        {
-          text: '',
-          align: 'left',
-          value: 'transactionType',
-          class: ['px-2', 'text-truncate'],
-          cellClass: ['px-2', 'text-truncate'],
-          sortable: false,
-        },
-      ]
-    })
-
-    onMounted(() => {
-      console.log(router, route)
-    })
-
-    return { ledger, navigateToLedger, cols }
+    const { result } = useQuery(
+      EvmTransactionGQL,
+      () => ({ chainId: 1, hash: '0x100364c3733e65f044bac70534e8b17187ed64fa89d8b45883ff081f67379178' }),
+      { fetchPolicy: 'no-cache' }
+    )
+    const txData = computed<EvmTransaction>(() => result.value?.evmTransaction ?? null)
+    const txDataFormatted = computed(() => ({ ...txData.value, some: 'value' }))
+    return { tx: txDataFormatted }
   },
   head: {},
 })
