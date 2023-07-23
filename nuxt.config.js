@@ -63,7 +63,6 @@ export default {
         websocketsOnly: false,
       },
     },
-    errorHandler: '@/plugins/errorhandler.apollo.js',
   },
 
   // Axios module configuration (https://go.nuxtjs.dev/config-axios)
@@ -123,6 +122,7 @@ export default {
     },
 
     extractCSS: false,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     extend(config, ctx) {},
     transpile: [
       'tslib',
