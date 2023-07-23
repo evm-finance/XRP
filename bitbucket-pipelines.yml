@@ -80,8 +80,8 @@ pipelines:
           script:
             # Replace the docker image name in the task definition with the newly pushed image.
             - export CONTAINER_NAME="evmx-ui"
-            - export MEMORY="1024"
-            - export CPU="512"
+            - export MEMORY="2048"
+            - export CPU="1024"
             - envsubst < task-definition-template.json >  task-definition.json
 
             # Update the task definition.
