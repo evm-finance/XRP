@@ -1,3 +1,4 @@
+import * as process from 'process'
 import { ref, computed, watch } from '@nuxtjs/composition-api'
 import { useQuery, useSubscription } from '@vue/apollo-composable/dist'
 import { Block } from '@/types/apollo/main/types'
@@ -21,9 +22,11 @@ export default function () {
     pollInterval: 60000,
   })
 
-  const { result: liveBlock } = useSubscription(BlocksSubscriptionGQL, () => ({ network: 'ripple' }), {
-    fetchPolicy: 'no-cache',
-  })
+  const { result: liveBlock } = process.browser
+    ? useSubscription(BlocksSubscriptionGQL, () => ({ network: 'ripple' }), {
+        fetchPolicy: 'no-cache',
+      })
+    : { result: ref(null) }
 
   const nextPage = () => pageNumber.value++
 
