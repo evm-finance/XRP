@@ -59,8 +59,8 @@ export default {
     clientConfigs: {
       default: {
         httpEndpoint: process.env.BASE_GRAPHQL_SERVER_URL,
-        wsEndpoint: process.env.BASE_GRAPHQL_WEBSOCKET_URL,
-        websocketsOnly: false,
+        // wsEndpoint: process.env.BASE_GRAPHQL_WEBSOCKET_URL,
+        // websocketsOnly: false,
       },
     },
   },
