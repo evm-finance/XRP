@@ -79,7 +79,6 @@
 </template>
 
 <script lang="ts">
-import * as process from 'process'
 import { computed, defineComponent, PropType, ref, toRefs, useContext, watch } from '@nuxtjs/composition-api'
 import { useQuery, useSubscription } from '@vue/apollo-composable/dist'
 import { BlocksGQL, BlocksStreamGQL } from '~/apollo/main/token.query.graphql'
@@ -108,12 +107,9 @@ export default defineComponent<Props>({
     const network = toRefs(props).networkId
 
     const { onResult } = useQuery(BlocksGQL, () => ({ network: network.value }), { fetchPolicy: 'no-cache' })
-    const { result: liveBlock } = process.browser
-      ? useSubscription(BlocksStreamGQL, () => ({ network: network.value }), {
-          fetchPolicy: 'no-cache',
-        })
-      : { result: ref(null) }
-
+    const { result: liveBlock } = useSubscription(BlocksStreamGQL, () => ({ network: network.value }), {
+      fetchPolicy: 'no-cache',
+    })
     onResult(({ data }) => {
       blocks.value = data?.blocks ?? []
     })
@@ -145,6 +141,7 @@ export default defineComponent<Props>({
       }))
     })
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     function addNewRecords(newRecords: BlockObserver[]) {
       clearTimeout(updateTimeout)
       newRecords = newRecords.map((elem) => ({

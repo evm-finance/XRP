@@ -1,5 +1,7 @@
 export interface EvmTransaction {
   chainId: number
+  timestamp: number
+  block: number
   from: string
   gasFees: number
   gssLimit: number

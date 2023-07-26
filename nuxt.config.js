@@ -20,13 +20,12 @@ export default {
     '~/plugins/helper.ts',
     // '~/plugins/errorhandler.apollo.js',
     '~/plugins/apolloClient.ts',
+    '~/plugins/emitter.client.ts',
 
     '~/plugins/web3/web3.ts',
     '~/plugins/typer.client.ts',
   ],
 
-  ssr: true,
-  target: 'server',
   components: true,
 
   buildModules: ['@nuxt/typescript-build', '@nuxtjs/composition-api/module', '@nuxtjs/vuetify'],
@@ -40,7 +39,10 @@ export default {
         debug: { sendHitTask: true },
       },
     ],
+
+    '@nuxtjs/composition-api/module',
     '@nuxtjs/apollo',
+
     [
       'nuxt-compress',
       {
@@ -122,16 +124,23 @@ export default {
     },
 
     extractCSS: false,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     extend(config, ctx) {},
-    transpile: ['@apollo/client/core', '@vue/apollo-composable', 'ts-invariant'],
+    transpile: [
+      // 'tslib',
+      // '@apollo/client',
+      '@apollo/client/core',
+      '@vue/apollo-composable',
+      'ts-invariant',
+      // '@vue/apollo-option',
+    ],
   },
 
   hooks: {
     render: {
       errorMiddleware(app) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars,n/handle-callback-err
         app.use((error, req, res, next) => {
+          console.error(error)
           res.writeHead(307, { Location: '/about' })
           res.end()
         })

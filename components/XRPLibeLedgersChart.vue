@@ -5,7 +5,6 @@
 <script lang="ts">
 import { defineComponent, onBeforeUnmount, onMounted, PropType, ref, useContext } from '@nuxtjs/composition-api'
 import { Block } from '~/types/apollo/main/types'
-import emitter from '~/types/emitter'
 
 let am4core: any = null
 let am4charts: any = null
@@ -29,6 +28,7 @@ export default defineComponent<Props>({
 
   setup(props) {
     // STATE
+    const { $emitter } = useContext()
     const chartDiv = ref(null)
     const ledgers = ref<Block[]>(
       props.data
@@ -155,7 +155,7 @@ export default defineComponent<Props>({
       renderChart()
     })
 
-    emitter.on('onNewBlock', (data: Block[]) => {
+    $emitter.on('onNewBlock', (data: Block[]) => {
       if (data.length) {
         const block: any = data[0]
         block.date = block.minedAt * 1000

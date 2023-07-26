@@ -188,7 +188,6 @@
 <script lang="ts">
 import { computed, defineComponent, PropType, ref, toRefs, useContext, watchEffect } from '@nuxtjs/composition-api'
 import { Pool, PriceStream } from '~/types/apollo/main/types'
-import emitter from '~/types/emitter'
 import useTokenScreener from '~/composables/useTokenScreener'
 import { AavePoolModel } from '~/composables/useAavePools'
 import AaveMarketDetails from '~/components/pools/AaveMarketDetails.vue'
@@ -213,7 +212,7 @@ export default defineComponent<Props>({
 
   setup(props) {
     // COMPOSABLE
-    const { $copyAddressToClipboard, $f, $applyPtcChange } = useContext()
+    const { $copyAddressToClipboard, $f, $applyPtcChange, $emitter } = useContext()
     let priceUpdateTimeout: any = null
 
     // STATE
@@ -275,19 +274,18 @@ export default defineComponent<Props>({
     const loadPage = (options: any) => {
       const opt = { sortBy: 'rank', order: 'asc' }
 
-      console.log(options)
       if (options.sortBy.length > 0) {
         opt.sortBy = options.sortBy[0]
       }
       if (options.sortDesc.length > 0) {
         opt.order = options.sortDesc[0] ? 'desc' : 'asc'
       }
-      console.log(opt)
+
       sortBy.value = opt.sortBy
       order.value = opt.order
     }
 
-    emitter.on('priceStream', (val: any) => {
+    $emitter?.on('priceStream', (val: any) => {
       const prices: PriceStream[] = val.priceStream ?? []
       updateData(prices)
     })
