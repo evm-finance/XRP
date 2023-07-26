@@ -20,6 +20,7 @@ export default {
     '~/plugins/helper.ts',
     // '~/plugins/errorhandler.apollo.js',
     '~/plugins/apolloClient.ts',
+    '~/plugins/emitter.client.ts',
 
     '~/plugins/web3/web3.ts',
     '~/plugins/typer.client.ts',

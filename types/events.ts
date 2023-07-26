@@ -1,3 +1,5 @@
+import { Block } from '~/types/apollo/main/types'
+
 export enum EmitEvents {
   toggleNavigationMenu = 'toggle-navigation-menu',
   initAction = 'init-action',
@@ -17,4 +19,9 @@ export enum DefiEvents {
   toggleDepositModal = 'toggle-deposit-modal',
   toggleLendModal = 'toggle-lend-modal',
   toggleWithdrawModal = 'toggle-withdraw-modal',
+}
+export type EmitterEvents = {
+  priceStream: string
+  onInitGlobalSearch: string
+  onNewBlock: Block[]
 }

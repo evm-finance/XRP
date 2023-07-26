@@ -1,14 +1,14 @@
-import { ref, Ref, computed, watch, inject, useStore } from '@nuxtjs/composition-api'
+import { ref, Ref, computed, watch, inject, useStore, useContext } from '@nuxtjs/composition-api'
 import { useQuery, useSubscription } from '@vue/apollo-composable/dist'
 import { Pool } from '@/types/apollo/main/types'
 import { ScreenerGQL, PriceStreamGQL } from '~/apollo/main/token.query.graphql'
-import emitter from '~/types/emitter'
 import useERC20 from '~/composables/useERC20'
 import { ERC20Balance } from '~/types/global'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
 import { State } from '~/types/state'
 export default function (networkId: Ref<string>, dex: Ref<string>, sortBy: Ref<string>, sort: Ref<string>) {
   // STATE
+  const { $emitter } = useContext()
   const { state } = useStore<State>()
   const loading = ref<boolean>(true)
   const pageNumber = ref<number>(0)
@@ -79,7 +79,7 @@ export default function (networkId: Ref<string>, dex: Ref<string>, sortBy: Ref<s
     loading.value = queryResult.loading
   })
 
-  watch(liveData, (val: any) => emitter.emit('priceStream', val))
+  watch(liveData, (val: any) => $emitter.emit('priceStream', val))
 
   watch([addresses, account], async () => {
     if (addresses.value.length) {

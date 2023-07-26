@@ -73,15 +73,16 @@
   </v-dialog>
 </template>
 <script lang="ts">
-import { computed, defineComponent, inject, ref, useStore } from '@nuxtjs/composition-api'
+import * as process from 'process'
+import { computed, defineComponent, inject, ref, useContext, useStore } from '@nuxtjs/composition-api'
 import { ethers } from 'ethers'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
 import { Chain } from '~/types/apollo/main/types'
 import { SearchResult } from '~/types/global'
 import { State } from '~/types/state'
-import emitter from '~/types/emitter'
 export default defineComponent({
   setup() {
+    const { $emitter } = useContext()
     const { state, dispatch } = useStore<State>()
     const { allNetworks, getCustomProviderByNetworkId } = inject(WEB3_PLUGIN_KEY) as Web3
     const searchResult = computed({
@@ -153,7 +154,9 @@ export default defineComponent({
     function useSearch() {
       dialog.value = false
     }
-    emitter.on('onInitGlobalSearch', () => openDialog())
+    // TODO: Change to VUEX handler instead of event emitter
+    // eslint-disable-next-line no-unused-expressions
+    $emitter?.on('onInitGlobalSearch', () => openDialog())
 
     return {
       loading,

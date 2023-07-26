@@ -5,7 +5,7 @@
         <v-col cols="12" class="text-center">
           <v-icon style="margin-left: 100px; margin-bottom: -10px" color="red" right>mdi-close-circle</v-icon>
           <div>
-            <v-avatar size="80"><img src="/img/metamask.svg" /></v-avatar>
+            <v-avatar size="80"><img src="/img/metamask.svg" alt="" /></v-avatar>
           </div>
           <div class="title">Wallet Not Connected</div>
           <div class="subtitle-2">To start using EVMX, please connect your Metamask Wallet or search for wallet</div>
@@ -34,14 +34,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, useStore } from '@nuxtjs/composition-api'
+import { defineComponent, useContext, useStore } from '@nuxtjs/composition-api'
 import { State } from '~/types/state'
-import emitter from '~/types/emitter'
 export default defineComponent({
   setup() {
     // COMPOSABLE
     const { dispatch } = useStore<State>()
-    const initSearch = () => emitter.emit('onInitGlobalSearch', '')
+    const { $emitter } = useContext()
+    const initSearch = () => $emitter.emit('onInitGlobalSearch', '')
 
     return { dispatch, initSearch }
   },

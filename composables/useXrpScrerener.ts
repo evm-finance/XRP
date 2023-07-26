@@ -1,24 +1,17 @@
-import {
-  ref,
-  computed,
-  // watch
-} from '@nuxtjs/composition-api'
-import {
-  useQuery,
-  // useSubscription
-} from '@vue/apollo-composable/dist'
+import * as process from 'process'
+import { ref, computed, watch, useContext } from '@nuxtjs/composition-api'
+import { useQuery, useSubscription } from '@vue/apollo-composable/dist'
 import { Block } from '@/types/apollo/main/types'
-import {
-  // BlocksSubscriptionGQL,
-  BlocksXrpGQL,
-} from '~/apollo/queries'
-// import emitter from '~/types/emitter'
+import { BlocksSubscriptionGQL, BlocksXrpGQL } from '~/apollo/queries'
 
 type BlockObserver = Block & {
   updateOption?: { status: boolean; color: string | null }
 }
 
 export default function () {
+  // COMPOSABLES
+  const { $emitter } = useContext()
+
   // STATE
   const loading = ref<boolean>(true)
   const pageNumber = ref<number>(0)
@@ -31,10 +24,11 @@ export default function () {
     pollInterval: 60000,
   })
 
-  // const { result: liveBlock } = useSubscription(BlocksSubscriptionGQL, () => ({ network: 'ripple' }), {
-  //   fetchPolicy: 'no-cache',
-  // })
-  // console.log(liveBlock, 'LLLLLLLLLLL')
+  const { result: liveBlock } = process.browser
+    ? useSubscription(BlocksSubscriptionGQL, () => ({ network: 'ripple' }), {
+        fetchPolicy: 'no-cache',
+      })
+    : { result: ref(null) }
 
   const nextPage = () => pageNumber.value++
 
@@ -44,17 +38,17 @@ export default function () {
   })
 
   // EVENTS
-  onResult((queryResult) => {
+  onResult((queryResult: any) => {
     blocks.value = queryResult.data?.blocks ?? []
     loading.value = queryResult.loading
     currentTime.value = new Date().getTime() / 1000
   })
 
-  // watch(liveBlock, (val: any) => {
-  //   const newData: BlockObserver[] | Block[] = val?.block ?? []
-  //   addNewRecords(newData)
-  //   emitter.emit('onNewBlock', newData)
-  // })
+  watch(liveBlock, (val: any) => {
+    const newData: BlockObserver[] | Block[] = val?.block ?? []
+    addNewRecords(newData)
+    $emitter.emit('onNewBlock', newData)
+  })
 
   function addNewRecords(newRecords: BlockObserver[]) {
     clearTimeout(updateTimeout)
