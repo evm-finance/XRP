@@ -3,7 +3,8 @@ export interface EvmTransaction {
   timestamp: number
   block: number
   from: string
-  gasFees: number
+  gasPrice: number
+  transactionFee: number
   gssLimit: number
   hash: string
   isPending: boolean
@@ -12,21 +13,28 @@ export interface EvmTransaction {
   to: string
   txDataHex: string
   value: string
-  Input: {
-    methodSigDataStr: string
-    inputsSigDataStr: string
-    inputsMap: Object | null
-    argsMap: Object | null
-  }
-  logEvents: {
-    items: {
-      network: string
-      contract: string
-      name: string
-      topic: string
-      address: string
-      signature: string
-      allFunctionParams: Object | null
-    }[]
-  }
+  input:
+    | {
+        methodSigDataStr: string
+        inputsSigDataStr: string
+        fullFunctionSig: string
+        functionName: string
+        inputsMap: Record<string, string> | undefined
+        argsMap: Record<string, Record<string, string>> | undefined
+      }
+    | undefined
+  logEvents:
+    | {
+        items: {
+          network: string
+          contract: string
+          name: string
+          topic: string
+          address: string
+          signature: string
+          outputDataMapHex: string
+          allFunctionParams: Record<string, { indexed: boolean; name: string; type: string; value: any }> | undefined
+        }[]
+      }
+    | undefined
 }

@@ -5,6 +5,9 @@ schema {
   subscription: Subscription
 }
 
+"The @defer directive may be specified on a fragment spread to imply de-prioritization, that causes the fragment to be omitted in the initial response, and delivered as a subsequent response afterward. A query with @defer directive will cause the request to potentially return multiple responses, where non-deferred data is delivered in the initial response and data deferred delivered in a subsequent response. @include and @skip take precedence over @defer."
+directive @defer(if: Boolean = true, label: String) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+
 type AaveAddress {
   aTokenAddress: String!
   aTokenSymbol: String!
@@ -162,7 +165,7 @@ type EvmTransaction {
   block: Int!
   chainId: Int!
   from: String!
-  gasFees: Float!
+  gasPrice: Float!
   gssLimit: Float!
   hash: String!
   input: TxInput!
@@ -172,8 +175,9 @@ type EvmTransaction {
   status: String!
   timestamp: Int!
   to: String!
+  transactionFee: Float!
   txDataHex: String!
-  value: String!
+  value: Float!
 }
 
 type GasStats {
@@ -410,9 +414,9 @@ type Transaction {
 type TransactionEvent {
   address: String!
   allFunctionParams: JSONMap
-  contract: String!
+  contract: ContractType!
   indexedParams: JSONMap
-  name: String!
+  name: EventType!
   network: String!
   outputDataMap: JSONMap
   outputDataMapHex: String!
@@ -472,6 +476,8 @@ type TxDetail {
 
 type TxInput {
   argsMap: JSONMap
+  fullFunctionSig: String!
+  functionName: String!
   inputsMap: JSONMap
   inputsSigDataStr: String!
   methodSigDataStr: String!
@@ -544,6 +550,26 @@ type XRPTransaction {
 
 type XRPTransactions {
   items: [XRPTransaction!]!
+}
+
+enum ContractType {
+  uniswapV2Factory
+  uniswapV2Pair
+  uniswapV2Router
+  uniswapV3Factory
+  uniswapV3FactoryBSC
+  uniswapV3Pool
+  uniswapV3PoolBSC
+  uniswapV3Quoter
+  uniswapV3QuoterBSC
+  uniswapV3Router02
+}
+
+enum EventType {
+  Burn
+  Mint
+  PairCreated
+  Swap
 }
 
 enum TimeInterval {

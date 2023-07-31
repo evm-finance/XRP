@@ -37,8 +37,9 @@
               path: `/token/${item.contractTickerSymbol}`,
               query: { contract: item.contractAddress, decimals: item.contractDecimals },
             }"
-            v-text="item.contractTickerSymbol"
-          />
+          >
+            {{ item.contractTickerSymbol }}
+          </nuxt-link>
         </div>
       </template>
 

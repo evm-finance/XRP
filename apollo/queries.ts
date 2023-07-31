@@ -49,7 +49,8 @@ export const EvmTransactionGQL = gql`
       block
       status
       from
-      gasFees
+      gasPrice
+      transactionFee
       gssLimit
       hash
       isPending
@@ -62,6 +63,8 @@ export const EvmTransactionGQL = gql`
         inputsSigDataStr
         inputsMap
         argsMap
+        fullFunctionSig
+        functionName
       }
       logEvents {
         items {
@@ -72,6 +75,7 @@ export const EvmTransactionGQL = gql`
           address
           signature
           allFunctionParams
+          outputDataMapHex
         }
       }
     }
