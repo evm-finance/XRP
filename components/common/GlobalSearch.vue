@@ -9,7 +9,7 @@
         dense
         hide-details
         single-line
-        placeholder="Search"
+        placeholder="Search by Token address / Wallet / Txn Hash / XRP Ledger "
         v-bind="attrs"
         prepend-inner-icon="mdi-magnify"
         v-on="on"
