@@ -13,7 +13,10 @@ export interface ERC20Balance {
 export type SearchResult = {
   isWallet: boolean
   isContract: boolean
+  isTransaction?: boolean
+  isXRPLedger?: boolean
   searchString: string
-  network: Chain
+  network: Chain | null
   desc: string
+  to: string
 }

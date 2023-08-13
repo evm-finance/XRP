@@ -97,7 +97,7 @@ export default function (chainId: Ref<number>) {
 
   const customWalletAddress = computed(
     () =>
-      state.configs.globalSearchResult.find((elem) => elem.network.chainIdentifier === chainId.value)?.searchString ??
+      state.configs.globalSearchResult.find((elem) => elem.network?.chainIdentifier === chainId.value)?.searchString ??
       null
   )
 

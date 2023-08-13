@@ -22,6 +22,22 @@ export default function useERC20() {
       return 0
     }
   }
+  const getUniswapTokenByAddress = async (
+    address: string,
+    network: Chain,
+    provider: any
+  ): Promise<UniswapToken | null> => {
+    try {
+      const contract = new ethers.Contract(address, erc20Abi, provider) as unknown as Erc20Contract
+      const symbol = await contract.symbol()
+      const name = await contract.name()
+      const decimals = await contract.decimals()
+      return { address, chainId: network.chainIdentifier, name, symbol, decimals }
+    } catch (e) {
+      console.log(e)
+      return null
+    }
+  }
 
   const approveMaxSpending = async (
     tokenAddress: string,
@@ -184,5 +200,6 @@ export default function useERC20() {
     nativeNetworkBalance,
     balanceMulticall,
     poolBalanceMulticall,
+    getUniswapTokenByAddress,
   }
 }

@@ -12,21 +12,6 @@
           <div class="py-3">
             <v-btn tile depressed @click="dispatch('ui/walletDialogStatus', true)">Connect to Wallet</v-btn>
           </div>
-          <div class="py-1">OR</div>
-          <div class="px-8">
-            <span class="text-center">
-              <v-text-field
-                solo
-                rounded
-                dense
-                hide-details
-                single-line
-                placeholder="Search for wallet"
-                prepend-inner-icon="mdi-magnify"
-                @click="initSearch"
-              />
-            </span>
-          </div>
         </v-col>
       </v-row>
     </v-container>

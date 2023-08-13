@@ -284,7 +284,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, useRoute } from '@nuxtjs/composition-api'
+import { computed, defineComponent, Ref, ref, useRoute } from '@nuxtjs/composition-api'
 import { useQuery } from '@vue/apollo-composable/dist'
 import { EvmTransactionGQL } from '~/apollo/queries'
 import { EvmTransaction } from '~/types/graph'
@@ -301,10 +301,11 @@ export default defineComponent({
   setup() {
     const route = useRoute()
     const hash = computed(() => route.value.params?.id ?? '')
+    const chainId = computed(() => route.value.query.chainId ?? '1') as Ref<string>
 
     const { result, error } = process.browser
       ? useQuery(EvmTransactionGQL, () => ({
-          chainId: 1,
+          chainId: parseFloat(chainId.value),
           hash: hash.value,
         }))
       : { result: ref(null), error: ref('') }

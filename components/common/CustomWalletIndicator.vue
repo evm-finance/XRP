@@ -29,7 +29,7 @@ export default defineComponent<Props>({
     const customWalletAddress = computed<any>({
       get: () => {
         const address =
-          state.configs.globalSearchResult.find((elem) => elem.network.id === networkId.value)?.searchString ?? null
+          state.configs.globalSearchResult.find((elem) => elem.network?.id === networkId.value)?.searchString ?? null
         return address === null
           ? null
           : `${address.slice(0, 5)}.....${address.slice(address.length - 5, address.length)}`

@@ -34,21 +34,7 @@
       <v-spacer />
 
       <client-only>
-        <div>
-          <v-text-field
-            solo
-            rounded
-            dense
-            hide-details
-            single-line
-            placeholder="Search"
-            prepend-inner-icon="mdi-magnify"
-            @click="onInitSearch"
-          />
-        </div>
-        <!--        <v-btn text tile @click="searchOverlay = !searchOverlay">
-          <v-icon size="20" @click="onInitSearch">mdi-magnify</v-icon>
-        </v-btn>-->
+        <global-search />
         <gas-info class="hidden-xs-and-down" />
         <network-selection />
       </client-only>
@@ -61,8 +47,6 @@
       </v-container>
     </v-main>
     <wallet-select-dialog />
-
-    <global-search ref="globalSearchComponentRef" />
 
     <v-navigation-drawer v-model="drawer" fixed temporary>
       <v-list elevation="0">

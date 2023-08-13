@@ -1,171 +1,236 @@
 <template>
-  <v-dialog
-    v-model="dialog"
-    max-width="580"
-    width="580"
-    persistent
-    transition="dialog-top-transition"
-    content-class="my-custom-dialog"
-  >
-    <v-card tile outlined height="auto" min-height="200" width="600">
-      <div class="text-right mb-3">
-        <v-icon class="my-2 ma-3" @click="dialog = !dialog">mdi-close</v-icon>
-      </div>
-      <v-row class="px-4">
-        <v-col>
-          <v-text-field
-            v-model="search"
-            solo
-            dense
-            clearable
-            hide-details
-            placeholder="Search for wallet"
-            @keydown.enter.prevent="onSearch"
-          >
-            <template #append-outer>
-              <v-btn depressed style="top: -6px" @click="onSearch">
-                <v-icon size="20"> mdi-magnify</v-icon>
-              </v-btn>
-            </template>
-          </v-text-field>
-        </v-col>
-      </v-row>
+  <v-menu v-model="searchMenuToggle" offset-y>
+    <template #activator="{ attrs, on }">
+      <v-text-field
+        v-model="search"
+        :loading="loading"
+        clearable
+        solo
+        dense
+        hide-details
+        single-line
+        placeholder="Search"
+        v-bind="attrs"
+        prepend-inner-icon="mdi-magnify"
+        v-on="on"
+      />
+    </template>
 
-      <div v-if="loading" class="text-center mt-4">
-        <v-progress-circular indeterminate color="primary" />
-      </div>
+    <v-list>
+      <v-list-item v-for="(item, i) in searchResult" :key="i" exact :to="item.to">
+        <v-list-item-avatar size="24">
+          <v-img
+            :src="$imageUrlBySymbol(item.network?.symbol ?? '')"
+            :lazy-src="$imageUrlBySymbol(item.network?.symbol ?? '')"
+          />
+        </v-list-item-avatar>
+        <v-list-item-content>
+          <v-list-item-title>{{ item.network?.name }}</v-list-item-title>
+          <v-list-item-subtitle>{{ item.desc }}</v-list-item-subtitle>
+        </v-list-item-content>
 
-      <v-row v-else no-gutters justify="center">
-        <v-col cols="12">
-          <v-list dense>
-            <v-list-item-group>
-              <v-list-item v-for="item in searchResult" :key="item.network.chainIdentifier" no-action :value="item">
-                <v-list-item-avatar size="24">
-                  <v-img
-                    :src="$imageUrlBySymbol(item.network.symbol)"
-                    :lazy-src="$imageUrlBySymbol(item.network.symbol)"
-                  />
-                </v-list-item-avatar>
-                <v-list-item-content>
-                  <v-list-item-title v-text="item.network.name" />
-                  <v-list-item-subtitle v-text="item.desc" />
-                </v-list-item-content>
-
-                <v-list-item-action>
-                  <span>
-                    <v-chip v-if="item.isWallet" x-small color="green  darken-2">Wallet</v-chip>
-                    <v-chip v-if="item.isContract" x-small color="deep-purple darken-2">Contract</v-chip>
-                    <v-icon v-if="!item.isWallet && !item.isContract" size="18" color="red">mdi-close</v-icon>
-                  </span>
-                </v-list-item-action>
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
-        </v-col>
-
-        <v-col v-if="searchResult.length" cols="12">
-          <div class="text-center my-4">
-            <v-btn text color="primary" @click="useSearch">OK use this address</v-btn>
-          </div>
-        </v-col>
-      </v-row>
-    </v-card>
-  </v-dialog>
+        <v-list-item-action>
+          <span>
+            <v-chip v-if="item.isWallet" x-small color="green  darken-2">Wallet</v-chip>
+            <v-chip v-if="item.isContract" x-small color="deep-purple darken-2">Contract</v-chip>
+            <v-chip v-if="item.isTransaction" x-small color="deep-purple darken-2">Transaction</v-chip>
+            <v-chip v-if="item.isXRPLedger" x-small color="deep-purple darken-2">XRP Ledger</v-chip>
+            <v-icon
+              v-if="!item.isWallet && !item.isContract && !item.isTransaction && !item.isXRPLedger"
+              size="18"
+              color="red"
+            >
+              mdi-close
+            </v-icon>
+          </span>
+        </v-list-item-action>
+      </v-list-item>
+    </v-list>
+  </v-menu>
 </template>
 <script lang="ts">
-import * as process from 'process'
-import { computed, defineComponent, inject, ref, useContext, useStore } from '@nuxtjs/composition-api'
+import { defineComponent, inject, ref, watch } from '@nuxtjs/composition-api'
 import { ethers } from 'ethers'
+import useERC20 from '~/composables/useERC20'
+import { useHelpers } from '~/composables/useHelpers'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
 import { Chain } from '~/types/apollo/main/types'
 import { SearchResult } from '~/types/global'
-import { State } from '~/types/state'
+
 export default defineComponent({
   setup() {
-    const { $emitter } = useContext()
-    const { state, dispatch } = useStore<State>()
     const { allNetworks, getCustomProviderByNetworkId } = inject(WEB3_PLUGIN_KEY) as Web3
-    const searchResult = computed({
-      get: () => state.configs.globalSearchResult,
-      set: (value: any) => dispatch('configs/searchResult', value),
-    })
+    const { debounceAsync } = useHelpers()
+    const { getUniswapTokenByAddress } = useERC20()
 
+    const searchResult = ref<SearchResult[]>([])
+    const searchMenuToggle = ref(false)
     const dialog = ref(false)
     const search = ref<string | null>('')
     const loading = ref(false)
 
-    const checkAddressType = async (address: string, network: Chain, provider: any): Promise<SearchResult> => {
+    const checkAddressType = async (address: string, network: Chain, provider: any): Promise<SearchResult[]> => {
       try {
+        const resp: SearchResult[] = []
+
+        if (address.length === 8) {
+          resp.push({
+            desc: 'Valid XRP ledger',
+            network: null,
+            isWallet: false,
+            isContract: false,
+            isXRPLedger: true,
+            searchString: address,
+            to: `/xrp-explorer/ledger/${address}`,
+          })
+          return resp
+        }
+
+        const isValidTx = await isValidTransactionHash(address, provider)
+        if (isValidTx) {
+          resp.push({
+            desc: 'Valid transaction hash',
+            network,
+            isWallet: false,
+            isContract: false,
+            isTransaction: true,
+            searchString: address,
+            to: `/tx/${address}?chainId=${network.chainIdentifier}`,
+          })
+          return resp
+        }
+
         // Get the code at the address
         const code = await provider.getCode(address)
 
         // If the code is "0x", it is not a contract address (wallet address)
         if (code === '0x') {
           const transactionCount = await provider.getTransactionCount(address)
+
+          // Check ETH balance
+          const balance = await provider.getBalance(address)
+
           if (transactionCount > 0) {
-            return {
+            resp.push({
               desc: 'Address is a wallet (has transaction history)',
               network,
               isWallet: true,
               isContract: false,
               searchString: address,
-            }
-          }
-
-          // Check ETH balance
-          const balance = await provider.getBalance(address)
-          if (balance.gt(ethers.constants.Zero)) {
-            return {
+              to: `/portfolio/balances?wallet=${address}&chainId=${network.chainIdentifier}`,
+            })
+          } else if (balance.gt(ethers.constants.Zero)) {
+            resp.push({
               desc: 'Address is a wallet (holds Ether)',
               network,
               isWallet: true,
               isContract: false,
               searchString: address,
-            }
+              to: `/portfolio/balances?wallet=${address}&chainId=${network.chainIdentifier}`,
+            })
+          } else {
+            resp.push({
+              desc: 'Address is a wallet',
+              network,
+              isWallet: true,
+              isContract: false,
+              searchString: address,
+              to: `/portfolio/balances?wallet=${address}&chainId=${network.chainIdentifier}`,
+            })
           }
-          return { desc: 'Valid wallet', network, isWallet: true, isContract: false, searchString: address }
         } else {
-          return { desc: 'invalid wallet', network, isWallet: false, isContract: true, searchString: address }
+          const contract = await getUniswapTokenByAddress(address, network, provider)
+          resp.push({
+            desc: `${contract?.name ?? 'UNKNOWN'}`,
+            network,
+            isWallet: false,
+            isContract: true,
+            searchString: address,
+            to: `/token/${contract?.symbol}?contact=${address}&decimals=${contract?.decimals}`,
+          })
+
+          resp.push({
+            desc: `Balances of ${contract?.name} contract`,
+            network,
+            isWallet: true,
+            isContract: false,
+            searchString: address,
+            to: `/portfolio/balances?wallet=${address}&chainId=${network.chainIdentifier}`,
+          })
         }
+        return resp
       } catch (error) {
-        return { desc: 'Invalid address', network, isWallet: false, isContract: false, searchString: address }
+        return [
+          {
+            desc: 'Invalid address or tx hash',
+            network,
+            isWallet: false,
+            isContract: false,
+            searchString: address,
+            to: '#',
+          },
+        ]
       }
     }
 
-    const onSearch = async () => {
-      if (search.value === null || search.value.length < 1) {
+    async function isValidTransactionHash(transactionHash: string, provider: any): Promise<boolean> {
+      try {
+        const transaction = await provider.getTransaction(transactionHash)
+        return !!transaction
+      } catch (error) {
+        return false
+      }
+    }
+
+    const onSearch = async (search: string | null): Promise<SearchResult[]> => {
+      let result: SearchResult[][] = []
+      if (search === null || search.length < 1) {
         searchResult.value = []
+        return []
+      }
+
+      const multCalls: Promise<SearchResult[]>[] = []
+      allNetworks.value.forEach((elem) => {
+        const provider = getCustomProviderByNetworkId(elem.id)
+        const request = checkAddressType(search ?? '', elem, provider)
+        multCalls.push(request)
+      })
+      result = await Promise.all(multCalls)
+      const res = result.reduce((r, c) => r.concat(c), [])
+
+      if (res.length && res[0].isXRPLedger) {
+        return [res[0]]
+      }
+      return res
+    }
+
+    const onSearchChange = debounceAsync(async (searchVal: string) => {
+      searchResult.value = []
+      searchResult.value = await onSearch(searchVal)
+      searchMenuToggle.value = true
+    }, 1000)
+
+    watch(search, async (searchVal) => {
+      if (searchVal == null) {
         return
       }
       loading.value = true
-      const multCalls: Promise<SearchResult>[] = []
-      allNetworks.value.forEach((elem) => {
-        const provider = getCustomProviderByNetworkId(elem.id)
-        const request = checkAddressType(search.value ?? '', elem, provider)
-        multCalls.push(request)
-      })
-      searchResult.value = await Promise.all(multCalls)
+      await onSearchChange(searchVal)
       loading.value = false
-    }
+    })
 
     function openDialog() {
       dialog.value = true
     }
-    function useSearch() {
-      dialog.value = false
-    }
-    // TODO: Change to VUEX handler instead of event emitter
-    // eslint-disable-next-line no-unused-expressions
-    $emitter?.on('onInitGlobalSearch', () => openDialog())
 
     return {
       loading,
       searchResult,
       dialog,
       search,
+      searchMenuToggle,
       onSearch,
       openDialog,
-      useSearch,
     }
   },
 })

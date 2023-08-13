@@ -22,7 +22,7 @@ export default function (networkId: Ref<string>, dex: Ref<string>, sortBy: Ref<s
   } = inject(WEB3_PLUGIN_KEY) as Web3
 
   const customWalletAddress = computed(
-    () => state.configs.globalSearchResult.find((elem) => elem.network.id === networkId.value)?.searchString ?? null
+    () => state.configs.globalSearchResult.find((elem) => elem.network?.id === networkId.value)?.searchString ?? null
   )
 
   const account = computed(() =>
