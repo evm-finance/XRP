@@ -85,12 +85,32 @@
                   hide-default-footer
                   :headers="cols"
                   :items-per-page="200"
-                  :items="ledger.XRPTransactions.items"
+                  :items="transactions"
                   class="elevation-0 row-height-50"
                   mobile-breakpoint="0"
                 >
                   <template #item.hash="{ item }">
-                    <span>{{ item.hash }}</span>
+                    <div class="pink--text">{{ item.hashShort }}</div>
+                  </template>
+
+                  <template #item.account="{ item }">
+                    <div class="grey--text">{{ item.accountShort }}</div>
+                  </template>
+
+                  <template #item.transactionType="{ item }">
+                    <v-chip class="ma-2" label small outlined :color="eventColor(item.transactionType)">
+                      {{ item.transactionType }}
+                    </v-chip>
+                  </template>
+
+                  <template #item.destination="{ item }">
+                    <div class="grey--text">{{ item.toFormatted }}</div>
+                  </template>
+                  <template #item.amount="{ item }">
+                    <div>
+                      {{ item.amountFormatted.value }}
+                      <span class="grey--text ml-2">{{ item.amountFormatted.currency }}</span>
+                    </div>
                   </template>
                 </v-data-table>
               </v-card>
@@ -106,7 +126,7 @@
 import { computed, defineComponent, useRoute, useRouter } from '@nuxtjs/composition-api'
 import { useQuery } from '@vue/apollo-composable/dist'
 import { BlockGQL } from '~/apollo/main/token.query.graphql'
-import { Block } from '~/types/apollo/main/types'
+import { Block, XrpTransaction } from '~/types/apollo/main/types'
 export default defineComponent({
   components: {},
   setup() {
@@ -117,9 +137,61 @@ export default defineComponent({
       fetchPolicy: 'no-cache',
     })
     const ledger = computed<Block | null>(() => result.value?.block ?? null)
+
+    const transactions = computed(() =>
+      ledger.value?.XRPTransactions.items
+        .map((elem) => ({
+          ...elem,
+          hashShort: `${elem.hash.slice(0, 10)}........${elem.hash.slice(elem.hash.length - 10, elem.hash.length)}`,
+          accountShort: `${elem.account.slice(0, 20)}....`,
+          toFormatted: elem?.destination ? `${elem.destination.slice(0, 20)}....` : 'XRPL',
+          amountFormatted: handleAmount(elem),
+          fee: `${parseFloat(elem.fee) / 10 ** 6}  XRP`,
+        }))
+        .sort((a, b) => {
+          if (a.metadata.TransactionIndex < b.metadata.TransactionIndex) return -1
+          if (a.metadata.TransactionIndex > b.metadata.TransactionIndex) return 1
+          return 0
+        })
+    )
+
+    function handleAmount(data: XrpTransaction) {
+      if (typeof data.amount === 'string') {
+        return { value: parseFloat(data.amount) / 10 ** 6, currency: 'XRP' }
+      }
+      // if (data.amount === null) {
+      //   const affectedNodes = data.metadata.AffectedNodes
+      //   for (const node of affectedNodes) {
+      //     if (node.CreatedNode && node.CreatedNode.NewFields) {
+      //       const takerGets = node.CreatedNode.NewFields.TakerGets
+      //       console.log('TakerGets:', takerGets)
+      //       if (typeof takerGets === 'object') {
+      //         return { value: parseFloat(takerGets?.value ?? 0), currency: takerGets?.currency ?? '' }
+      //       } else {
+      //         continue
+      //       }
+      //     } else if (node.ModifiedNode && node.ModifiedNode.NewFields) {
+      //       const takerGets = node.ModifiedNode.NewFields.TakerGets
+      //       console.log('TakerGets:', takerGets)
+      //     }
+      //   }
+      // }
+      return { value: '-', currency: '' }
+    }
+
     const navigateToLedger = (ledger: number) => router.push(`/xrp-explorer/ledger/${ledger}`)
     const cols = computed(() => {
       return [
+        {
+          text: 'Index',
+          align: 'left',
+          value: 'metadata.TransactionIndex',
+          width: '20',
+          class: ['px-4', 'text-truncate'],
+          cellClass: ['px-4', 'text-truncate', 'grey--text'],
+          sortable: false,
+        },
+
         {
           text: 'Hash',
           align: 'left',
@@ -135,18 +207,8 @@ export default defineComponent({
           align: 'left',
           value: 'account',
           width: '100',
-          sortable: false,
-          class: ['px-2', 'text-truncate', 'grey--text'],
-          cellClass: ['px-2', 'text-truncate', 'grey--text'],
-        },
-
-        {
-          text: 'To',
-          align: 'left',
-          value: 'destination',
-          class: ['px-2', 'text-truncate'],
-          cellClass: ['px-2', 'text-truncate', 'grey--text'],
-          width: '200',
+          class: ['px-4', 'text-truncate'],
+          cellClass: ['px-4', 'text-truncate', 'grey--text'],
           sortable: false,
         },
 
@@ -155,12 +217,58 @@ export default defineComponent({
           align: 'left',
           value: 'transactionType',
           class: ['px-2', 'text-truncate'],
+          width: '100',
           cellClass: ['px-2', 'text-truncate'],
+          sortable: false,
+        },
+
+        {
+          text: 'To',
+          align: 'left',
+          value: 'destination',
+          class: ['px-2', 'text-truncate'],
+          cellClass: ['px-2', 'text-truncate', 'grey--text'],
+          width: '100',
+          sortable: false,
+        },
+
+        {
+          text: 'Amount',
+          align: 'left',
+          value: 'amount',
+          class: ['px-2', 'text-truncate'],
+          cellClass: ['px-2', 'text-truncate'],
+          width: '100',
+          sortable: false,
+        },
+        {
+          text: 'Amount',
+          align: 'left',
+          value: 'fee',
+          class: ['px-2', 'text-truncate'],
+          cellClass: ['px-2', 'text-truncate', 'grey--text'],
+          width: '100',
           sortable: false,
         },
       ]
     })
-    return { ledger, navigateToLedger, cols }
+    const eventColor = (event: any): string => {
+      const colors: { [key: string]: string } = {
+        OfferCreate: 'green',
+        TicketCreate: 'green',
+        Payment: 'green',
+        NFTokenCreateOffer: 'green',
+        NFTokenCancelOffer: 'red ',
+        NFTokenMint: 'primary',
+        OfferCancel: 'red',
+        TrustSet: 'orange',
+      }
+
+      // @ts-ignore
+      return Object.hasOwn(colors, event) ? colors[event] : 'grey'
+    }
+
+    return { ledger, navigateToLedger, cols, transactions, eventColor }
   },
   head: {},
 })
