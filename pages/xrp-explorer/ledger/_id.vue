@@ -90,7 +90,7 @@
                   mobile-breakpoint="0"
                 >
                   <template #item.hash="{ item }">
-                    <div class="pink--text">{{ item.hashShort }}</div>
+                    <nuxt-link :to="`/xrp-explorer/tx/${item.hash}`" class="pink--text">{{ item.hashShort }}</nuxt-link>
                   </template>
 
                   <template #item.account="{ item }">

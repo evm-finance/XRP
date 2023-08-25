@@ -81,3 +81,31 @@ export const EvmTransactionGQL = gql`
     }
   }
 `
+export const XRPTransactionGQL = gql`
+  query EvmTransactionGQL($hash: String!) {
+    xrpTransaction(hash: $hash) {
+      account
+      amount
+      destination
+      fee
+      flags
+      lastLedgerSequence
+      offerSequence
+      sequence
+      signingPubKey
+      takerGets
+      takerPays
+      transactionType
+      txnSignature
+      date
+      hash
+      inLedger
+      ledgerIndex
+      meta
+      metadata
+      validated
+      warnings
+      memos
+    }
+  }
+`
