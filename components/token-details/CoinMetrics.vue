@@ -24,7 +24,8 @@
 
           <v-col cols="12">
             <div class="font-weight-medium subtitle-1 ml-2 text-no-wrap">
-              <span v-text="$f(tokenPriceEth, { minDigits: 2, maxDigits: 8 })" />
+              <!--              <span v-text="$f(tokenPriceEth, { minDigits: 2, maxDigits: 8 })" />-->
+              <span v-text="'-'" />
               <span class="font-weight-regular ml-1 grey--text text-caption">ETH</span>
             </div>
           </v-col>

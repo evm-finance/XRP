@@ -1,24 +1,21 @@
 <template>
   <div class="text-no-wrap d-flex grey--text text--lighten-1">
     {{ label }}
-    <a
-      v-if="isContract"
-      class="ml-1 cursor-copy white--text"
-      @click="navigateToExplorer(address, 'address', blockExplorerUrl)"
-    >
+    <nuxt-link v-if="isContract" class="ml-1 cursor-copy white--text" :to="`/portfolio/balances?wallet=${address}`">
       <v-avatar v-if="symbol" size="16" style="margin-top: -2px; margin-right: 2px; margin-left: 2px">
         <img alt="" :src="$imageUrlBySymbol(symbol.toLowerCase())" @error="$setAltImageUrl" />
       </v-avatar>
       <v-icon v-else class="ml-1 mt-n1" small>mdi-file-sign</v-icon>
       {{ !name ? $truncateAddress(address, 4, 10) : name }}
-    </a>
+    </nuxt-link>
 
-    <a
+    <nuxt-link
       v-else
+      :to="`/portfolio/balances?wallet=${address}`"
       :class="['cursor-copy', 'ml-1', address === walletAddress ? 'pink--text' : 'white--text']"
-      @click="navigateToExplorer(address, 'address', blockExplorerUrl)"
-      v-text="$truncateAddress(address, 4, 10)"
-    />
+    >
+      {{ $truncateAddress(address, 4, 10) }}
+    </nuxt-link>
   </div>
 </template>
 

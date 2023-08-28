@@ -72,11 +72,9 @@
 
       <!--   Txn Hash   -->
       <template #[`item.txHash`]="{ item }">
-        <a
-          class="text-decoration-none grey--text"
-          @click="$navigateToExplorer(item.txHash, 'tx', currentChain.blockExplorerUrl)"
-          v-text="$truncateAddress(item.txHash, 10, 4)"
-        />
+        <nuxt-link class="text-decoration-none grey--text" :to="`/tx/${item.txHash}?chainId=${chainId}`">{{
+          $truncateAddress(item.txHash, 6, 6)
+        }}</nuxt-link>
       </template>
 
       <!--   isInbound   -->
@@ -224,6 +222,7 @@ export default defineComponent({
     isInboundRenderer: { type: Function as PropType<inboundFunctionType>, required: true },
     transactions: { type: Array as PropType<TransactionModel[]>, default: () => [] },
     itemsPerPage: { type: Number, default: 15 },
+    chainId: { type: Number, default: 1 },
     account: { type: String, default: '' },
   },
   setup() {

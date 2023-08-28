@@ -6,6 +6,9 @@
           <h1 class="text-h4">
             DeFi Balances
             <info-tooltip :text="messages.tooltips.balanceHeaderDesc" />
+            <nuxt-link :to="`/portfolio/transactions?wallet=${account}`" class="text-caption">
+              Navigate to Transaction History
+            </nuxt-link>
           </h1>
         </v-col>
 
@@ -126,7 +129,7 @@ export default defineComponent({
   setup() {
     // COMPOSABLES
     const { getNetworkByChainNumber } = inject(WEB3_PLUGIN_KEY) as Web3
-    const { loading, balanceData, error, totalBalance, isWalletReady } = usePortfolioBalances()
+    const { loading, balanceData, error, totalBalance, isWalletReady, account } = usePortfolioBalances()
 
     // COMPUtED
     const stats = computed(() =>
@@ -140,7 +143,7 @@ export default defineComponent({
     // META TAGS
     useMetaTags('balances', useRoute().value.path)
     const dialog = ref(true)
-    return { loading, balanceData, error, stats, totalBalance, isWalletReady, messages, dialog }
+    return { loading, balanceData, error, stats, totalBalance, isWalletReady, messages, dialog, account }
   },
   head: {},
 })

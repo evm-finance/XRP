@@ -1,11 +1,11 @@
+import * as process from 'process'
 import { plainToClass } from 'class-transformer'
 import { useQuery } from '@vue/apollo-composable/dist'
-import { computed, inject, reactive, Ref, ref, useStore, watch } from '@nuxtjs/composition-api'
+import { computed, inject, reactive, Ref, ref, useRoute, watch } from '@nuxtjs/composition-api'
 import { TransactionsGQL } from '~/apollo/main/portfolio.query.graphql'
 
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
 import { LogEvent, TransactionItem, TxDetail } from '~/types/apollo/main/types'
-import { State } from '~/types/state'
 
 export class TransactionModel implements TransactionItem {
   readonly blockSignedAt!: string
@@ -83,10 +83,10 @@ export class TransactionModel implements TransactionItem {
     return this.successful ? { text: 'Success', color: 'green' } : { text: 'Failed', color: 'pink' }
   }
 }
-
+type AnyFunction = (...args: any[]) => void
 export default function (chainId: Ref<number>) {
   // STATE
-  const { state } = useStore<State>()
+  const route = useRoute()
   const loading = ref(true)
   const currentPage = ref(1)
   const hasMore = ref(false)
@@ -95,11 +95,7 @@ export default function (chainId: Ref<number>) {
   // COMPOSABLES
   const { account: metamaskWalletAddress, walletReady } = inject(WEB3_PLUGIN_KEY) as Web3
 
-  const customWalletAddress = computed(
-    () =>
-      state.configs.globalSearchResult.find((elem) => elem.network?.chainIdentifier === chainId.value)?.searchString ??
-      null
-  )
+  const customWalletAddress = computed(() => route.value.query?.wallet ?? '') as Ref<string>
 
   const isWalletReady = computed(() => walletReady.value || customWalletAddress.value?.length)
 
@@ -107,16 +103,19 @@ export default function (chainId: Ref<number>) {
     customWalletAddress.value?.trim().length ? customWalletAddress.value?.trim() : metamaskWalletAddress.value
   )
 
-  const { result, error, onResult } = useQuery(
-    TransactionsGQL,
-    () => ({
-      chainId: chainId.value ?? 1,
-      address: account.value ?? '',
-      pageNumber: pagination.page,
-      pageSize: pagination.perPage,
-    }),
-    { fetchPolicy: 'no-cache' }
-  )
+  const myFunction: AnyFunction = (_: any) => {}
+  const { result, error, onResult } = process.browser
+    ? useQuery(
+        TransactionsGQL,
+        () => ({
+          chainId: chainId.value ?? 1,
+          address: account.value ?? '',
+          pageNumber: pagination.page,
+          pageSize: pagination.perPage,
+        }),
+        { fetchPolicy: 'no-cache' }
+      )
+    : { result: ref(null), error: ref(null), onResult: myFunction }
 
   // COMPUTED
   const transactionsData = computed(

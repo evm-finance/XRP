@@ -51,5 +51,6 @@ export default function () {
     isWalletReady,
     error,
     loading,
+    account,
   }
 }

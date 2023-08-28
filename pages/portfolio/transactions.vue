@@ -6,6 +6,9 @@
           <h1 class="text-h4">
             Web3 Transaction History
             <info-tooltip :text="messages.tooltips.txHeaderDesc" />
+            <nuxt-link :to="`/portfolio/balances?wallet=${account}`" class="text-caption">
+              Navigate to Balances
+            </nuxt-link>
           </h1>
         </v-col>
       </v-row>
@@ -49,6 +52,7 @@
                 :is-inbound-renderer="isInboundRenderer"
                 :transactions="transactionsData"
                 :account="account"
+                :chain-id="chainId"
               />
             </div>
 
@@ -106,6 +110,7 @@ export default defineComponent({
       messages,
       allNetworks,
       selectedChainId,
+      chainId,
 
       // METHODS
       isInboundRenderer,
