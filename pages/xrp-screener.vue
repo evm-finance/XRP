@@ -5,6 +5,9 @@
         <v-col cols="12">
           <h1 class="text-h4">XRP Screener</h1>
         </v-col>
+        <v-btn
+        @click="connectWallet()">
+        </v-btn>
       </v-row>
 
       <v-row justify="center">
@@ -63,6 +66,32 @@
                 <!--                    <v-chip class="mx-2" label :color="eventColor(d)" small outlined>{{ `${d}  ${i}` }}</v-chip>-->
                 <!--                  </span>-->
                 <!--                </template>-->
+
+                <template #item.buy="{ item }">
+          <v-btn
+            text:
+            outlined:
+            color="green"
+            class="pa-1 ma-1"
+            height="26"
+            @click="buy()"
+          >
+            <span class="text-caption">{{ item.value }}</span>
+          </v-btn>
+        </template>
+
+        <template #item.sell="{ item }">
+          <v-btn
+            text:
+            outlined:
+            color="pink"
+            class="pa-1 ma-1"
+            height="26"
+            @click="sell()"
+          >
+            <span class="text-caption">{{ item.value }}</span>
+          </v-btn>
+        </template>
               </v-data-table>
             </client-only>
           </v-card>
@@ -76,6 +105,8 @@
 import { computed, defineComponent, ref, useContext } from '@nuxtjs/composition-api'
 import { useQuery } from '@vue/apollo-composable/dist'
 import { XRPScreenerGQL } from '~/apollo/queries'
+import  useXrpTrade from '~/composables/useXrpTrade'
+import { isInstalled, getAddress } from "@gemwallet/api";
 interface XRPScreenerElem {
   currency: string
   issuerAddress: string
@@ -86,12 +117,16 @@ interface XRPScreenerElem {
   price: number
   volume24H: number
 }
+
 export default defineComponent({
   setup() {
     const { $f } = useContext()
     const loading = ref(true)
     const screenerRawData = ref<XRPScreenerElem[]>([])
+    const offers = ref<offerTypes[]>([])
     const { onResult } = useQuery(XRPScreenerGQL, { fetchPolicy: 'no-cache', pollInterval: 60000 })
+    const {buy , sell, connectWallet } = useXrpTrade()
+    type offerTypes = 'buy' | 'sell'
 
     const screenerDataFormatted = computed(() =>
       screenerRawData.value.map((elem) => ({
@@ -121,12 +156,27 @@ export default defineComponent({
           text: 'Currency',
           align: 'left',
           value: 'currency',
-          width: '300',
+          width: '150',
           class: ['px-4', 'text-truncate'],
           cellClass: ['px-4', 'text-truncate'],
           sortable: true,
         },
-
+        {
+          text: '',
+          value: 'buy',
+          width: 50,
+          sortable: false,
+          class: ['px-2', 'text-truncate'],
+          cellClass: ['px-2', 'text-truncate'],
+        },
+        {
+          text: '',
+          value: 'sell',
+          width: 50,
+          sortable: false,
+          class: ['px-2', 'text-truncate'],
+          cellClass: ['px-2', 'text-truncate'],
+        },
         {
           text: 'Issuer Name',
           align: 'left',
@@ -178,10 +228,14 @@ export default defineComponent({
         },
       ]
     })
+
     return {
       loading,
       cols,
       screenerDataFormatted,
+      buy, 
+      sell,
+      connectWallet
     }
   },
   head: {},

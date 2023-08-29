@@ -1,5 +1,5 @@
 import * as process from 'process'
-import { ref, computed, watch, useContext } from '@nuxtjs/composition-api'
+import { ref, computed, watch, useContext, Ref, reactive, inject } from '@nuxtjs/composition-api'
 import { useQuery, useSubscription } from '@vue/apollo-composable/dist'
 import { Block } from '@/types/apollo/main/types'
 import { BlocksSubscriptionGQL, BlocksXrpGQL } from '~/apollo/queries'
