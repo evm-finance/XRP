@@ -75,6 +75,8 @@ export default defineComponent({
       { title: 'Terms and Conditions', url: '/terms-and-conditions' },
       { title: 'Meet Our Team', url: '/team' },
       { title: 'FAQ', url: '/faq' },
+      { title: 'About', url: '/about' },
+      { title: 'Verse', url: '/verse' },
     ]
 
     const communityLinks = [

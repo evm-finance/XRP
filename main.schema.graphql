@@ -309,6 +309,7 @@ type Query {
   transactions(address: String!, chainId: Int! = 0, pageNumber: Int! = 0, pageSize: Int! = 100): Transaction!
   transfers(address: String!, chainId: Int! = 0, contractAddress: String!, pageNumber: Int! = 0, pageSize: Int! = 100): Transfers!
   uniswapTokens(chainId: Int! = 1, pageNumber: Int! = 0, pageSize: Int! = 100, searchString: String! = "", source: [UniswapTokenSource!]!, userWallet: String! = ""): UniswapTokens!
+  xrpScreener: [XRPTokenFields!]!
   xrpTransaction(hash: String!): XRPTransaction!
 }
 
@@ -522,6 +523,17 @@ type XRPLedgerData {
   totalCoins: String!
   totalCoins1: String!
   transactionHash: String!
+}
+
+type XRPTokenFields {
+  currency: String!
+  icon: String!
+  issuerAddress: String!
+  issuerName: String!
+  marketcap: Float!
+  price: Float!
+  tokenName: String!
+  volume24H: Float!
 }
 
 type XRPTransaction {

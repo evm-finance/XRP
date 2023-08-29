@@ -109,3 +109,17 @@ export const XRPTransactionGQL = gql`
     }
   }
 `
+export const XRPScreenerGQL = gql`
+  query XRPScreenerGQL {
+    xrpScreener {
+      currency
+      issuerAddress
+      icon
+      tokenName
+      issuerName
+      marketcap
+      price
+      volume24H
+    }
+  }
+`

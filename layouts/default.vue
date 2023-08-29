@@ -93,12 +93,11 @@ export default defineComponent({
     const links = ref([
       { name: 'Aave', to: '/markets/aave' },
       { name: 'Trade', to: '/swap' },
-      { name: 'Verse', to: '/verse' },
       { name: 'Balances', to: '/portfolio/balances' },
       { name: 'Transactions', to: '/portfolio/transactions' },
       { name: 'Screener', to: '/screener' },
       { name: 'XRP-Explorer', to: '/xrp-explorer' },
-      { name: 'About', to: '/about' },
+      { name: 'XRP-Screener', to: '/xrp-screener' },
     ])
 
     // COMPOSABLE
