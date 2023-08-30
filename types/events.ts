@@ -12,6 +12,7 @@ export enum EmitEvents {
   navigateToExplorer = 'navigate-to-explorer',
   onUniswapTokenSelect = 'on-uniswap-token-select',
   onUniswapTokenMenuOpen = 'on-uniswap-token-menu-open',
+  onXrpInputOpen = 'on-xrp-input-open',
 }
 
 export enum DefiEvents {

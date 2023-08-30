@@ -81,16 +81,34 @@
         </template>
 
         <template #item.sell="{ item }">
-          <v-btn
-            text:
-            outlined:
-            color="pink"
-            class="pa-1 ma-1"
-            height="26"
-            @click="sell()"
-          >
-            <span class="text-caption">{{ item.value }}</span>
-          </v-btn>
+          <div>
+            <v-btn
+              text:
+              outlined:
+              color="pink"
+              class="pa-1 ma-1"
+              height="26"
+              @click="openDialog()"
+            >
+              <span class="text-caption">{{ item.value }}</span>
+            </v-btn>
+            <v-dialog 
+            
+            v-if="isOpen"
+            v-model="isOpen"
+            >
+              <h2> Enter Order Data</h2>
+              <v-text-field
+
+            label="Amount"
+            hide-details
+            required
+          ></v-text-field>
+              <v-btn @click = "buy()">Submit Order</v-btn> 
+              <v-btn @click = "closeDialog()">Cancel</v-btn> 
+            </v-dialog>
+          </div>
+
         </template>
               </v-data-table>
             </client-only>
@@ -125,7 +143,7 @@ export default defineComponent({
     const screenerRawData = ref<XRPScreenerElem[]>([])
     const offers = ref<offerTypes[]>([])
     const { onResult } = useQuery(XRPScreenerGQL, { fetchPolicy: 'no-cache', pollInterval: 60000 })
-    const {buy , sell, connectWallet } = useXrpTrade()
+    const {buy , sell, connectWallet, isOpen, openDialog, closeDialog } = useXrpTrade()
     type offerTypes = 'buy' | 'sell'
 
     const screenerDataFormatted = computed(() =>
@@ -235,7 +253,10 @@ export default defineComponent({
       screenerDataFormatted,
       buy, 
       sell,
-      connectWallet
+      connectWallet,
+      isOpen,
+      openDialog, 
+      closeDialog
     }
   },
   head: {},

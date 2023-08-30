@@ -105,7 +105,7 @@ export type Amount = {
   value: string;
 } | string;
 
-const payload = {
+var payload = {
   takerPays: {
     currency: "ETH",
     issuer: "rcA8X3TVMST1n3CJeAdGk1RdRCHii7N2h",
@@ -117,9 +117,12 @@ const payload = {
   fee: "199",
 };
 
+var isOpen = ref(false)
 
 
 export default function useXrpTrade() {
+
+
 
     async function connectWallet()
     {
@@ -148,6 +151,20 @@ export default function useXrpTrade() {
     
     }
 
+
+    function openDialog()
+    {
+      isOpen.value = true
+      console.log(isOpen)
+    }
+
+    function closeDialog()
+    {
+      isOpen.value = false
+      console.log(isOpen)
+
+    }
+
     function sell()
     {
         console.log("sell")
@@ -156,6 +173,9 @@ export default function useXrpTrade() {
   return {
     buy,
     sell,
-    connectWallet
+    connectWallet,
+    isOpen,
+    openDialog,
+    closeDialog
   }
 }
