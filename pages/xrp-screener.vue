@@ -9,7 +9,6 @@
         @click="connectWallet()">
         </v-btn>
       </v-row>
-
       <v-row justify="center">
         <v-col md="12">
           <v-card tile outlined height="1330">
@@ -49,67 +48,44 @@
                     </v-row>
                   </div>
                 </template>
-
-                <!--                <template #item.blockNumber="{ item }">-->
-                <!--                  <div>-->
-                <!--                    <nuxt-link class="pink&#45;&#45;text" :to="`/xrp-explorer/ledger/${item.blockNumber}`">-->
-                <!--                      {{ item.blockNumber }}-->
-                <!--                    </nuxt-link>-->
-                <!--                    <div class="grey&#45;&#45;text text-caption">-->
-                <!--                      {{ item.hashShort }}-->
-                <!--                    </div>-->
-                <!--                  </div>-->
-                <!--                </template>-->
-
-                <!--                <template #item.events="{ item }">-->
-                <!--                  <span v-for="(i, d) in item.XRPLedger.eventsCount" :key="d">-->
-                <!--                    <v-chip class="mx-2" label :color="eventColor(d)" small outlined>{{ `${d}  ${i}` }}</v-chip>-->
-                <!--                  </span>-->
-                <!--                </template>-->
-
                 <template #item.buy="{ item }">
-          <v-btn
-            text:
-            outlined:
-            color="green"
-            class="pa-1 ma-1"
-            height="26"
-            @click="buy()"
-          >
-            <span class="text-caption">{{ item.value }}</span>
-          </v-btn>
-        </template>
-
-        <template #item.sell="{ item }">
-          <div>
-            <v-btn
-              text:
-              outlined:
-              color="pink"
-              class="pa-1 ma-1"
-              height="26"
-              @click="openDialog()"
-            >
-              <span class="text-caption">{{ item.value }}</span>
-            </v-btn>
-            <v-dialog 
-            
-            v-if="isOpen"
-            v-model="isOpen"
-            >
-              <h2> Enter Order Data</h2>
-              <v-text-field
-
-            label="Amount"
-            hide-details
-            required
-          ></v-text-field>
-              <v-btn @click = "buy()">Submit Order</v-btn> 
-              <v-btn @click = "closeDialog()">Cancel</v-btn> 
-            </v-dialog>
-          </div>
-
-        </template>
+                  <v-btn
+                    text:
+                    outlined:
+                    color="green"
+                    class="pa-1 ma-1"
+                    height="26"
+                    @click="buy()"
+                  >
+                    <span class="text-caption">{{ item.value }}</span>
+                  </v-btn>
+                </template>
+                <template #item.sell="{ item }">
+                  <div>
+                    <v-btn
+                      text:
+                      outlined:
+                      color="pink"
+                      class="pa-1 ma-1"
+                      height="26"
+                      @click="openDialog()"
+                      >
+                      <span class="text-caption">{{ item.value }}</span>
+                    </v-btn>
+                    <v-dialog 
+                      v-if="isOpen"
+                      v-model="isOpen">
+                      <h2> Enter Order Data</h2>
+                      <v-text-field
+                        label="Amount"
+                        hide-details
+                        required
+                      ></v-text-field>
+                      <v-btn @click = "buy()">Submit Order</v-btn> 
+                      <v-btn @click = "closeDialog()">Cancel</v-btn> 
+                    </v-dialog>
+                  </div>
+                </template>
               </v-data-table>
             </client-only>
           </v-card>
