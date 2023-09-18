@@ -3,7 +3,6 @@ import { ref, computed, watch, useContext, Ref, reactive, inject } from '@nuxtjs
 import { plainToClass } from 'class-transformer'
 import { useQuery, useSubscription } from '@vue/apollo-composable/dist'
 import { Block } from '@/types/apollo/main/types'
-import { BlocksSubscriptionGQL, BlocksXrpGQL } from '~/apollo/queries'
 import { isInstalled, getAddress, createOffer } from "@gemwallet/api";
 
 
@@ -122,8 +121,6 @@ var isOpen = ref(false)
 
 export default function useXrpTrade() {
 
-
-
     async function connectWallet()
     {
       isInstalled().then((response) => {
@@ -136,7 +133,6 @@ export default function useXrpTrade() {
     })
   }
   
-
     function buy()
     {
         console.log("buy")

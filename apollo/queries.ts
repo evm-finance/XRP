@@ -109,6 +109,30 @@ export const XRPTransactionGQL = gql`
     }
   }
 `
+
+export const XRPDefiDataGQL = gql `
+query XRPDefiDataGQL {
+  account
+  xrpBalance
+  xrpPrice
+  xrpTransactions {
+      amount
+      destination
+      transactionType
+      fee
+      hash
+      ledgerIndex
+  }
+  xrpTokenBalances {
+    tokenSymbol
+    tokenIssuer
+    tokenName
+    balanceXrp
+    priceXrp
+  }
+
+}`
+
 export const XRPScreenerGQL = gql`
   query XRPScreenerGQL {
     xrpScreener {
