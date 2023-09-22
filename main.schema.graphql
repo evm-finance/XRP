@@ -536,6 +536,27 @@ type XRPTokenFields {
   volume24H: Float!
 }
 
+type XRPBalanceItem {
+  symbol: String!
+  issuer: String!
+  name:   String!
+  balance: Float!
+  price:  Float!
+  value:  Float!
+}
+
+type XRPBalances {
+  balance: Float!
+  xrpPrice: Float!
+  xrpBalances: [XRPBalanceItem]!
+}
+
+type XRPDefiData {
+  account: String!
+  balances: XRPBalances!
+  transactions: [XRPTransaction]!
+}
+
 type XRPTransaction {
   account: String!
   amount: Any

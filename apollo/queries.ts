@@ -110,7 +110,7 @@ export const XRPTransactionGQL = gql`
   }
 `
 
-export const XRPDefiDataGQL = gql `
+export const XRPDefiDataGQL = gql`
 query XRPDefiDataGQL {
   account
   xrpBalance
@@ -127,10 +127,35 @@ query XRPDefiDataGQL {
     tokenSymbol
     tokenIssuer
     tokenName
-    balanceXrp
+    balance
     priceXrp
   }
+}`
 
+export const XRPAccountTransactionsGQL = gql`
+query XRPAccountTransactionsGQL {
+  xrpTransactions {
+      amount
+      destination
+      transactionType
+      fee
+      hash
+      ledgerIndex
+  }
+}`
+
+export const XRPAccountBalancesGQL = gql`
+query XRPAccountBalancesGQL {
+  account
+  xrpBalance
+  xrpPrice
+  xrpTokenBalances {
+    tokenSymbol
+    tokenIssuer
+    tokenName
+    balance
+    priceXrp
+  }
 }`
 
 export const XRPScreenerGQL = gql`

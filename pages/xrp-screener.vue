@@ -1,4 +1,5 @@
 <template>
+  <div>
   <v-row no-gutters justify="center">
     <v-col cols="12" md="10">
       <v-row justify="center">
@@ -93,6 +94,7 @@
       </v-row>
     </v-col>
   </v-row>
+</div>
 </template>
 
 <script lang="ts">
@@ -101,6 +103,8 @@ import { useQuery } from '@vue/apollo-composable/dist'
 import { XRPScreenerGQL } from '~/apollo/queries'
 import  useXrpTrade from '~/composables/useXrpTrade'
 import { isInstalled, getAddress } from "@gemwallet/api";
+
+
 interface XRPScreenerElem {
   currency: string
   issuerAddress: string
