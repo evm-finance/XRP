@@ -111,7 +111,7 @@ export const XRPTransactionGQL = gql`
 `
 
 export const XRPDefiDataGQL = gql`
-query XRPDefiDataGQL {
+query XRPDefiDataGQL ($address: String!) {
   account
   xrpBalance
   xrpPrice
@@ -133,8 +133,8 @@ query XRPDefiDataGQL {
 }`
 
 export const XRPAccountTransactionsGQL = gql`
-query XRPAccountTransactionsGQL {
-  xrpTransactions {
+query XRPAccountTransactionsGQL ($address: String!) {
+  xrpTransactions(address: $address) {
       amount
       destination
       transactionType
@@ -145,16 +145,20 @@ query XRPAccountTransactionsGQL {
 }`
 
 export const XRPAccountBalancesGQL = gql`
-query XRPAccountBalancesGQL {
-  account
-  xrpBalance
-  xrpPrice
-  xrpTokenBalances {
-    tokenSymbol
-    tokenIssuer
-    tokenName
-    balance
-    priceXrp
+query XRPAccountBalancesGQL ($address: String!) {
+  
+  xrpTokenBalances (address: $address) {
+    account
+    xrpBalance
+    xrpPrice
+    XRPBalanceElem {
+      symbol
+      issuer
+      name
+      balance
+      price
+      value
+    }
   }
 }`
 

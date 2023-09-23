@@ -5,8 +5,11 @@
     </div>
 </template>
 <script lang="ts">
-import { computed, ComputedRef, defineComponent, PropType, useStore, ref, useContext } from '@nuxtjs/composition-api'
+import { computed, defineComponent, ref, useContext } from '@nuxtjs/composition-api'
 import { plainToClass } from 'class-transformer'
+import { useQuery } from '@vue/apollo-composable/dist'
+import { XRPAccountBalancesGQL } from '~/apollo/queries'
+
 //import { State } from '~/types/state'
 //import { result } from '~/composables/useXrpAccounts'
 
@@ -26,6 +29,8 @@ export default defineComponent({
     setup() {
         const { $f } = useContext()
     const loading = ref(true)
+    const { onResult } = useQuery(XRPAccountBalancesGQL, () => ({address:'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj'}), { fetchPolicy: 'no-cache'})
+
     const balancesRawData = ref<XRPBalanceElem[]>([])
         const screenerDataFormatted = computed(() =>
         balancesRawData.value.map((elem) => ({
