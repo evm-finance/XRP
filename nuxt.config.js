@@ -148,7 +148,7 @@ export default {
     },
   },
   env: {
-    amChartLicense: process.env.AMCHARTS_LICENSE,
+    amChartLicenBse: process.env.AMCHARTS_LICENSE,
     baseURL: process.env.BASE_URL,
   },
 
