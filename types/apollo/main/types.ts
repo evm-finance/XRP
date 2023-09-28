@@ -837,7 +837,7 @@ export type BlocksStreamGqlSubscriptionVariables = Exact<{
 
 export type BlocksStreamGqlSubscription = { __typename?: 'Subscription', block: Array<{ __typename?: 'Block', network: string, blockNumber: number, minedAt: number, txCount: number, swapCount: number, pairCreatedCount: number, mintCount: number, metrics: { __typename?: 'BlockMetrics', items: Array<{ __typename?: 'BlockMetric', totalLiquidity: number, change1H: number, token0Symbol: string, token1Symbol: string }> }, XRPLedger: { __typename?: 'XRPLedger', ledgerHash: string, eventsCount?: any | null } }> };
 
-export type XRPBalanceItem = {
+export type XRPBalanceElem = {
   symbol:   Scalars['String']
   issuer:   Scalars['String']
   name:     Scalars['String']
@@ -847,9 +847,9 @@ export type XRPBalanceItem = {
 };
 
 export type XRPBalances = {
-  balance:      Scalars['Float']
+  xrpBalance:   Scalars['Float']
   xrpPrice:     Scalars['Float']
-  xrpBalances:  Array<XRPBalanceItem>
+  xrpBalances:  Array<XRPBalanceElem>
 };
 
 export type XRPDefiData = {

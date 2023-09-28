@@ -310,6 +310,7 @@ type Query {
   transfers(address: String!, chainId: Int! = 0, contractAddress: String!, pageNumber: Int! = 0, pageSize: Int! = 100): Transfers!
   uniswapTokens(chainId: Int! = 1, pageNumber: Int! = 0, pageSize: Int! = 100, searchString: String! = "", source: [UniswapTokenSource!]!, userWallet: String! = ""): UniswapTokens!
   xrpScreener: [XRPTokenFields!]!
+  xrpBalances(account String!): XRPBalances!
   xrpTransaction(hash: String!): XRPTransaction!
 }
 
@@ -546,9 +547,10 @@ type XRPBalanceItem {
 }
 
 type XRPBalances {
+  account: String!
   balance: Float!
   xrpPrice: Float!
-  xrpBalances: [XRPBalanceItem]!
+  tokens: [XRPBalanceItem]!
 }
 
 type XRPDefiData {

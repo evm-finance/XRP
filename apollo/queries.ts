@@ -151,7 +151,7 @@ query XRPAccountBalancesGQL ($address: String!) {
     account
     xrpBalance
     xrpPrice
-    XRPBalanceElem {
+    xrpTokens {
       symbol
       issuer
       name

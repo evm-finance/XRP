@@ -17,8 +17,7 @@ interface XRPBalanceElem {
     icon: string
     issuerAddress: string
     currency: string
-    tokenName: string
-    issuerName: string
+    name: string
     balance: number
     price: number
     value: number
