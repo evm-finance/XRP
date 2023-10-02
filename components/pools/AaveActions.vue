@@ -155,7 +155,7 @@ import {
   useStore,
   watch,
 } from '@nuxtjs/composition-api'
-import { AavePoolModel, actionTypes, aaveActions } from '~/composables/useAavePools'
+import { AavePoolModel, actionTypes, aaveActions, aaveVersion } from '~/composables/useAavePools'
 import { State } from '~/types/state'
 import AaveActionForm from '~/components/pools/AaveActionForm.vue'
 import useAaveTransactions from '~/composables/useAaveTransactions'
@@ -173,6 +173,7 @@ type Props = {
   someData: number
   poolData: AavePoolModel
   poolAction: actionTypes
+  version: aaveVersion
 }
 
 interface TxOption {
@@ -201,6 +202,7 @@ export default defineComponent<Props>({
     totalCollateralUsd: { type: Number, default: 0, required: true },
     totalBorrowedUsd: { type: Number, default: 0, required: true },
     maxLtv: { type: Number, default: 0, required: true },
+    version: { type: String as PropType<aaveVersion>, required: true },
   },
 
   setup(props, { emit }) {
@@ -213,6 +215,7 @@ export default defineComponent<Props>({
 
     const action = ref<actionTypes>('deposit')
     const pool = ref() as Ref<AavePoolModel>
+    const version = ref<aaveVersion>('v2')
 
     const marketStats = reactive({
       healthFactor: toRefs(props).healthFactor,
@@ -227,7 +230,8 @@ export default defineComponent<Props>({
     const { state } = useStore<State>()
     const { txLoading, receipt, isTxMined, deposit, borrow, repay, withdraw, resetToDefault } = useAaveTransactions(
       pool,
-      amount
+      amount,
+      version
     )
 
     // COMPUTED
@@ -471,6 +475,7 @@ export default defineComponent<Props>({
     onMounted(() => {
       action.value = props.poolAction
       pool.value = props.poolData
+      version.value = props.version
     })
 
     return {

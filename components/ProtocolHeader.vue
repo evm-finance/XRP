@@ -9,19 +9,26 @@
 
           <h2 class="text-h4 font-weight-medium ml-3">
             {{ protocolName }}
-            <span>
-              <v-btn text small color="pink" tile>
-                <span class="text-h6 font-weight-medium" v-text="protocolSymbol" />
-              </v-btn>
-            </span>
           </h2>
+          <v-btn-toggle
+            v-model="currenVersion"
+            mandatory
+            rounded
+            color="primary"
+            background-color="transparent"
+            class="pt-3 ml-4"
+          >
+            <v-btn v-for="(item, index) in versions" :key="index" :value="item" rounded height="24" color="transparent">
+              <span class="text-body-2 text-capitalize">{{ item }}</span>
+            </v-btn>
+          </v-btn-toggle>
         </v-row>
 
         <v-row no-gutters class="mb-2">
           <client-only>
             <v-col cols="12" class="mt-2">
-              <v-chip color="grey darken-4" label small v-text="`Protocol`" />
-              <v-chip color="grey darken-4" label small v-text="'DeFi'" />
+              <v-chip color="grey darken-4" label small>Protocol</v-chip>
+              <v-chip color="grey darken-4" label small>DeFi</v-chip>
             </v-col>
           </client-only>
         </v-row>
@@ -67,7 +74,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from '@nuxtjs/composition-api'
+import { defineComponent, computed, ref, watch } from '@nuxtjs/composition-api'
+import { aaveVersion } from '~/composables/useAavePools'
 
 type Props = {
   name: string
@@ -88,11 +96,16 @@ export default defineComponent<Props>({
     twitter: { type: String, required: true },
   },
 
-  setup(props) {
+  setup(props, { emit }) {
     const protocolImage = computed(
       () =>
         `https://quantifycrypto.s3-us-west-2.amazonaws.com/pictures/crypto-img/32/icon/${props.symbol.toLowerCase()}.png`
     )
+    const currenVersion = ref<aaveVersion>('v2')
+    const versions = ref<aaveVersion[]>(['v2', 'v3'])
+
+    watch(currenVersion, (v) => emit('on-version-changed', v))
+
     return {
       protocolName: props.name,
       protocolSymbol: props.symbol,
@@ -101,6 +114,8 @@ export default defineComponent<Props>({
       protocolDescription: props.description,
       protocolTwitter: props.twitter,
       protocolImage,
+      currenVersion,
+      versions,
     }
   },
 })

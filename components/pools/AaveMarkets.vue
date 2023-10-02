@@ -36,13 +36,15 @@
                 <v-row no-gutters>
                   <v-col>
                     <nuxt-link
-                      class="text-capitalize font-weight-bold pink--text text-decoration-none"
+                      class="text-capitalize font-weight-bold pink--text text-decoration-none d-inline-block text-truncate"
+                      style="max-width: 150px"
                       :to="{
                         path: `/token/${item.symbol}`,
                         query: { name: item.name, contract: item.addresses.address, decimals: item.addresses.decimals },
                       }"
-                      v-text="item.name"
-                    />
+                    >
+                      {{ item.name }}
+                    </nuxt-link>
                   </v-col>
                 </v-row>
                 <v-row no-gutters>

@@ -294,6 +294,7 @@ type PriceStream {
 type Query {
   aaveAddresses(chainId: Int!): [AaveAddress!]!
   aavePools(chainId: Int!): [AavePool!]!
+  aavePoolsUPDATED(chainId: Int!, version: String!): [AavePool!]!
   balances(address: String!, chainIds: [Int!]!): [Balance!]!
   block(blockNumber: Int!, network: String!): Block!
   blocks(network: String!): [Block!]!

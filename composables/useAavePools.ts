@@ -1,11 +1,12 @@
 import { useQuery } from '@vue/apollo-composable/dist'
 import { computed, Ref, ref } from '@nuxtjs/composition-api'
 import { plainToClass } from 'class-transformer'
-import { AavePoolGQL } from '~/apollo/main/pools.query.graphql'
 import { AaveAddress, AavePool, AavePoolPrice, AavePortfolio } from '@/types/apollo/main/types'
 import { RAY_UNITS, SECONDS_PER_YEAR } from '~/constants/utils'
+import { AaveMarketsQGL } from '~/apollo/queries'
 
 export type actionTypes = 'deposit' | 'borrow' | 'repay' | 'withdraw'
+export type aaveVersion = 'v2' | 'v3'
 export const aaveActions = ref<Array<actionTypes>>(['deposit', 'borrow', 'withdraw', 'repay'])
 
 export class AavePoolModel implements AavePool {
@@ -120,16 +121,27 @@ export class AavePoolModel implements AavePool {
   }
 }
 
-export default function (chainId: Ref<number | null>) {
+export default function (chainId: Ref<number | null>, version: Ref<aaveVersion> = ref('v2')) {
   // COMPOSABLES
   // const { chainId } = inject(WEB3_PLUGIN_KEY) as Web3
-  const { result, loading } = useQuery(AavePoolGQL, () => ({ chainId: chainId.value ?? 1 }), {
-    fetchPolicy: 'no-cache',
-    pollInterval: 30000,
-  })
+  // const { result, loading } = useQuery(AavePoolGQL, () => ({ chainId: chainId.value ?? 1 }), {
+  //   fetchPolicy: 'no-cache',
+  //   pollInterval: 30000,
+  // })
+
+  const { result, loading, error } = useQuery(
+    AaveMarketsQGL,
+    () => ({ chainId: chainId.value ?? 1, version: version.value }),
+    {
+      fetchPolicy: 'no-cache',
+      pollInterval: 30000,
+    }
+  )
 
   // COMPUTED
-  const aavePoolsData = computed(() => plainToClass(AavePoolModel, result.value?.aavePools as AavePoolModel[]) ?? [])
+  const aavePoolsData = computed(() => {
+    return error.value ? [] : plainToClass(AavePoolModel, (result?.value?.aavePoolsUPDATED as AavePoolModel[]) ?? [])
+  })
 
   return {
     loading,
