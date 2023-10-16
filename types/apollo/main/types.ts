@@ -846,7 +846,8 @@ export type XRPBalanceElem = {
   value:    Scalars['Float']
 };
 
-export type XRPBalances = {
+export type XRPAccountBalances = {
+  account:      Scalars['String']
   xrpBalance:   Scalars['Float']
   xrpPrice:     Scalars['Float']
   xrpBalances:  Array<XRPBalanceElem>
@@ -854,6 +855,6 @@ export type XRPBalances = {
 
 export type XRPDefiData = {
   account:      Scalars['String']
-  balances:     XRPBalances
+  balances:     XRPAccountBalances
   transactions: Array<XrpTransaction>
 }

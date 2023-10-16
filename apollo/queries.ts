@@ -145,9 +145,9 @@ query XRPAccountTransactionsGQL ($address: String!) {
 }`
 
 export const XRPAccountBalancesGQL = gql`
-query XRPAccountBalancesGQL ($address: String!) {
+query XRPAccountBalancesGQL ($account: String!) {
   
-  xrpTokenBalances (address: $address) {
+  xrpAccountBalances (account: $account) {
     account
     xrpBalance
     xrpPrice

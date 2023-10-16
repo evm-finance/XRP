@@ -548,9 +548,9 @@ type XRPBalanceItem {
 
 type XRPBalances {
   account: String!
-  balance: Float!
+  xrpBalance: Float!
   xrpPrice: Float!
-  tokens: [XRPBalanceItem]!
+  xrpTokens: [XRPBalanceItem]!
 }
 
 type XRPDefiData {

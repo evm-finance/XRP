@@ -14,8 +14,7 @@ import { XRPAccountBalancesGQL } from '~/apollo/queries'
 //import { result } from '~/composables/useXrpAccounts'
 
 interface XRPBalanceElem {
-    icon: string
-    issuerAddress: string
+    issuer: string
     currency: string
     name: string
     balance: number
@@ -28,16 +27,16 @@ export default defineComponent({
     setup() {
         const { $f } = useContext()
     const loading = ref(true)
-    const { onResult } = useQuery(XRPAccountBalancesGQL, () => ({address:'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj'}), { fetchPolicy: 'no-cache'})
+    const { onResult } = useQuery(XRPAccountBalancesGQL, () => ({account:'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj'}), { fetchPolicy: 'no-cache'})
 
     const balancesRawData = ref<XRPBalanceElem[]>([])
         const screenerDataFormatted = computed(() =>
         balancesRawData.value.map((elem) => ({
         ...elem,
         currencyShort: elem.currency.length > 20 ? elem.currency.substring(0, 20) + '...' : elem.currency,
-        issuerAddressShort: `${elem.issuerAddress.slice(0, 10)}........${elem.issuerAddress.slice(
-          elem.issuerAddress.length - 10,
-          elem.issuerAddress.length
+        issuerAddressShort: `${elem.issuer.slice(0, 10)}........${elem.issuer.slice(
+          elem.issuer.length - 10,
+          elem.issuer.length
         )}`,
         priceFormatted: $f(elem.price, { minDigits: 6, after: '' }),
       }))
@@ -55,9 +54,9 @@ export default defineComponent({
           sortable: true,
         },
         {
-          text: 'Issuer Name',
+          text: 'Token Name',
           align: 'left',
-          value: 'issuerName',
+          value: 'tokenName',
           width: '100',
           sortable: true,
           class: ['px-2', 'text-truncate'],
@@ -72,9 +71,8 @@ export default defineComponent({
           class: ['px-2', 'text-truncate'],
           cellClass: ['px-2', 'text-truncate', 'grey--text'],
         },
-
         {
-          text: 'Price (XRP)',
+          text: 'Price',
           align: 'left',
           value: 'priceFormatted',
           width: '100',
@@ -85,7 +83,16 @@ export default defineComponent({
         {
           text: 'Balance',
           align: 'left',
-          value: 'priceFormatted',
+          value: 'balance',
+          width: '100',
+          sortable: true,
+          class: ['px-2', 'text-truncate'],
+          cellClass: ['px-2', 'text-truncate'],
+        },
+        {
+          text: 'Value',
+          align: 'left',
+          value: 'value',
           width: '100',
           sortable: true,
           class: ['px-2', 'text-truncate'],
@@ -94,7 +101,7 @@ export default defineComponent({
             ]
         })
     
-        return {cols}
+        return {cols, screenerDataFormatted}
     
     }
        
