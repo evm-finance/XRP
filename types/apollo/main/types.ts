@@ -73,6 +73,17 @@ export type AavePortfolio = {
   walletBal: Scalars['Float'];
 };
 
+export type AbiElem = {
+  __typename?: 'AbiElem';
+  constant: Scalars['Boolean'];
+  inputs: Array<CalldataAbi>;
+  outputs: Array<CalldataAbi>;
+  name: Scalars['String'];
+  payable: Scalars['Boolean'];
+  stateMutability: Scalars['String'];
+  type: Scalars['String'];
+}
+
 export type Balance = {
   __typename?: 'Balance';
   aavePools: Array<AavePool>;
@@ -147,6 +158,13 @@ export type BlockTransactionContractTransfer = {
   txHash: Scalars['String'];
 };
 
+export type CalldataAbi = {
+  __typename?: 'CalldataAbi';
+  name: Scalars['String'];
+  type: Scalars['String'];
+}
+
+
 export type Chain = {
   __typename?: 'Chain';
   blockExplorerUrl: Scalars['String'];
@@ -158,6 +176,11 @@ export type Chain = {
   symbol: Scalars['String'];
   weth: UniswapToken;
 };
+
+export type ContractAbi = {
+  __typename?: 'ContractAbi';
+  abiElements: Array<AbiElem>; 
+}
 
 export type DailyChart = {
   __typename?: 'DailyChart';
@@ -235,6 +258,9 @@ export type LogEventParams = {
   type: Scalars['String'];
   value: Scalars['String'];
 };
+
+
+
 
 export type News = {
   __typename?: 'News';

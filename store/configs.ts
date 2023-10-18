@@ -32,7 +32,8 @@ export const state = () =>
     gasStats: null,
     chains: [],
     protocols: [],
-    balancesChains: [1, 56, 137, 250, 43114, 10000],
+    // -----------> ETH OP BSC MATIC FTM  BASE   BCH    ARB    AVAX  
+    balancesChains: [1, 10, 56, 137, 250, 8453, 10000, 42161, 43114],
     globalSearchResult: [],
   } as ConfigState)
 
