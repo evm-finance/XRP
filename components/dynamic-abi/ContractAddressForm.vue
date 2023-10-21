@@ -5,13 +5,15 @@
 // This component will accept a string from an input form and interpret it as a JSON object
 
 <template>
-    <div>
+    <div >
         <v-row>
-            <h3> {{ paramName }} </h3>
+            <h3 style="margin-bottom: 25px; margin-right:10px; color: white"> Enter Contract Address: </h3>
             <form @submit.prevent="submitForm">
-                <input v-model="inputString" type="text" class="param_form_input" style="margin-bottom: 10px; color: rgba(255, 255, 255, 0.89)"></textarea>
+                <input v-model="inputString" type="text" class="contractAddressForm" style="margin-bottom: 25px; margin-right:10px; height:38px; color: rgba(255, 255, 255, 0.89);"></input>
 
             </form>
+            <v-btn type="submit" style="color: red">submit</v-btn>
+            <h3 style="margin-left: 10px; font-size: 18px;"> Network: </h3>
         </v-row>
     </div>
 </template>
@@ -20,21 +22,15 @@
 
 import { ref } from 'vue';
 import { defineComponent } from '@nuxtjs/composition-api';
-import { stringify } from 'postcss';
 
 export default defineComponent({
-    props: {
-        paramName: String,
-        paramType: String
-    },
-    setup(props, { emit }) {
+    setup({ emit }) {
         const inputString = ref('');
 
         const submitForm = () => {
             try {
-                const jsonData = JSON.parse(inputString.value)
                 // console.log(jsonData)
-                emit('abiEntered', jsonData)
+                emit('addressEntered', inputString.value)
             }
             catch (error) {
                 console.error('Invalid JSON string');
@@ -44,8 +40,6 @@ export default defineComponent({
         return {
             inputString,
             submitForm,
-            paramName: props.paramName, 
-            paramType: props.paramType
         }
     }
 })
@@ -53,7 +47,7 @@ export default defineComponent({
 </script>
 
 <style>
-.param_form_input {
+.contractAddressForm {
     background-color: rgba(255, 255, 255, 0.048);
     word-wrap: break-word;
     font-size: 18px;

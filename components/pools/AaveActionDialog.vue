@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="dialog" width="400" max-width="400">
     <v-card v-if="pool && dialog" tile outlined max-width="400" class="pa-4" height="100%">
-      <div>
+      <div>  
         <v-row no-gutters align="center">
           <v-col cols="11">
             <h6 class="text-h6"><span class="text-capitalize" v-text="action" /> {{ pool.symbol }}</h6>
