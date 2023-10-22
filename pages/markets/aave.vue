@@ -10,7 +10,6 @@
         :url="header.url"
         @on-version-changed="(v) => (version = v)"
       />
-      <v-btn @click="fetchPortfolioNew">PORTFOLIO</v-btn>
       <aave-market-stats
         v-if="walletReady"
         :total-deposit-usd="totalDepositsUsd"
