@@ -1,11 +1,10 @@
 import type { ActionTree, MutationTree, GetterTree } from 'vuex'
 import { Context } from '@nuxt/types'
-import { Chain } from '~/types/apollo/main/types'
-import { SupportedChainsGQL } from '~/apollo/main/config.query.graphql'
 import { ConfigState } from '~/types/state'
-import { SearchResult } from '~/types/global'
+import { SearchResult, Network } from '~/types/global'
+import { SupportedChainsGQL } from '~/apollo/queries'
 
-const defaultChain: Chain = {
+const defaultChain: Network = {
   weth: {
     chainId: 1,
     symbol: 'WETH',
@@ -30,14 +29,14 @@ export const state = () =>
     title: 'EVM',
     globalStats: null,
     gasStats: null,
-    chains: [],
+    networks: [],
     protocols: [],
-    balancesChains: [1, 56, 137, 250, 43114, 10000],
+    balancesChains: [1, 56, 137, 250, 43114, 10, 10000],
     globalSearchResult: [],
   } as ConfigState)
 
 export const mutations: MutationTree<ConfigState> = {
-  SET_CONFIG: (state, { chains }) => (state.chains = chains),
+  SET_CONFIG: (state, { networks }) => (state.networks = networks),
   SET_SEARCH_RESULT: (state, { searchResult }) => (state.globalSearchResult = searchResult),
 }
 
@@ -46,6 +45,7 @@ export const actions: ActionTree<ConfigState, ConfigState> = {
     try {
       const client = context.app.apolloProvider?.defaultClient
       const query = await client?.query({ query: SupportedChainsGQL, fetchPolicy: 'no-cache' })
+
       if (query && query.data) {
         commit('SET_CONFIG', query.data)
       }
@@ -58,5 +58,5 @@ export const actions: ActionTree<ConfigState, ConfigState> = {
 }
 export const getters: GetterTree<ConfigState, ConfigState> = {
   chainInfo: (state: ConfigState) => (chainId: number) =>
-    state.chains.find((elem: Chain) => elem.chainIdentifier === chainId) ?? defaultChain,
+    state.networks.find((elem: Network) => elem.chainIdentifier === chainId) ?? defaultChain,
 } as any

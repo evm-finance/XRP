@@ -1,6 +1,7 @@
 import { ethers } from 'ethers'
 import { ChainChangeParamInterface, ConnectorInterface, Web3ErrorInterface } from './connector'
-import { Chain } from '~/types/apollo/main/types'
+import { Network } from '~/types/global'
+
 declare const window: any
 
 // TODO: Add network  change
@@ -117,7 +118,7 @@ export class MetamaskConnector implements ConnectorInterface {
     }
   }
 
-  async handleChanChange(chain: Chain) {
+  async handleChanChange(chain: Network) {
     let chainId: string | number = chain.chainIdentifier
 
     if (chainId === 1) {

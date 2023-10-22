@@ -54,8 +54,7 @@ import { ethers } from 'ethers'
 import useERC20 from '~/composables/useERC20'
 import { useHelpers } from '~/composables/useHelpers'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
-import { Chain } from '~/types/apollo/main/types'
-import { SearchResult } from '~/types/global'
+import { SearchResult, Network } from '~/types/global'
 
 export default defineComponent({
   setup() {
@@ -69,7 +68,7 @@ export default defineComponent({
     const search = ref<string | null>('')
     const loading = ref(false)
 
-    const checkAddressType = async (address: string, network: Chain, provider: any): Promise<SearchResult[]> => {
+    const checkAddressType = async (address: string, network: Network, provider: any): Promise<SearchResult[]> => {
       try {
         const resp: SearchResult[] = []
 

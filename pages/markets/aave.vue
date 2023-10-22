@@ -10,6 +10,7 @@
         :url="header.url"
         @on-version-changed="(v) => (version = v)"
       />
+      <v-btn @click="fetchPortfolioNew">PORTFOLIO</v-btn>
       <aave-market-stats
         v-if="walletReady"
         :total-deposit-usd="totalDepositsUsd"
@@ -123,7 +124,7 @@ export default defineComponent({
     const portfolio = ref<PortfolioMap>({})
     const selectedPool = ref() as Ref<AavePoolModel>
     const poolAction = ref('deposit') as Ref<actionTypes>
-    const version = ref<aaveVersion>('v2')
+    const version = ref<aaveVersion>('v3')
     const aaveActionComponent = ref<any>(null)
     const searchString = ref('')
     const switchNetworkDialog = ref<any>(null)
@@ -139,7 +140,7 @@ export default defineComponent({
       aavePoolsData.value.reduce((elem, item) => ({ ...elem, [item.id]: item.addresses }), {})
     )
 
-    const { fetchPortfolio } = usePortfolio(addresses)
+    const { fetchPortfolioNew } = usePortfolio(addresses)
 
     const pools = computed(() => {
       const pools: AavePoolModel[] = []
@@ -171,7 +172,7 @@ export default defineComponent({
 
     // METHODS
     async function updatePortfolio() {
-      portfolio.value = await fetchPortfolio()
+      portfolio.value = await fetchPortfolioNew()
     }
 
     function initAction({ action, pool }: { action: actionTypes; pool: AavePoolModel }) {
@@ -212,6 +213,7 @@ export default defineComponent({
       // METHODS
       initAction,
       updatePortfolio,
+      fetchPortfolioNew,
     }
   },
   head: {},

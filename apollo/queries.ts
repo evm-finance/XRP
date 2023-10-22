@@ -174,3 +174,26 @@ export const AaveMarketsQGL = gql`
     }
   }
 `
+
+export const SupportedChainsGQL = gql`
+  query SupportedChainsGQL {
+    networks {
+      id
+      chainIdentifier
+      name
+      symbol
+      rpcUrl
+      blockExplorerUrl
+      dex {
+        name
+        value
+        symbol
+      }
+      weth {
+        chainId
+        address
+        symbol
+      }
+    }
+  }
+`

@@ -66,11 +66,39 @@
         </template>
 
         <template #item.portfolio.walletBal="{ item }">
-          <div v-text="$f(item.portfolio.walletBal, { minDigits: 2, maxDigits: 6 })" />
-          <div
-            :class="textClass"
-            v-text="$f(item.portfolio.walletBal * item.price.priceUsd, { minDigits: 2, pre: '$ ' })"
-          />
+          <div v-if="item.portfolio.isWrapped">
+            <v-row no-gutters>
+              <v-col>
+                <span class="grey--text" style="display: inline-block; width: 50px">
+                  <!--                  {{ item.balanceNew.nativeSymbol }}-->
+                  {{ item.portfolio.networkSymbol }}
+                </span>
+                <span class="mx-3">{{ $f(item.portfolio.nativeBalance, { minDigits: 2, maxDigits: 6 }) }}</span>
+                <span class="grey--text">
+                  {{ $f(item.portfolio.nativeBalance * item.price.priceUsd, { minDigits: 2, pre: '$ ' }) }}
+                </span>
+              </v-col>
+            </v-row>
+            <v-row no-gutters>
+              <v-col>
+                <span class="grey--text" style="display: inline-block; width: 50px">
+                  {{ item.symbol }}
+                </span>
+                <span class="mx-3">{{ $f(item.portfolio.walletBal, { minDigits: 2, maxDigits: 6 }) }}</span>
+                <span class="grey--text">
+                  {{ $f(item.portfolio.walletBal * item.price.priceUsd, { minDigits: 2, pre: '$ ' }) }}
+                </span>
+              </v-col>
+            </v-row>
+          </div>
+
+          <div v-else>
+            <div v-text="$f(item.portfolio.walletBal, { minDigits: 2, maxDigits: 6 })" />
+            <div
+              :class="textClass"
+              v-text="$f(item.portfolio.walletBal * item.price.priceUsd, { minDigits: 2, pre: '$ ' })"
+            />
+          </div>
         </template>
 
         <template #item.portfolio.totalDeposits="{ item }">
@@ -187,7 +215,8 @@ import { State } from '~/types/state'
 import AaveMarketDetails from '~/components/pools/AaveMarketDetails.vue'
 import { EmitEvents } from '~/types/events'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
-import { Chain } from '~/types/apollo/main/types'
+import { Network } from '~/types/global'
+
 type Props = {
   pools: AavePoolModel[]
   loading: boolean
@@ -332,7 +361,7 @@ export default defineComponent<Props>({
     }
     // METHODS
     function navigateToExplorer(address: string) {
-      const currentChain: Chain = getters['configs/chainInfo'](chainId.value ?? 1)
+      const currentChain: Network = getters['configs/chainInfo'](chainId.value ?? 1)
       const url = `${currentChain.blockExplorerUrl}address/${address}`
       window.open(url)
     }

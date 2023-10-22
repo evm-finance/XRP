@@ -5,19 +5,11 @@ export function useHelpers() {
   const { state } = useStore<State>()
   const isNativeToken = (chainId: number, symbol: string) => {
     const chainIdAdjusted: number = chainId === 1337 ? 1 : chainId
-    const chain = state.configs.chains.find(
+    const chain = state.configs.networks.find(
       (elem) => elem.chainIdentifier === chainIdAdjusted && elem.symbol === symbol
     )
     return !!chain
   }
-
-  // function debounce(callback: any, delay = 300) {
-  //   let timeout: any = null
-  //   return (...args: any) => {
-  //     clearTimeout(timeout)
-  //     timeout = setTimeout(() => callback.apply(args), delay)
-  //   }
-  // }
 
   function debounceAsync<T, Callback extends (...args: any[]) => Promise<T>>(
     callback: Callback,

@@ -71,6 +71,9 @@ export type AavePortfolio = {
   totalDeposits: Scalars['Float'];
   variableBorrow: Scalars['Float'];
   walletBal: Scalars['Float'];
+  nativeBalance: Scalars['Float'];
+  isWrapped: Scalars['Boolean'];
+  networkSymbol: Scalars['String'];
 };
 
 export type Balance = {
@@ -147,17 +150,17 @@ export type BlockTransactionContractTransfer = {
   txHash: Scalars['String'];
 };
 
-export type Chain = {
-  __typename?: 'Chain';
-  blockExplorerUrl: Scalars['String'];
-  chainIdentifier: Scalars['Int'];
-  dex: Array<Dex>;
-  id: Scalars['String'];
-  name: Scalars['String'];
-  rpcUrl: Scalars['String'];
-  symbol: Scalars['String'];
-  weth: UniswapToken;
-};
+// export type Chain = {
+//   __typename?: 'Chain';
+//   blockExplorerUrl: Scalars['String'];
+//   chainIdentifier: Scalars['Int'];
+//   dex: Array<Dex>;
+//   id: Scalars['String'];
+//   name: Scalars['String'];
+//   rpcUrl: Scalars['String'];
+//   symbol: Scalars['String'];
+//   weth: UniswapToken;
+// };
 
 export type DailyChart = {
   __typename?: 'DailyChart';
@@ -165,12 +168,7 @@ export type DailyChart = {
   priceUsd: Scalars['Float'];
 };
 
-export type Dex = {
-  __typename?: 'Dex';
-  name: Scalars['String'];
-  symbol: Scalars['String'];
-  value: Scalars['String'];
-};
+
 
 export type EthGasStatsResult = {
   __typename?: 'EthGasStatsResult';
@@ -312,7 +310,6 @@ export type Query = {
   balances: Array<Balance>;
   block: Block;
   blocks: Array<Block>;
-  chains: Array<Chain>;
   dailyChart: Array<DailyChart>;
   fiatPrices: Scalars['Map'];
   gas: Array<GasStats>;

@@ -29,7 +29,6 @@ export class AavePoolModel implements AavePool {
   readonly vEmissionPerSecond!: number
   readonly variableBorrowRate!: number
   readonly addresses!: AaveAddress
-  portfolioVal!: AavePortfolio
   readonly baseLTVasCollateral!: number
   readonly reserveLiquidationBonus!: number
   readonly reserveLiquidationThreshold!: number
@@ -37,6 +36,7 @@ export class AavePoolModel implements AavePool {
   readonly usageAsCollateralEnabled!: boolean
   readonly borrowingEnabled!: boolean
   readonly stableBorrowRateEnabled!: boolean
+  portfolioVal!: AavePortfolio
 
   get depositAPR(): number {
     return this.borrowingEnabled ? this.liquidityRate / RAY_UNITS : -1
@@ -121,20 +121,14 @@ export class AavePoolModel implements AavePool {
   }
 }
 
-export default function (chainId: Ref<number | null>, version: Ref<aaveVersion> = ref('v2')) {
+export default function (chainId: Ref<number | null>, version: Ref<aaveVersion> = ref('v3')) {
   // COMPOSABLES
-  // const { chainId } = inject(WEB3_PLUGIN_KEY) as Web3
-  // const { result, loading } = useQuery(AavePoolGQL, () => ({ chainId: chainId.value ?? 1 }), {
-  //   fetchPolicy: 'no-cache',
-  //   pollInterval: 30000,
-  // })
-
   const { result, loading, error } = useQuery(
     AaveMarketsQGL,
     () => ({ chainId: chainId.value ?? 1, version: version.value }),
     {
       fetchPolicy: 'no-cache',
-      pollInterval: 30000,
+      pollInterval: 60000,
     }
   )
 

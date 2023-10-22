@@ -4,8 +4,8 @@ import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
 import erc20Abi from '~/constracts/abi/erc20Abi.json'
 import { Erc20Contract } from '~/types/abi/erc20-contract'
 import { useHelpers } from '~/composables/useHelpers'
-import { Chain, UniswapToken } from '~/types/apollo/main/types'
-import { ERC20Balance } from '~/types/global'
+import { UniswapToken } from '~/types/apollo/main/types'
+import { ERC20Balance, Network } from '~/types/global'
 
 const MAX_UINT256 = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
@@ -24,7 +24,7 @@ export default function useERC20() {
   }
   const getUniswapTokenByAddress = async (
     address: string,
-    network: Chain,
+    network: Network,
     provider: any
   ): Promise<UniswapToken | null> => {
     try {
@@ -34,7 +34,6 @@ export default function useERC20() {
       const decimals = await contract.decimals()
       return { address, chainId: network.chainIdentifier, name, symbol, decimals }
     } catch (e) {
-      console.log(e)
       return null
     }
   }
@@ -95,14 +94,9 @@ export default function useERC20() {
     try {
       const balanceInWei = await provider.getBalance(account)
       const balanceInEth = ethers.utils.formatUnits(balanceInWei)
-      return {
-        address,
-        balance: parseFloat(balanceInEth),
-        isNative: true,
-        uniqueKeyOrSymbol,
-      }
+      return { address, balance: parseFloat(balanceInEth), isNative: true, uniqueKeyOrSymbol }
     } catch (error) {
-      return { address: account, balance: 0, isNative: true, uniqueKeyOrSymbol }
+      return { address, balance: 0, isNative: true, uniqueKeyOrSymbol }
     }
   }
 
@@ -138,7 +132,7 @@ export default function useERC20() {
     return await Promise.all(multCalls)
   }
 
-  const isWrappedToken = (tokenAddress: string, network: Chain): boolean => {
+  const isWrappedToken = (tokenAddress: string, network: Network): boolean => {
     switch (network.id) {
       case 'ethereum':
         return tokenAddress.toLowerCase() === network.weth.address.toLowerCase()
@@ -155,7 +149,7 @@ export default function useERC20() {
     tokenAddress: string,
     symbol: string,
     decimals: number,
-    network: Chain,
+    network: Network,
     account: string,
     provider: any
   ) => {
@@ -181,7 +175,7 @@ export default function useERC20() {
 
   async function poolBalanceMulticall(
     tokens: UniswapToken[],
-    network: Chain,
+    network: Network,
     account: string,
     provider: any
   ): Promise<ERC20Balance[]> {

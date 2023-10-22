@@ -101,7 +101,7 @@ export default defineComponent<Props>({
       () =>
         `https://quantifycrypto.s3-us-west-2.amazonaws.com/pictures/crypto-img/32/icon/${props.symbol.toLowerCase()}.png`
     )
-    const currenVersion = ref<aaveVersion>('v2')
+    const currenVersion = ref<aaveVersion>('v3')
     const versions = ref<aaveVersion[]>(['v2', 'v3'])
 
     watch(currenVersion, (v) => emit('on-version-changed', v))
