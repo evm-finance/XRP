@@ -97,7 +97,7 @@
             </v-col>
           </v-row>
 
-          <balance-protocols v-show="!loading" :balances="balanceData" />
+          <!--          <balance-protocols v-show="!loading" :balances="balanceData" />-->
         </v-col>
       </v-row>
     </v-col>
@@ -110,7 +110,7 @@ import usePortfolioBalances from '~/composables/usePortfolioBalances'
 import PortfolioBalanceGrid from '~/components/portfolio/PortfolioBalanceGrid.vue'
 import BalancesChart from '~/components/portfolio/BalancesChart.vue'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
-import BalanceProtocols from '~/components/portfolio/BalanceProtocols.vue'
+// import BalanceProtocols from '~/components/portfolio/BalanceProtocols.vue'
 import ConnectWalletMemo from '~/components/common/ConnectWalletMemo.vue'
 import { useMetaTags } from '~/composables/useMetaTags'
 import InfoTooltip from '~/components/common/ui/InfoTooltip.vue'
@@ -122,7 +122,7 @@ export default defineComponent({
     CustomWalletIndicator,
     InfoTooltip,
     ConnectWalletMemo,
-    BalanceProtocols,
+    // BalanceProtocols,
     BalancesChart,
     PortfolioBalanceGrid,
   },

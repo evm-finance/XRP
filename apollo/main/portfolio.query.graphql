@@ -25,24 +25,6 @@ query BalancesGQL($chainIds: [Int!]!, $address: String! ) {
       quote24h
       nftData
     }
-    aavePools{
-      symbol,
-      id,
-      name,
-      liquidityRate,
-      borrowingEnabled,
-      stableBorrowRateEnabled,
-      stableBorrowRate ,
-      variableBorrowRate
-      portfolioVal{
-        totalDeposits,
-        walletBal,
-        stableBorrow,
-        variableBorrow
-      }
-      price{id,priceInEth, priceUsd}
-      addresses{address ,decimals}
-    }
   }
 }
 

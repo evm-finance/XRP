@@ -164,8 +164,6 @@ export default defineComponent({
 
     // WATCHERS
     watch([loading, walletReady, account, chainId], async () => {
-      // console.log('ACCCCCCCC', chainId.value)
-      // Refresh portfolio of loading of aave pools query is set to false
       if (!loading.value) await updatePortfolio()
     })
 

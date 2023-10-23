@@ -23,6 +23,7 @@ export type Network = {
   id: string
   name: string
   rpcUrl: string
+  nativeTokenSymbol: string
   symbol: string
   weth: UniswapToken
 }

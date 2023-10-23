@@ -125,7 +125,7 @@ export const XRPScreenerGQL = gql`
 `
 export const AaveMarketsQGL = gql`
   query AaveMarketsQGL($chainId: Int!, $version: String!) {
-    aavePoolsUPDATED(chainId: $chainId, version: $version) {
+    aavePools(chainId: $chainId, version: $version) {
       id
       underlyingAsset
       name
@@ -182,6 +182,7 @@ export const SupportedChainsGQL = gql`
       chainIdentifier
       name
       symbol
+      nativeTokenSymbol
       rpcUrl
       blockExplorerUrl
       dex {

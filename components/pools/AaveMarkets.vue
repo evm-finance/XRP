@@ -20,7 +20,9 @@
         mobile-breakpoint="0"
       >
         <template #expanded-item="{ headers, item }">
-          <td :colspan="headers.length"><aave-market-details :pool="item" /></td>
+          <td :colspan="headers.length">
+            <aave-market-details :pool="item" />
+          </td>
         </template>
 
         <!--      Cols-->
@@ -210,7 +212,7 @@ import {
   useStore,
   watch,
 } from '@nuxtjs/composition-api'
-import { AavePoolModel, aaveActions, actionTypes } from '~/composables/useAavePools'
+import { aaveActions, AavePoolModel, actionTypes } from '~/composables/useAavePools'
 import { State } from '~/types/state'
 import AaveMarketDetails from '~/components/pools/AaveMarketDetails.vue'
 import { EmitEvents } from '~/types/events'
@@ -359,6 +361,7 @@ export default defineComponent<Props>({
         })
       }
     }
+
     // METHODS
     function navigateToExplorer(address: string) {
       const currentChain: Network = getters['configs/chainInfo'](chainId.value ?? 1)

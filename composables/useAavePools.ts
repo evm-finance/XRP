@@ -1,9 +1,9 @@
 import { useQuery } from '@vue/apollo-composable/dist'
 import { computed, Ref, ref } from '@nuxtjs/composition-api'
 import { plainToClass } from 'class-transformer'
-import { AaveAddress, AavePool, AavePoolPrice, AavePortfolio } from '@/types/apollo/main/types'
 import { RAY_UNITS, SECONDS_PER_YEAR } from '~/constants/utils'
 import { AaveMarketsQGL } from '~/apollo/queries'
+import { AaveAddress, AavePool, AavePoolPrice, AavePortfolio } from '~/types/aave'
 
 export type actionTypes = 'deposit' | 'borrow' | 'repay' | 'withdraw'
 export type aaveVersion = 'v2' | 'v3'
@@ -134,7 +134,7 @@ export default function (chainId: Ref<number | null>, version: Ref<aaveVersion> 
 
   // COMPUTED
   const aavePoolsData = computed(() => {
-    return error.value ? [] : plainToClass(AavePoolModel, (result?.value?.aavePoolsUPDATED as AavePoolModel[]) ?? [])
+    return error.value ? [] : plainToClass(AavePoolModel, (result?.value?.aavePools as AavePoolModel[]) ?? [])
   })
 
   return {

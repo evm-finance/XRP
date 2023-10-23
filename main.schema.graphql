@@ -63,7 +63,6 @@ type AavePortfolio {
 }
 
 type Balance {
-  aavePools: [AavePool!]!
   address: String!
   chainId: Float!
   items: [BalanceItem!]!
@@ -223,6 +222,7 @@ type Network {
   dex: [Dex!]!
   id: String!
   name: String!
+  nativeTokenSymbol: String!
   rpcUrl: String!
   symbol: String!
   weth: UniswapToken!
@@ -292,9 +292,7 @@ type PriceStream {
 }
 
 type Query {
-  aaveAddresses(chainId: Int!): [AaveAddress!]!
-  aavePools(chainId: Int!): [AavePool!]!
-  aavePoolsUPDATED(chainId: Int!, version: String!): [AavePool!]!
+  aavePools(chainId: Int!, version: String!): [AavePool!]!
   balances(address: String!, chainIds: [Int!]!): [Balance!]!
   block(blockNumber: Int!, network: String!): Block!
   blocks(network: String!): [Block!]!
