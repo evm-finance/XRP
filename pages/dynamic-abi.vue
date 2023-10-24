@@ -11,7 +11,7 @@
                 <function-buttons :functionNames="functions"
                 @functionSelected="openWindow"></function-buttons>
             </v-row>
-            <v-dialog v-model="dialog" width="400">
+            <v-dialog v-model="dialog" width="600">
                 <dynamic-contract-ui @previewTransaction="sendTransaction"></dynamic-contract-ui>
             </v-dialog>
         </div>
@@ -43,7 +43,7 @@ export default defineComponent({
 },
 setup() {
 
-    const ESTIMATED_GAS_FEE = async (tx: ContractTransaction): Promise<BigNumber> =>
+    const ESTIMATED_GAS_FEE = async (tx: any): Promise<BigNumber> =>
         (await provider.value?.estimateGas(<any>tx)) ?? BigNumber.from('0')
     const ERC20_GAS_LIMIT = (estimatedGas: BigNumber): number => estimatedGas.mul(`125`).div('100').toNumber()
     const NATIVE_ETH_GAS_LIMIT = (estimatedGas: BigNumber): number => estimatedGas.mul(`175`).div('100').toNumber()
@@ -53,7 +53,7 @@ setup() {
     const dialog = ref(false)
     const address = ref('')
     const functions = ref([])
-    const calldata = ref([])
+    const calldata : Ref<ethers.BigNumber[]> = ref([])
     const selectedType = ref('')
     const selectedFunction = ref('')
 
@@ -93,9 +93,6 @@ setup() {
     }
 
     const sendTransaction = async () => {
-        const num = 1
-        calldata.value.push(num)
-        console.log(num)
         console.log(selectedFunction.value,signer.value,account.value,selectedType.value,chainId.value)
         try{
             const contract = new ethers.Contract(

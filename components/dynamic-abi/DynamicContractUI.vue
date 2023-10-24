@@ -1,11 +1,15 @@
 // This component will create a dynamic form that has a ParamInputForm for each parameter
 //  
+//0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7 WAVAX
 
 <template>
-    <div>
-      <h3  style="font-size:32px; color:green; font-weight: bold;">Enter Function Parameters</h3>
-      <p style="font-size:20px; color:green; font-weight: bold;">Function Selected: </p>
+    <div class="dynamic_ui">
+      <h3  style="font-size:32px; color:white; font-weight: bold;">Enter Function Parameters</h3>
+      <p style="font-size:20px; color:white; font-weight: bold;">Function Selected: {{  }}</p>
+      <v-col v-for >
 
+        
+      </v-col>
 
 
       <v-btn color="red" outlined @click="previewTransaction">
@@ -58,7 +62,7 @@ export default defineComponent({
 
     return {
         cols,
-        previewTransaction
+        previewTransaction,
     }
   }
 })
@@ -66,5 +70,12 @@ export default defineComponent({
 </script>
 
 <style>
+.dynamic_ui {
+    background-color: rgb(10, 10, 10);
+    word-wrap: break-word;
+    font-size: 14px;
+    width: 600px;
+    height: 800px;
+}
 
 </style>
