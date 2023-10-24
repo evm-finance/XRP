@@ -69,6 +69,10 @@ setup() {
         renderButtons.value = true
     }
 
+    const setAbi = () => {
+        functions.value
+    }
+
     const setAddress = (addressInput) => {
         //console.log(addressInput)
         address.value = addressInput
@@ -146,7 +150,8 @@ setup() {
         //data
         renderButtons,
         functions,
-        dialog
+        dialog,
+        selectedFunction
 
 
     }

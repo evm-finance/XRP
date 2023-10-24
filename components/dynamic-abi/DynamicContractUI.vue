@@ -6,10 +6,15 @@
     <div class="dynamic_ui">
       <h3  style="font-size:32px; color:white; font-weight: bold;">Enter Function Parameters</h3>
       <p style="font-size:20px; color:white; font-weight: bold;">Function Selected: {{  }}</p>
-      <v-col v-for >
+      
+        <v-row v-for="f in funcs" :key="f">
+          <v-col> Name: {{ f.name }}</v-col>
+          <v-col> Type: {{ f.type }}</v-col>
+          <v-text-field
+            style="width:400px; background-color: rgba(241, 236, 236, 0.9); font-color:black"></v-text-field>
+        </v-row>
+      
 
-        
-      </v-col>
 
 
       <v-btn color="red" outlined @click="previewTransaction">
@@ -23,6 +28,7 @@
 import {
   defineComponent,
   ref,
+  props,
   computed
 } from '@nuxtjs/composition-api'
 
@@ -30,6 +36,9 @@ import {
 import TransactionResult from '~/components/common/TransactionResult.vue'
 
 export default defineComponent({
+  // props:{
+  //   calldataParams:{type: Array, required: true}
+  // },
   setup(_,{emit}){
 
     const previewTransaction = () => {
@@ -37,32 +46,39 @@ export default defineComponent({
       emit('previewTransaction')
     }
 
+    const calldata = ref('')
+    const funcs = [{"name":"amount","type":"uint256"},{"name":"to","type":"address"}]
+    // const calldata = computed(() => {
+    //   return []
+    // })
     const cols = computed(() => {
       return [
         {
           text: 'Parameter Name',
           align: 'left',
           value: 'name',
-          width: '50',
+          width: '30px',
         },
         {
           text: 'Type',
           align: 'left',
           value: 'type',
-          width: '50',
+          width: '30px',
         },
         {
           text: '',
           align: 'left',
           value: 'input',
-          width: '100',
+          width: '100px',
         },
       ]
     })
 
     return {
         cols,
+        funcs,
         previewTransaction,
+        //calldataParams:props.calldataParams
     }
   }
 })
@@ -71,11 +87,11 @@ export default defineComponent({
 
 <style>
 .dynamic_ui {
-    background-color: rgb(10, 10, 10);
+    background-color: rgba(3, 3, 3, 0.9);
     word-wrap: break-word;
     font-size: 14px;
-    width: 600px;
-    height: 800px;
+    width: 400px;
+    height: 600px;
 }
 
 </style>
