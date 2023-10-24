@@ -5,7 +5,7 @@
 <template>
     <div class="dynamic_ui">
       <h3  style="font-size:32px; color:white; font-weight: bold;">Enter Function Parameters</h3>
-      <p style="font-size:20px; color:white; font-weight: bold;">Function Selected: {{  }}</p>
+      <p style="font-size:20px; color:white; font-weight: bold;">Function Selected: {{ functionName }}</p>
       
         <v-row v-for="f in calldataParams" :key="f">
           <v-col> Name:{{ f.name }}</v-col>
@@ -35,10 +35,10 @@ import { inputAbi, CalldataAbi, EventElem } from '~/types/apollo/main/types'
 
 export default defineComponent({
   props:{
-    calldataParams:{type: Array as PropType<inputAbi[]>, required: true}
+    calldataParams:{type: Array as PropType<inputAbi[]>, required: true},
+    functionName:{type: String, required: true}
   },
   setup(props,{emit}){
-
 
     const previewTransaction = () => {
       console.log(props.calldataParams)
@@ -76,6 +76,7 @@ export default defineComponent({
     return {
         cols,
         calldataParams:props.calldataParams,
+        functionName: props.functionName,
 
         previewTransaction,
     }

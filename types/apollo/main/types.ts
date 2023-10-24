@@ -18,7 +18,7 @@ export type Scalars = {
 export type inputAbi = { 
 __typename?: 'inputAbi';
 inputs: CalldataAbi | EventElem;
-}
+};
 
 export type AaveAddress = {
   __typename?: 'AaveAddress';

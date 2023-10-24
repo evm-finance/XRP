@@ -12,14 +12,15 @@
                 @functionSelected="openWindow"></function-buttons>
             </v-row>
             <v-dialog v-model="dialog" width="600">
-                <dynamic-contract-input :calldataParams=selectedAbi @previewTransaction="sendTransaction"></dynamic-contract-input>
+                <dynamic-contract-input :calldataParams=selectedAbi :functionName=selectedFunction @previewTransaction="sendTransaction"></dynamic-contract-input>
             </v-dialog>
         </div>
     </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, inject, reactive, Ref } from '@nuxtjs/composition-api';
+import { onClickOutside } from '@vueuse/core'
+import { defineComponent, ref, inject, reactive, Ref, del } from '@nuxtjs/composition-api';
 import AbiInputForm from '~/components/dynamic-abi/AbiInputForm.vue'
 import ContractAddressForm from '~/components/dynamic-abi/ContractAddressForm.vue'
 import FunctionButtons from '~/components/dynamic-abi/FunctionButtons.vue'
@@ -31,7 +32,7 @@ import { BigNumber, ethers } from 'ethers'
 // import { DefiEvents, EmitEvents } from '~/types/events'
 import type { ContractTransaction } from 'ethers'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
-import { Chain, AbiElem, EventElem, AbiEvent, CalldataAbi } from '~/types/apollo/main/types'
+import { Chain, AbiElem, EventElem, AbiEvent, CalldataAbi, inputAbi } from '~/types/apollo/main/types'
 import { ConstructorFragment } from 'ethers/lib/utils';
 
 export default defineComponent({
@@ -88,7 +89,11 @@ setup() {
                 if(functions.value[i].type == selectedType.value && functions.value[i].name == selectedFunction.value)
                 {
                     console.log('found')
-                    selectedAbi.value = functions.value[i].inputs
+                    //selectedAbi.value = functions.value[i].inputs
+                    for(let j = 0; j < functions.value[i].inputs.length; j++)
+                    {
+                        selectedAbi.value[j] = (functions.value[i].inputs[j])
+                    }
                 }
                 //console.log(data[i])
                 //functions.value.push(jsonData[i])
@@ -126,7 +131,7 @@ setup() {
                 functions.value,
                 signer.value
             )
-            setAbi()
+            //setAbi()
             console.log(selectedAbi.value)
             console.log(contract)
             // var testTx = await contract.populateTransaction[selectedFunction.value]();
@@ -156,10 +161,17 @@ setup() {
         {
             dialog.value = false
         }
-        console.log("starting")
-        //console.log(name,type)
+        console.log("window opened", 'name:',name,'type:',type)
         selectedFunction.value = name
         selectedType.value = type
+
+        setAbi()
+        delay(100)
+
+        console.log("finishing")
+        
+        console.log()
+
         dialog.value=true
     }
 
