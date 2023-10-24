@@ -15,6 +15,13 @@ export type Scalars = {
   Map: any;
 };
 
+export type calldataTemplate = {
+  __typename?: 'calldataTemplate';
+  name: Scalars['String'];
+  type: Scalars['String'];
+  value: Scalars['String'];
+};
+
 export type inputAbi = { 
 __typename?: 'inputAbi';
 inputs: CalldataAbi | EventElem;
@@ -95,6 +102,13 @@ export type EventElem = {
   internalType: Scalars['String']
   name: Scalars['String']
   type: Scalars['String']
+}
+
+export type CalldataAbi = {
+  __typename?: 'CalldataAbi';
+  name: Scalars['String'];
+  type: Scalars['String'];
+  internalType: Scalars['String'];
 }
 
 export type AbiEvent = {
@@ -179,12 +193,6 @@ export type BlockTransactionContractTransfer = {
   txHash: Scalars['String'];
 };
 
-export type CalldataAbi = {
-  __typename?: 'CalldataAbi';
-  name: Scalars['String'];
-  type: Scalars['String'];
-  internalType: Scalars['String'];
-}
 
 
 export type Chain = {

@@ -11,16 +11,15 @@
                 <function-buttons :functionNames="functions"
                 @functionSelected="openWindow"></function-buttons>
             </v-row>
-            <v-dialog v-model="dialog" width="600">
-                <dynamic-contract-input :calldataParams=selectedAbi :functionName=selectedFunction @previewTransaction="sendTransaction"></dynamic-contract-input>
+            <v-dialog v-model="dialog" v-if="dialog" width="600" @click:outside="handleClickOutside">
+                <dynamic-contract-input :calldataParams=selectedAbi :payable=payableFunction :functionName=selectedFunction :address=address :contract=contractInstance @previewTransaction="sendTransaction"></dynamic-contract-input>
             </v-dialog>
         </div>
     </div>
 </template>
 
 <script lang="ts">
-import { onClickOutside } from '@vueuse/core'
-import { defineComponent, ref, inject, reactive, Ref, del } from '@nuxtjs/composition-api';
+import { defineComponent, ref, inject, reactive, Ref, del, nextTick } from '@nuxtjs/composition-api';
 import AbiInputForm from '~/components/dynamic-abi/AbiInputForm.vue'
 import ContractAddressForm from '~/components/dynamic-abi/ContractAddressForm.vue'
 import FunctionButtons from '~/components/dynamic-abi/FunctionButtons.vue'
@@ -32,7 +31,7 @@ import { BigNumber, ethers } from 'ethers'
 // import { DefiEvents, EmitEvents } from '~/types/events'
 import type { ContractTransaction } from 'ethers'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
-import { Chain, AbiElem, EventElem, AbiEvent, CalldataAbi, inputAbi } from '~/types/apollo/main/types'
+import { Chain, AbiElem, EventElem, AbiEvent, CalldataAbi, inputAbi, calldataTemplate } from '~/types/apollo/main/types'
 import { ConstructorFragment } from 'ethers/lib/utils';
 
 export default defineComponent({
@@ -44,31 +43,34 @@ export default defineComponent({
 },
 setup() {
 
-    const ESTIMATED_GAS_FEE = async (tx: any): Promise<BigNumber> =>
-        (await provider.value?.estimateGas(<any>tx)) ?? BigNumber.from('0')
-    const ERC20_GAS_LIMIT = (estimatedGas: BigNumber): number => estimatedGas.mul(`125`).div('100').toNumber()
-    const NATIVE_ETH_GAS_LIMIT = (estimatedGas: BigNumber): number => estimatedGas.mul(`175`).div('100').toNumber()
     const { signer, account, chainId, provider } = inject(WEB3_PLUGIN_KEY) as Web3
-    type calldataElement = string | BigNumber
-    type abiTemplate = {
-        name: string,
-        type: string,
-        value: calldataElement | null
-    }
     const { allowedSpending, approveMaxSpending } = useERC20()
     const renderButtons = ref(false)
     const dialog = ref(false)
     const address = ref('')
+    const callValue = ref(0)
+    const contractInstance = ref<ethers.Contract | null>(null); 
     //const functions : Ref<abiTemplate[]> = ref([])
     type rawAbi = AbiElem | AbiEvent
-    type inputAbi = CalldataAbi | EventElem
+    //type inputAbi = CalldataAbi | EventElem
     const functions : Ref<rawAbi[]> = ref([])
-    const calldata : Ref<calldataElement[]> = ref([])
-    const selectedType = ref('')
-    const selectedFunction = ref('')
-    const selectedAbi : Ref<inputAbi[]> = ref([])
+    const calldata : Ref<calldataTemplate[]> = ref([])
+    const selectedType : Ref<string> = ref('')
+    const selectedFunction : Ref<string> = ref('')
+    const payableFunction = ref(false)
+    const selectedAbi : Ref<CalldataAbi[] | EventElem[]> = ref([])
 
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve,ms));
+
+    const handleClickOutside = () => 
+    {
+        console.log('clicked outside, closing')
+        dialog.value=false
+        selectedFunction.value = ''
+        selectedAbi.value=[]
+        console.log(selectedAbi.value,selectedFunction.value)
+
+    }
     
     const loadAgain = async () => {
         console.log("reloading")
@@ -88,7 +90,22 @@ setup() {
                 // console.log(selectedType.value,selectedFunction.value)
                 if(functions.value[i].type == selectedType.value && functions.value[i].name == selectedFunction.value)
                 {
-                    console.log('found')
+                    
+                    var temp = functions.value[i] as AbiElem
+                    console.log('found',temp)
+                    if('payable' in temp)
+                    {
+                        
+                        payableFunction.value = temp.payable
+
+                        // if(payableFunction.value)
+                        //     console.log('payable')
+                        // else
+                        //     console.log('was not payable function')
+                    }
+                        
+
+                    
                     //selectedAbi.value = functions.value[i].inputs
                     for(let j = 0; j < functions.value[i].inputs.length; j++)
                     {
@@ -112,6 +129,11 @@ setup() {
         console.log(data)
         console.log(address.value)
 
+        contractInstance.value = new ethers.Contract(
+                address.value,
+                data,
+                signer.value
+            )
         
         for(let i = 0; i < data.length; i++)
             {
@@ -140,7 +162,7 @@ setup() {
             // const gasLimit = ERC20_GAS_LIMIT(estimatedGas)
             // console.log(gasLimit)
             // console.log(contract.functions[selectedFunction.value])
-            // const depositCall = await contract.functions[selectedFunction.value]({value:calldata.value,gasLimit})
+            // const depositCall = await contract.functions[selectedFunction.value]({value:callValue.value,gasLimit,})
             // console.log(depositCall)
             // const resp = await depositCall.wait()
 
@@ -155,24 +177,18 @@ setup() {
     }
     //0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc
     
-    const openWindow = (name: string,type: string) => {
+    const openWindow = async (name: string,type: string) => {
         //
-        if(dialog.value)
-        {
-            dialog.value = false
-        }
+        console.log(dialog.value)
         console.log("window opened", 'name:',name,'type:',type)
         selectedFunction.value = name
         selectedType.value = type
-
+        console.log(selectedType.value,selectedFunction.value,dialog.value,selectedAbi.value)
         setAbi()
-        delay(100)
-
-        console.log("finishing")
         
-        console.log()
-
+        await delay(100)
         dialog.value=true
+
     }
 
     return {
@@ -182,13 +198,18 @@ setup() {
         loadAgain,
         setAddress,
         sendTransaction,
+        handleClickOutside,
         
         //data
         renderButtons,
         functions,
         dialog,
         selectedFunction,
-        selectedAbi
+        selectedAbi,
+        payableFunction,
+        callValue,
+        address,
+        contractInstance
 
     }
 }

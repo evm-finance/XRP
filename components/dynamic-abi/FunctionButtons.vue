@@ -58,7 +58,7 @@ export default defineComponent({
         const viewMethods = ref([])
         const events = ref([])
         const initFunction = (name, type) => {
-            console.log(props.functionNames)
+            console.log(props)
             emit('functionSelected',name,type.type)
             //console.log(name,type.type)
         }
