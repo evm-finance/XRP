@@ -62,15 +62,11 @@ export default defineComponent({
   },
   setup(props,{emit}){
 
-    type calldataFields = {
-      name: string,
-      type: string,
-      value: string
-    }
+
     const { signer, account, chainId, provider } = inject(WEB3_PLUGIN_KEY) as Web3
     const { allowedSpending, approveMaxSpending } = useERC20()
     const callValueInput = ref(0)
-    const calldataObject : Ref<calldataFields[]> = ref([])
+    const calldataObject : Ref<(string | number)[]> = ref([])
 
     const ERC20_GAS_LIMIT = (estimatedGas: BigNumber): number => estimatedGas.mul(`125`).div('100').toNumber()
   const NATIVE_ETH_GAS_LIMIT = (estimatedGas: BigNumber): number => estimatedGas.mul(`175`).div('100').toNumber()
@@ -89,26 +85,39 @@ export default defineComponent({
       var finalCalldata: (string | number)[] = []
       for (let i = 0; i < calldataObject.value.length; i++) 
       {
-        if (calldataObject.value[i].type === "string")
-          finalCalldata[i] = calldataObject.value[i].value
+        console.log('lost')
+        if (props.calldataParams[i].type[0] == 'u' )
+        {
+          console.log('found', calldataObject.value[i])
+          finalCalldata[i] = Number(calldataObject.value[i])
+        }
         else
-          finalCalldata[i] = Number(calldataObject.value[i].value)
+        {
+          console.log('not found')
+          finalCalldata[i] = calldataObject.value[i]
+        }
       }
 
       try{
-        var testTx = await props.contract.populateTransaction[props.functionName](finalCalldata);
-      console.log(testTx)
-      const estimatedGas: BigNumber = await ESTIMATED_GAS_FEE(testTx)
-      const gasLimit = ERC20_GAS_LIMIT(estimatedGas)
-      console.log(gasLimit)
-      console.log(props.contract.functions[props.functionName])
-      const depositCall = await props.contract.functions[props.functionName]()
-      console.log(depositCall)
-      const resp = await depositCall.wait()
+        console.log('testing tx')
+        console.log(props.functionName)
+        console.log(...finalCalldata)
+              //0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7 WAVAX
+
+        var testTx = await props.contract.populateTransaction[props.functionName](...finalCalldata);
+        console.log(testTx)
+        const estimatedGas: BigNumber = await ESTIMATED_GAS_FEE(testTx)
+        const gasLimit = ERC20_GAS_LIMIT(estimatedGas)
+        console.log('gas limit',gasLimit)
+        console.log(props.contract.functions[props.functionName])
+        const depositCall = await props.contract.functions[props.functionName]({value: callValueInput.value, gasLimit, data:testTx.data})
+        console.log(depositCall)
+        const resp = await depositCall.wait()
       }
 
       catch(error)
       {
+        console.log(error)
         console.log('failed to generate transaction, hurry up, its getting late')
       }
 
