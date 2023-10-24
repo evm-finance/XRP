@@ -1,4 +1,4 @@
-// This Component will be a generic input form for smart contracts
+<!-- // This Component will be a generic input form for smart contracts
 // There will be rules enforced for address, uint, string, and bytes types
 // Type will be passed in as props
 
@@ -7,7 +7,7 @@
 <template>
     <div>
         <v-row>
-            <h3> {{ paramName }} </h3>
+            <p> Param Name: {{ paramName }} </p>
             <form @submit.prevent="submitForm">
                 <input v-model="inputString" type="text" class="param_form_input" style="margin-bottom: 10px; color: rgba(255, 255, 255, 0.89)"></textarea>
 
@@ -18,8 +18,7 @@
 
 <script>
 
-import { ref } from 'vue';
-import { defineComponent } from '@nuxtjs/composition-api';
+import { defineComponent, ref, props } from '@nuxtjs/composition-api';
 import { stringify } from 'postcss';
 
 export default defineComponent({
@@ -43,7 +42,6 @@ export default defineComponent({
 
         return {
             inputString,
-            submitForm,
             paramName: props.paramName, 
             paramType: props.paramType
         }
@@ -61,4 +59,4 @@ export default defineComponent({
     height: 30px;
 }
 
-</style>
+</style> -->

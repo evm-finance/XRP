@@ -4,10 +4,10 @@
     <div>
         <h3 style="margin-bottom: 15px; color: white"> Enter ABI Below </h3>
         <v-row>
-            <form @submit.prevent="submitForm">
+            <form @submit.prevent="enterAbi">
                 <textarea v-model="inputString" type="text" class="abiInput" style="margin-bottom: 10px; color: rgba(255, 255, 255, 0.89)"></textarea>
                 <v-row justify="center" >
-                    <v-btn type="submit" style="color: red">Generate Function Buttons</v-btn>
+                    <v-btn outlined type="generate_function_buttons" style="color: red">Generate Function Buttons</v-btn>
                 </v-row> 
             </form>
         </v-row>
@@ -17,18 +17,21 @@
 <script>
 
 import { ref } from 'vue';
-import { defineComponent } from '@nuxtjs/composition-api';
+import { defineComponent, props } from '@nuxtjs/composition-api';
 
 export default defineComponent({
-    setup(_, { emit }) {
+
+    setup(_,{ emit }) {
         const inputString = ref('');
         const jsonData = ref('');
 
-        const submitForm = () => {
+        const enterAbi = () => {
             try {
+                console.log('testing props',props)
                 const jsonData = JSON.parse(inputString.value)
                 // console.log(jsonData)
                 emit('abiEntered', jsonData)
+                emit('reload')
             }
             catch (error) {
                 console.error('Invalid JSON string');
@@ -37,7 +40,7 @@ export default defineComponent({
 
         return {
             inputString,
-            submitForm,
+            enterAbi,
             jsonData
         }
     }

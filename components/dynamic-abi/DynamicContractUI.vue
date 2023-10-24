@@ -1,36 +1,70 @@
-<!-- // This component will create a dynamic form that has a ParamInputForm for each parameter
+// This component will create a dynamic form that has a ParamInputForm for each parameter
 //  
 
 <template>
     <div>
+      <h3  style="font-size:32px; color:green; font-weight: bold;">Enter Function Parameters</h3>
+      <p style="font-size:20px; color:green; font-weight: bold;">Function Selected: </p>
 
+
+
+      <v-btn color="red" outlined @click="previewTransaction">
+        preview transaction
+      </v-btn>
     </div>
 
 </template>
 
 <script lang="ts">
 import {
-  computed,
   defineComponent,
-  inject,
-  PropType,
   ref,
-  toRefs,
-  UnwrapRef,
-  useStore,
-  watch,
+  computed
 } from '@nuxtjs/composition-api'
-import { State } from '~/types/state'
-import { DefiEvents, EmitEvents } from '~/types/events'
-import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
-import { Chain } from '~/types/apollo/main/types'
-import useDynamicAbi from '~/composables/useDynamicAbi'
+
+//import useDynamicAbi from '~/composables/useDynamicAbi'
 import TransactionResult from '~/components/common/TransactionResult.vue'
 
+export default defineComponent({
+  setup(_,{emit}){
 
+    const previewTransaction = () => {
+      console.log('previewTransaction')
+      emit('previewTransaction')
+    }
+
+    const cols = computed(() => {
+      return [
+        {
+          text: 'Parameter Name',
+          align: 'left',
+          value: 'name',
+          width: '50',
+        },
+        {
+          text: 'Type',
+          align: 'left',
+          value: 'type',
+          width: '50',
+        },
+        {
+          text: '',
+          align: 'left',
+          value: 'input',
+          width: '100',
+        },
+      ]
+    })
+
+    return {
+        cols,
+        previewTransaction
+    }
+  }
+})
 
 </script>
 
 <style>
 
-</style> -->
+</style>

@@ -7,13 +7,13 @@
 <template>
     <div >
         <v-row>
-            <h3 style="margin-bottom: 25px; margin-right:10px; color: white"> Enter Contract Address: </h3>
-            <form @submit.prevent="submitForm">
-                <input v-model="inputString" type="text" class="contractAddressForm" style="margin-bottom: 25px; margin-right:10px; height:38px; color: rgba(255, 255, 255, 0.89);"></input>
+            <h3 style="margin-right:10px; color: white"> Enter Contract Address: </h3>
+            <form @submit.prevent="enterContract">
+                <textarea v-model="inputString" type="text" class="contractAddressForm" style="margin-right:10px; height:30px; color: rgba(255, 255, 255, 0.89);"></textarea>
+                <v-btn outlined type="enterContract" style="color: red; margin-bottom:25px;">submit</v-btn>
 
             </form>
-            <v-btn type="submit" style="color: red">submit</v-btn>
-            <h3 style="margin-left: 10px; font-size: 18px;"> Network: </h3>
+
         </v-row>
     </div>
 </template>
@@ -24,22 +24,24 @@ import { ref } from 'vue';
 import { defineComponent } from '@nuxtjs/composition-api';
 
 export default defineComponent({
-    setup({ emit }) {
+    setup(_,{ emit }) {
         const inputString = ref('');
 
-        const submitForm = () => {
+        const enterContract = () => {
             try {
                 // console.log(jsonData)
+                //console.log('hello world')
+                console.log(inputString.value)
                 emit('addressEntered', inputString.value)
             }
             catch (error) {
-                console.error('Invalid JSON string');
+                console.error('Invalid Address');
             }
         }
 
         return {
             inputString,
-            submitForm,
+            enterContract,
         }
     }
 })
@@ -52,7 +54,6 @@ export default defineComponent({
     word-wrap: break-word;
     font-size: 18px;
     width: 500px;
-    height: 30px;
 }
 
 </style>
