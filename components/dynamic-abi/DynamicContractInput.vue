@@ -7,11 +7,11 @@
       <h3  style="font-size:32px; color:white; font-weight: bold;">Enter Function Parameters</h3>
       <p style="font-size:20px; color:white; font-weight: bold;">Function Selected: {{  }}</p>
       
-        <v-row v-for="f in funcs" :key="f">
-          <v-col> Name: {{ f.name }}</v-col>
-          <v-col> Type: {{ f.type }}</v-col>
+        <v-row v-for="f in calldataParams" :key="f">
+          <v-col> Name:{{ f.name }}</v-col>
+          <v-col> Type:{{ f.type }}</v-col>
           <v-text-field
-            v-model="" style="width:400px; background-color: rgba(241, 236, 236, 0.9); font-color:black"></v-text-field>
+           style="width:300px; background-color: rgba(241, 236, 236, 0.9); font-color:black"></v-text-field>
         </v-row>
       <v-btn color="red" outlined @click="previewTransaction">
         preview transaction
@@ -24,26 +24,29 @@
 import {
   defineComponent,
   ref,
-  props,
-  computed
+  computed, PropType
 } from '@nuxtjs/composition-api'
 
 //import useDynamicAbi from '~/composables/useDynamicAbi'
 import TransactionResult from '~/components/common/TransactionResult.vue'
+import { inputAbi, CalldataAbi, EventElem } from '~/types/apollo/main/types'
+
+
 
 export default defineComponent({
-  // props:{
-  //   calldataParams:{type: Array, required: true}
-  // },
-  setup(_,{emit}){
+  props:{
+    calldataParams:{type: Array as PropType<inputAbi[]>, required: true}
+  },
+  setup(props,{emit}){
+
 
     const previewTransaction = () => {
+      console.log(props.calldataParams)
       console.log('previewTransaction')
       emit('previewTransaction')
     }
-
-    const calldata = ref('')
-    const funcs = [{"name":"amount","type":"uint256"},{"name":"to","type":"address"}]
+    
+    //const funcs = [{"name":"amount","type":"uint256"},{"name":"to","type":"address"}]
     // const calldata = computed(() => {
     //   return []
     // })
@@ -72,9 +75,9 @@ export default defineComponent({
 
     return {
         cols,
-        funcs,
+        calldataParams:props.calldataParams,
+
         previewTransaction,
-        //calldataParams:props.calldataParams
     }
   }
 })
@@ -86,7 +89,7 @@ export default defineComponent({
     background-color: rgba(3, 3, 3, 0.9);
     word-wrap: break-word;
     font-size: 14px;
-    width: 400px;
+    width: 600px;
     height: 600px;
 }
 

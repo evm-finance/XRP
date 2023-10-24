@@ -15,6 +15,11 @@ export type Scalars = {
   Map: any;
 };
 
+export type inputAbi = { 
+__typename?: 'inputAbi';
+inputs: CalldataAbi | EventElem;
+}
+
 export type AaveAddress = {
   __typename?: 'AaveAddress';
   aTokenAddress: Scalars['String'];
@@ -81,6 +86,22 @@ export type AbiElem = {
   name: Scalars['String'];
   payable: Scalars['Boolean'];
   stateMutability: Scalars['String'];
+  type: Scalars['String'];
+}
+
+export type EventElem = {
+  __typename?: 'EventElem'
+  indexed: Scalars['Boolean']
+  internalType: Scalars['String']
+  name: Scalars['String']
+  type: Scalars['String']
+}
+
+export type AbiEvent = {
+  __typename?: 'AbiEvent';
+  anonymous: Scalars['Boolean'];
+  inputs: Array<EventElem>;
+  name: Scalars['String'];
   type: Scalars['String'];
 }
 
@@ -162,6 +183,7 @@ export type CalldataAbi = {
   __typename?: 'CalldataAbi';
   name: Scalars['String'];
   type: Scalars['String'];
+  internalType: Scalars['String'];
 }
 
 

@@ -29,7 +29,7 @@ export default defineComponent({
             try {
                 console.log('testing props',props)
                 const jsonData = JSON.parse(inputString.value)
-                // console.log(jsonData)
+                console.log(jsonData)
                 emit('abiEntered', jsonData)
                 emit('reload')
             }

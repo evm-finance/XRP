@@ -58,7 +58,8 @@ export default defineComponent({
         const viewMethods = ref([])
         const events = ref([])
         const initFunction = (name, type) => {
-            emit('functionSelected',name,type)
+            console.log(props.functionNames)
+            emit('functionSelected',name,type.type)
             //console.log(name,type.type)
         }
         //0xdAC17F958D2ee523a2206206994597C13D831ec7 USDT on ETH
