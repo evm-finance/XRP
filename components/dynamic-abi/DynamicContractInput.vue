@@ -14,11 +14,11 @@
             v-model="callValueInput" style="width:300px; background-color: rgba(241, 236, 236, 0.9); font-color:black">
           </v-text-field>
           </v-row>
-          <v-row v-for="f in calldataParams" :key="f">
-            <v-col style="font-size:20px; color:white; font-weight: bold; margin-bottom: 20px;"> Name:{{ f.name }} </v-col>
-            <v-col style="font-size:20px; color:white; font-weight: bold; margin-bottom: 20px;"> Type:{{ f.type }} </v-col>
+          <v-row v-for="(item,index) in calldataParams" :key="index">
+            <v-col style="font-size:20px; color:white; font-weight: bold; margin-bottom: 20px;"> Name:{{ item.name }} </v-col>
+            <v-col style="font-size:20px; color:white; font-weight: bold; margin-bottom: 20px;"> Type:{{ item.type }} </v-col>
             <v-text-field
-              v-model="calldataObject.value" style="width:300px; background-color: rgba(241, 236, 236, 0.9); font-color:black" type="text" > 
+              v-model="calldataObject[index]" style="width:300px; background-color: rgba(241, 236, 236, 0.9); font-color:black" type="text" > 
             </v-text-field>
           </v-row>
           <v-btn style="margin-top:50px;" color="red" outlined @click="previewTransaction">
