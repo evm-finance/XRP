@@ -11,12 +11,8 @@
           <v-col> Name: {{ f.name }}</v-col>
           <v-col> Type: {{ f.type }}</v-col>
           <v-text-field
-            style="width:400px; background-color: rgba(241, 236, 236, 0.9); font-color:black"></v-text-field>
+            v-model="" style="width:400px; background-color: rgba(241, 236, 236, 0.9); font-color:black"></v-text-field>
         </v-row>
-      
-
-
-
       <v-btn color="red" outlined @click="previewTransaction">
         preview transaction
       </v-btn>
