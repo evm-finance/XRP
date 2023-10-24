@@ -32,6 +32,7 @@ import { BigNumber, ethers } from 'ethers'
 import type { ContractTransaction } from 'ethers'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
 import { Chain } from '~/types/apollo/main/types'
+import { ConstructorFragment } from 'ethers/lib/utils';
 
 export default defineComponent({
     components:{
@@ -42,15 +43,19 @@ export default defineComponent({
 },
 setup() {
 
+    const ESTIMATED_GAS_FEE = async (tx: ContractTransaction): Promise<BigNumber> =>
+        (await provider.value?.estimateGas(<any>tx)) ?? BigNumber.from('0')
+    const ERC20_GAS_LIMIT = (estimatedGas: BigNumber): number => estimatedGas.mul(`125`).div('100').toNumber()
+    const NATIVE_ETH_GAS_LIMIT = (estimatedGas: BigNumber): number => estimatedGas.mul(`175`).div('100').toNumber()
     const { signer, account, chainId, provider } = inject(WEB3_PLUGIN_KEY) as Web3
     const { allowedSpending, approveMaxSpending } = useERC20()
     const renderButtons = ref(false)
     const dialog = ref(false)
     const address = ref('')
     const functions = ref([])
-    const contractInstance = ref()
+    const calldata = ref([])
+    const selectedType = ref('')
     const selectedFunction = ref('')
-    const calldataParams = ref([])
 
     const delay = (ms) => new Promise(resolve => setTimeout(resolve,ms));
     
@@ -79,7 +84,7 @@ setup() {
         
         for(let i = 0; i < data.length; i++)
             {
-                console.log(data[i])
+                //console.log(data[i])
                 //functions.value.push(jsonData[i])
             }
         functions.value = data
@@ -87,8 +92,35 @@ setup() {
         // console.log('finised generateUI')
     }
 
-    const sendTransaction = () => {
-        console.log(selectedFunction.value,calldataParams.value,signer.value,account.value)
+    const sendTransaction = async () => {
+        const num = 1
+        calldata.value.push(num)
+        console.log(num)
+        console.log(selectedFunction.value,signer.value,account.value,selectedType.value,chainId.value)
+        try{
+            const contract = new ethers.Contract(
+                address.value,
+                functions.value,
+                signer.value
+            )
+            console.log(contract)
+            var testTx = await contract.populateTransaction[selectedFunction.value]({value:calldata.value});
+            console.log(testTx)
+            const estimatedGas: BigNumber = await ESTIMATED_GAS_FEE(testTx)
+            const gasLimit = ERC20_GAS_LIMIT(estimatedGas)
+            console.log(gasLimit)
+            console.log(contract.functions[selectedFunction.value])
+            const depositCall = await contract.functions[selectedFunction.value]({value:calldata.value,gasLimit})
+            console.log(depositCall)
+            const resp = await depositCall.wait()
+
+
+            //contract.
+        }
+        catch (error)
+        {
+            console.log('failed to instantiate contract, try harder')
+        }
         //contractInstance.{{function}}
     }
     //0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc
@@ -100,22 +132,9 @@ setup() {
             dialog.value = false
         }
         console.log("starting")
-        console.log(functions)
-        console.log(name,type)
-        try{
-            const contract = new ethers.Contract(
-                address.value,
-                functions.value,
-                signer.value
-            )
-            console.log(contract)
-            contractInstance.value=contract
-            dialog.value=true
-        }
-        catch (error)
-        {
-            console.log('failed to instantiate contract, try harder')
-        }
+        //console.log(name,type)
+        selectedFunction.value = name
+        selectedType.value = type.type
         dialog.value=true
     }
 

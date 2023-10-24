@@ -58,10 +58,11 @@ export default defineComponent({
         const viewMethods = ref([])
         const events = ref([])
         const initFunction = (name, type) => {
-            emit('functionSelected',name,'type',type)
-            console.log(name,type)
+            emit('functionSelected',name,type)
+            //console.log(name,type.type)
         }
-
+        //0xdAC17F958D2ee523a2206206994597C13D831ec7 USDT on ETH
+        //0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7 WAVAX
         const parseProps = () => {
             // console.log("started parsing props")
             // console.log('props',props)
@@ -69,7 +70,7 @@ export default defineComponent({
             // console.log('props.functionNames',props.functionNames)
             for(let i = 0; i < props.functionNames.length; i++)
             {
-                console.log(props.functionNames)
+                //console.log(props.functionNames)
                 if(props.functionNames[i].constant == true) {
                     viewMethods.value.push(props.functionNames[i])
                 }
