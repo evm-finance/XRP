@@ -1,5 +1,6 @@
 import { ethers } from 'ethers'
-import { Chain, Maybe } from '~/types/apollo/main/types'
+import { Maybe } from '~/types/apollo/main/types'
+import { Network } from '~/types/global'
 
 export interface Web3ErrorInterface {
   status: boolean
@@ -16,7 +17,7 @@ export interface ConnectorInterface {
   handleDisconnect: () => void
   registerListeners: () => void
   resetErrors: () => void
-  handleChanChange: (chain: Chain) => void
+  handleChanChange: (chain: Network) => void
   importTokenToMetamask: (params: { address: string; symbol: string; decimals: number; image: string }) => Promise<void>
 }
 

@@ -102,9 +102,10 @@
 <script lang="ts">
 import { computed, ComputedRef, defineComponent, PropType, useStore } from '@nuxtjs/composition-api'
 import { plainToClass } from 'class-transformer'
-import { Balance, Chain } from '~/types/apollo/main/types'
+import { Balance } from '~/types/apollo/main/types'
 import { State } from '~/types/state'
 import { AavePoolModel } from '~/composables/useAavePools'
+import { Network } from '~/types/global'
 
 type Props = {
   balances: Balance[]
@@ -168,7 +169,7 @@ export default defineComponent<Props>({
       },
     ]
 
-    const pools: ComputedRef<{ chain: Chain; pool: AavePoolModel[]; balances: { text: string; value: number }[] }[]> =
+    const pools: ComputedRef<{ chain: Network; pool: AavePoolModel[]; balances: { text: string; value: number }[] }[]> =
       computed(() =>
         props.balances
           .map((elem) => ({

@@ -49,7 +49,7 @@ export default defineComponent({
     // get currentNetwork name, if not supported, show chain id
     const currentNetwork = computed<string>(() => {
       if (chainId.value) {
-        const found = state.configs.chains.find((chain) => chain.chainIdentifier === chainId.value)
+        const found = state.configs.networks.find((chain) => chain.chainIdentifier === chainId.value)
 
         if (found) {
           return found.name

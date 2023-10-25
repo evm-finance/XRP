@@ -4,7 +4,7 @@ import { ethers } from 'ethers'
 import { MetamaskConnector } from '~/plugins/web3/metamask.connector'
 import { ConnectorInterface, Web3ErrorInterface } from '~/plugins/web3/connector'
 import { Cookies } from '~/types/cookies'
-import { Chain } from '~/types/apollo/main/types'
+import { Network } from '~/types/global'
 
 export type Wallet = 'metamask'
 
@@ -15,7 +15,7 @@ export type Web3 = {
   connectWallet: (wallet: Wallet) => Promise<void>
   disconnectWallet: () => void
   resetErrors: () => void
-  changeChain: (chain: Chain) => void
+  changeNetwork: (chain: Network) => void
   importTokenToMetamask: (params: { address: string; symbol: string; decimals: number; image: string }) => Promise<void>
   provider: Ref<ethers.providers.Web3Provider | null>
   account: Ref<string>
@@ -25,11 +25,12 @@ export type Web3 = {
   walletReady: Ref<boolean>
   error: Ref<Web3ErrorInterface | null>
   signer: Ref<any>
-  allNetworks: Ref<Chain[]>
-  currentChain: Ref<Chain | null>
+  allNetworks: Ref<Network[]>
+  currentNetwork: Ref<Network | null>
   getCustomProviderByNetworkId: (networkId: string) => ethers.providers.JsonRpcProvider | null
-  getNetworkById: (networkId: string) => Chain | null
-  getNetworkByChainNumber: (chainIdentifier: number) => Chain | null
+  getNetworkById: (networkId: string) => Network | null
+  getNetworkByChainNumber: (chainIdentifier: number) => Network | null
+  isWrapped: (address: string, network: Network) => boolean
 }
 
 type PluginState = {
@@ -58,8 +59,8 @@ export default (context: Context): void => {
     const walletReady = computed(() => {
       return !!(pluginState.connector && pluginState.connector.provider && pluginState.walletState === 'connected')
     })
-    const allNetworks = computed<Chain[]>(() => context.store.state.configs.chains)
-    const currentChain = computed<Chain | null>(
+    const allNetworks = computed<Network[]>(() => context.store.state.configs.networks)
+    const currentNetwork = computed<Network | null>(
       () => allNetworks.value.find((elem) => elem.chainIdentifier === chainId.value) ?? null
     )
 
@@ -101,7 +102,7 @@ export default (context: Context): void => {
       }
       return null
     }
-    const getNetworkById = (networkId: string): Chain | null => {
+    const getNetworkById = (networkId: string): Network | null => {
       const network = allNetworks.value.find((elem) => elem.id === networkId)
       if (network) {
         return network
@@ -109,13 +110,16 @@ export default (context: Context): void => {
       return null
     }
 
-    const getNetworkByChainNumber = (chainIdentifier: number): Chain | null => {
+    const getNetworkByChainNumber = (chainIdentifier: number): Network | null => {
       const network = allNetworks.value.find((elem) => elem.chainIdentifier === chainIdentifier)
       if (network) {
         return network
       }
       return null
     }
+
+    const isWrapped = (address: string, network: Network): boolean =>
+      address.toLowerCase() === network.weth.address.toLowerCase()
 
     const disconnectWallet = () => {
       if (!pluginState.connector) {
@@ -135,7 +139,7 @@ export default (context: Context): void => {
       }
     }
 
-    const changeChain = (chain: Chain) => {
+    const changeNetwork = (chain: Network) => {
       if (pluginState.connector) {
         pluginState.connector.handleChanChange(chain)
       }
@@ -155,13 +159,14 @@ export default (context: Context): void => {
     const plugin: Web3 = {
       connectWallet,
       disconnectWallet,
-      changeChain,
+      changeNetwork,
       importTokenToMetamask,
       resetErrors,
       getCustomProviderByNetworkId,
       getNetworkById,
       getNetworkByChainNumber,
       ...toRefs(pluginState),
+      isWrapped,
       account,
       chainId,
       provider,
@@ -169,7 +174,7 @@ export default (context: Context): void => {
       walletReady,
       error: errorStatus,
       allNetworks,
-      currentChain,
+      currentNetwork,
     }
 
     provide(WEB3_PLUGIN_KEY, plugin)

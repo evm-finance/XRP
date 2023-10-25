@@ -1,12 +1,12 @@
-import { Chain, GasStats } from './apollo/main/types'
-import { SearchResult } from '~/types/global'
+import { GasStats } from './apollo/main/types'
+import { Network, SearchResult } from '~/types/global'
 
 export type ThemeOptions = 'dark' | 'light'
 
 export interface ConfigState {
   title: string
   gasStats: GasStats[] | null
-  chains: Chain[]
+  networks: Network[]
   balancesChains: number[]
   protocols: { name: string; symbol: string; id: string }[]
   globalSearchResult: SearchResult[]

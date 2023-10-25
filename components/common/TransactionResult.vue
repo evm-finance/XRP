@@ -31,7 +31,7 @@
 import { computed, defineComponent, inject, PropType, ref, useStore } from '@nuxtjs/composition-api'
 import { State } from '~/types/state'
 import { EmitEvents } from '~/types/events'
-import { Chain } from '~/types/apollo/main/types'
+import { Network } from '~/types/global'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
 type Props = {
   receipt: any
@@ -52,7 +52,7 @@ export default defineComponent<Props>({
     const { chainId } = inject(WEB3_PLUGIN_KEY) as Web3
 
     const txHash = computed(() => {
-      const currentChain: Chain = getters['configs/chainInfo'](chainId.value ?? 1)
+      const currentChain: Network = getters['configs/chainInfo'](chainId.value ?? 1)
       return `${currentChain.blockExplorerUrl}tx/${props.receipt.transactionHash}`
     })
     const txData = computed(() => {

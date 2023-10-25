@@ -8,6 +8,7 @@
         :title="header.title"
         :description="header.description"
         :url="header.url"
+        @on-version-changed="(v) => (version = v)"
       />
       <aave-market-stats
         v-if="walletReady"
@@ -73,6 +74,7 @@
           :max-ltv="maxLtv"
           :pool-data="selectedPool"
           :pool-action="poolAction"
+          :version="version"
           @transaction-success="updatePortfolio"
           @toggle-action-dialog="dialog = !dialog"
         />
@@ -84,7 +86,7 @@
 <script lang="ts">
 import { computed, defineComponent, inject, Ref, ref, useRoute, useStore, watch } from '@nuxtjs/composition-api'
 import protocolHeader from '~/components/ProtocolHeader.vue'
-import useAavePools, { AavePoolModel, actionTypes } from '~/composables/useAavePools'
+import useAavePools, { AavePoolModel, aaveVersion, actionTypes } from '~/composables/useAavePools'
 import AaveMarkets from '~/components/pools/AaveMarkets.vue'
 import usePortfolio, { PortfolioMap } from '~/composables/usePortfolio'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
@@ -121,13 +123,14 @@ export default defineComponent({
     const portfolio = ref<PortfolioMap>({})
     const selectedPool = ref() as Ref<AavePoolModel>
     const poolAction = ref('deposit') as Ref<actionTypes>
+    const version = ref<aaveVersion>('v3')
     const aaveActionComponent = ref<any>(null)
     const searchString = ref('')
     const switchNetworkDialog = ref<any>(null)
 
     // COMPOSABLE
     const { walletReady, account, chainId } = inject(WEB3_PLUGIN_KEY) as Web3
-    const { loading, aavePoolsData } = useAavePools(chainId)
+    const { loading, aavePoolsData } = useAavePools(chainId, version)
     const { state } = useStore<State>()
 
     // COMPUTED
@@ -136,7 +139,7 @@ export default defineComponent({
       aavePoolsData.value.reduce((elem, item) => ({ ...elem, [item.id]: item.addresses }), {})
     )
 
-    const { fetchPortfolio } = usePortfolio(addresses)
+    const { fetchPortfolioNew } = usePortfolio(addresses)
 
     const pools = computed(() => {
       const pools: AavePoolModel[] = []
@@ -161,13 +164,12 @@ export default defineComponent({
 
     // WATCHERS
     watch([loading, walletReady, account, chainId], async () => {
-      // Refresh portfolio of loading of aave pools query is set to false
       if (!loading.value) await updatePortfolio()
     })
 
     // METHODS
     async function updatePortfolio() {
-      portfolio.value = await fetchPortfolio()
+      portfolio.value = await fetchPortfolioNew()
     }
 
     function initAction({ action, pool }: { action: actionTypes; pool: AavePoolModel }) {
@@ -201,10 +203,14 @@ export default defineComponent({
       totalDepositsUsd,
       searchString,
       switchNetworkDialog,
+      version,
+      chainId,
+      aavePoolsData,
 
       // METHODS
       initAction,
       updatePortfolio,
+      fetchPortfolioNew,
     }
   },
   head: {},

@@ -63,7 +63,6 @@ type AavePortfolio {
 }
 
 type Balance {
-  aavePools: [AavePool!]!
   address: String!
   chainId: Float!
   items: [BalanceItem!]!
@@ -128,17 +127,6 @@ type BlockTransactionContractTransfer {
   successful: Boolean!
   transfers: [TokenTransferItem!]!
   txHash: String!
-}
-
-type Chain {
-  blockExplorerUrl: String!
-  chainIdentifier: Int!
-  dex: [Dex!]!
-  id: String!
-  name: String!
-  rpcUrl: String!
-  symbol: String!
-  weth: UniswapToken!
 }
 
 type DailyChart {
@@ -228,6 +216,18 @@ type LogEventParams {
   value: String!
 }
 
+type Network {
+  blockExplorerUrl: String!
+  chainIdentifier: Int!
+  dex: [Dex!]!
+  id: String!
+  name: String!
+  nativeTokenSymbol: String!
+  rpcUrl: String!
+  symbol: String!
+  weth: UniswapToken!
+}
+
 type News {
   currencies: [NewsCurrency!]!
   id: Int!
@@ -292,17 +292,16 @@ type PriceStream {
 }
 
 type Query {
-  aaveAddresses(chainId: Int!): [AaveAddress!]!
-  aavePools(chainId: Int!): [AavePool!]!
+  aavePools(chainId: Int!, version: String!): [AavePool!]!
   balances(address: String!, chainIds: [Int!]!): [Balance!]!
   block(blockNumber: Int!, network: String!): Block!
   blocks(network: String!): [Block!]!
-  chains: [Chain!]!
   dailyChart(coinGeckoID: String! = ""): [DailyChart!]!
   evmTransaction(chainId: Int!, hash: String!): EvmTransaction!
   fiatPrices(addresses: [String!]!, platform: String! = "ethereum"): Map!
   gas: [GasStats!]!
   globalStats: GlobalStats!
+  networks: [Network!]!
   poolScreener(dex: String!, network: String!, pageNumber: Int! = 0, sort: String!, sortBy: String!): [Pool!]!
   recentPrices: Map!
   token(chainId: Int! = 1, contractAddress: String! = "", decimals: Int! = 18, interval: TimeInterval! = INTERVAL_1H, qcKey: String!, walletAddress: String! = ""): Token!

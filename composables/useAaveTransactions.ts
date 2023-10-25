@@ -1,7 +1,7 @@
-import { computed, inject, reactive, Ref } from '@nuxtjs/composition-api'
+import { computed, inject, reactive, ref, Ref } from '@nuxtjs/composition-api'
 import { BigNumber, ethers } from 'ethers'
 import type { ContractTransaction } from 'ethers'
-import type { AavePoolModel } from '~/composables/useAavePools'
+import type { AavePoolModel, aaveVersion } from '~/composables/useAavePools'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
 import wethGatewayAbi from '~/constracts/abi/aave/wethGatewayAbi.json'
 import lendingPoolAbi from '~/constracts/abi/aave/lendingPoolAbi.json'
@@ -18,7 +18,8 @@ interface MarketConfig {
   WETH_VARIABLE_BORROW: string
   WRAPPED_ETH: string
 }
-const configs: { [key: number]: MarketConfig } = {
+
+const configsV2: { [key: number]: MarketConfig } = {
   1: {
     name: 'ETH mainnet',
     AAVE_LENDING_POOL_ADDRESS: '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9',
@@ -73,13 +74,55 @@ const configs: { [key: number]: MarketConfig } = {
   },
 }
 
+const configsV3: { [key: number]: MarketConfig } = {
+  1: {
+    name: 'ETH mainnet',
+    AAVE_LENDING_POOL_ADDRESS: '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2',
+    AAVE_WETH_GATEWAY_ADDRESS: '',
+    AWETH_ADDRESS: '',
+    WETH_VARIABLE_BORROW: '',
+    WRAPPED_ETH: '',
+  },
+
+  137: {
+    name: 'Polygon (Matic) ',
+    AAVE_LENDING_POOL_ADDRESS: '0x794a61358D6845594F94dc1DB02A252b5b4814aD',
+    AAVE_WETH_GATEWAY_ADDRESS: '',
+    AWETH_ADDRESS: '',
+    WETH_VARIABLE_BORROW: '',
+    WRAPPED_ETH: '',
+  },
+
+  43114: {
+    name: 'Avalanche',
+    AAVE_LENDING_POOL_ADDRESS: '0x794a61358D6845594F94dc1DB02A252b5b4814aD',
+    AAVE_WETH_GATEWAY_ADDRESS: '',
+    AWETH_ADDRESS: '',
+    WETH_VARIABLE_BORROW: '',
+    WRAPPED_ETH: '',
+  },
+
+  10: {
+    name: 'Optimism',
+    AAVE_LENDING_POOL_ADDRESS: '0x794a61358D6845594F94dc1DB02A252b5b4814aD',
+    AAVE_WETH_GATEWAY_ADDRESS: '',
+    AWETH_ADDRESS: '',
+    WETH_VARIABLE_BORROW: '',
+    WRAPPED_ETH: '',
+  },
+}
+
 interface Transaction {
   loading: boolean
   isCompleted: boolean
   receipt: any
 }
 
-export default function useAaveTransactions(pool: Ref<AavePoolModel>, amountInTokens: Ref<number>) {
+export default function useAaveTransactions(
+  pool: Ref<AavePoolModel>,
+  amountInTokens: Ref<number>,
+  version: Ref<aaveVersion> = ref('v3')
+) {
   // COMPUTED
   const { signer, account, chainId, provider } = inject(WEB3_PLUGIN_KEY) as Web3
   const { allowedSpending, approveMaxSpending } = useERC20()
@@ -92,21 +135,23 @@ export default function useAaveTransactions(pool: Ref<AavePoolModel>, amountInTo
     receipt: null,
   })
 
+  const configs = computed(() => (version.value === 'v2' ? configsV2 : configsV3))
+
   // COMPUTED
   const AAVE_LENDING_POOL_ADDRESS = computed(() =>
-    chainId.value && chainId.value in configs ? configs[chainId.value].AAVE_LENDING_POOL_ADDRESS : ''
+    chainId.value && chainId.value in configs.value ? configs.value[chainId.value].AAVE_LENDING_POOL_ADDRESS : ''
   )
 
   const AAVE_WETH_GATEWAY_ADDRESS = computed(() =>
-    chainId.value && chainId.value in configs ? configs[chainId.value].AAVE_WETH_GATEWAY_ADDRESS : ''
+    chainId.value && chainId.value in configs.value ? configs.value[chainId.value].AAVE_WETH_GATEWAY_ADDRESS : ''
   )
 
   const AWETH_ADDRESS = computed(() =>
-    chainId.value && chainId.value in configs ? configs[chainId.value].AWETH_ADDRESS : ''
+    chainId.value && chainId.value in configs.value ? configs.value[chainId.value].AWETH_ADDRESS : ''
   )
 
   const WRAPPED_ETH = computed(() =>
-    chainId.value && chainId.value in configs ? configs[chainId.value].WRAPPED_ETH : ''
+    chainId.value && chainId.value in configs.value ? configs.value[chainId.value].WRAPPED_ETH : ''
   )
 
   const txLoading = computed(() => txData.loading)
@@ -207,6 +252,8 @@ export default function useAaveTransactions(pool: Ref<AavePoolModel>, amountInTo
   }
 
   async function depositERC20Web3Call(): Promise<{ isCompleted: boolean; receipt: any }> {
+    console.log(AAVE_LENDING_POOL_ADDRESS.value, 'AAAAAAAAAAA')
+
     try {
       const contract = new ethers.Contract(
         AAVE_LENDING_POOL_ADDRESS.value,
@@ -229,6 +276,30 @@ export default function useAaveTransactions(pool: Ref<AavePoolModel>, amountInTo
       return { isCompleted: false, receipt: error }
     }
   }
+
+  // async function depositERC20Web3CallV3(): Promise<{ isCompleted: boolean; receipt: any }> {
+  //   try {
+  //     const contract = new ethers.Contract(
+  //       AAVE_LENDING_POOL_ADDRESS.value,
+  //       aaveLandingPoolV3,
+  //       signer.value
+  //     ) as unknown as AaveLendingPoolContractV3
+  //     const amount = ethers.utils.parseUnits(`${amountInTokens.value}`, pool.value.decimals)
+  //     const populatedTx = await contract.populateTransaction.deposit(
+  //       pool.value.underlyingAsset,
+  //       amount,
+  //       account.value,
+  //       0
+  //     )
+  //     const estimatedGas: BigNumber = await ESTIMATED_GAS_FEE(populatedTx)
+  //     const gasLimit = ERC20_GAS_LIMIT(estimatedGas)
+  //     const depositCall = await contract.deposit(pool.value.underlyingAsset, amount, account.value, 0, { gasLimit })
+  //     const resp = await depositCall.wait()
+  //     return { isCompleted: true, receipt: resp }
+  //   } catch (error) {
+  //     return { isCompleted: false, receipt: error }
+  //   }
+  // }
 
   async function borrowERC20Web3Call(): Promise<{ isCompleted: boolean; receipt: any }> {
     try {

@@ -10,6 +10,7 @@
       :max-ltv="maxLtv"
       :pool-data="pool"
       :pool-action="aaveActionType"
+      version="v3"
       @transaction-success="updatePortfolio()"
       @toggle-reserve-details="reserveDetailDialog = !reserveDetailDialog"
     />
@@ -63,8 +64,8 @@ export default defineComponent({
     const addresses = computed(() =>
       aavePoolsData.value.reduce((elem, item) => ({ ...elem, [item.id]: item.addresses }), {})
     )
-    const { fetchPortfolio } = usePortfolio(addresses)
-    const updatePortfolio = async () => (portfolio.value = await fetchPortfolio())
+    const { fetchPortfolioNew } = usePortfolio(addresses)
+    const updatePortfolio = async () => (portfolio.value = await fetchPortfolioNew())
     const pools = computed(() => {
       const pools: AavePoolModel[] = []
       aavePoolsData.value.forEach((elem) => {

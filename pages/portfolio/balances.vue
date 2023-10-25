@@ -29,7 +29,7 @@
         <v-col>
           <v-row>
             <v-col lg="4" cols="12">
-              <v-card class="py-2 px-4" height="300" tile outlined>
+              <v-card class="py-2 px-4" height="336" tile outlined>
                 <v-dialog v-model="loading" width="450">
                   <v-card tile outlined class="pa-6">
                     <v-row no-gutters>
@@ -44,7 +44,7 @@
                     </v-row>
                   </v-card>
                 </v-dialog>
-                <v-skeleton-loader v-if="loading" type="heading,table-tbody,table-tbody" height="240" />
+                <v-skeleton-loader v-if="loading" type="heading,table-tbody,table-tbody, table-tbody" height="280" />
                 <div v-else>
                   <h4 :class="['text-subtitle-1 text-truncate pink--text font-weight-medium']">Wallet Balance</h4>
                   <div
@@ -76,7 +76,7 @@
             </v-col>
             <v-col class="hidden-sm-and-down">
               <v-card tile outlined height="100%">
-                <v-skeleton-loader v-if="loading" type="image, image" height="240" />
+                <v-skeleton-loader v-if="loading" type="image, image" height="336" />
                 <client-only>
                   <balances-chart v-if="!loading" :balances="balanceData" />
                 </client-only>
@@ -97,7 +97,7 @@
             </v-col>
           </v-row>
 
-          <balance-protocols v-show="!loading" :balances="balanceData" />
+          <!--          <balance-protocols v-show="!loading" :balances="balanceData" />-->
         </v-col>
       </v-row>
     </v-col>
@@ -110,7 +110,7 @@ import usePortfolioBalances from '~/composables/usePortfolioBalances'
 import PortfolioBalanceGrid from '~/components/portfolio/PortfolioBalanceGrid.vue'
 import BalancesChart from '~/components/portfolio/BalancesChart.vue'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
-import BalanceProtocols from '~/components/portfolio/BalanceProtocols.vue'
+// import BalanceProtocols from '~/components/portfolio/BalanceProtocols.vue'
 import ConnectWalletMemo from '~/components/common/ConnectWalletMemo.vue'
 import { useMetaTags } from '~/composables/useMetaTags'
 import InfoTooltip from '~/components/common/ui/InfoTooltip.vue'
@@ -122,7 +122,7 @@ export default defineComponent({
     CustomWalletIndicator,
     InfoTooltip,
     ConnectWalletMemo,
-    BalanceProtocols,
+    // BalanceProtocols,
     BalancesChart,
     PortfolioBalanceGrid,
   },

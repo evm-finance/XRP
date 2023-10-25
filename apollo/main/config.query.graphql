@@ -1,17 +1,17 @@
-query SupportedChainsGQL {
-  chains {
-    id
-    chainIdentifier,
-    name,
-    symbol,
-    rpcUrl,
-    blockExplorerUrl,
-    dex {
-      name, value, symbol
-    }
-    weth{chainId, address, symbol}
-  }
-}
+#query SupportedChainsGQL {
+#  chains {
+#    id
+#    chainIdentifier,
+#    name,
+#    symbol,
+#    rpcUrl,
+#    blockExplorerUrl,
+#    dex {
+#      name, value, symbol
+#    }
+#    weth{chainId, address, symbol}
+#  }
+#}
 
 
 query GasGQL {

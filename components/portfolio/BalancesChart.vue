@@ -41,7 +41,7 @@ export default defineComponent<Props>({
     const { env } = useContext()
     const { state } = useStore<State>()
     const { getNetworkByChainNumber } = inject(WEB3_PLUGIN_KEY) as Web3
-    const chartHeight = ref(240)
+    const chartHeight = ref(300)
     const chartDiv = ref(null)
 
     let chart: any = null
@@ -103,7 +103,7 @@ export default defineComponent<Props>({
       pieChart = chart.createChild(am4charts.PieChart)
       pieChart.data = data.value
       pieChart.innerRadius = am4core.percent(65)
-      pieChart.width = 500
+      pieChart.width = 600
       // Add and configure Series
       pieSeries = pieChart.series.push(new am4charts.PieSeries())
       pieSeries.dataFields.value = 'value'

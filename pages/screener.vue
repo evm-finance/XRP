@@ -66,10 +66,10 @@
 
 import { computed, defineComponent, inject, ref } from '@nuxtjs/composition-api'
 import ScreenerGrid from '~/components/ScreenerGrid.vue'
-import { Chain } from '~/types/apollo/main/types'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
 import useAavePools, { AavePoolModel } from '~/composables/useAavePools'
 import CustomWalletIndicator from '~/components/common/CustomWalletIndicator.vue'
+import { Network } from '~/types/global'
 
 export default defineComponent({
   components: {
@@ -84,7 +84,7 @@ export default defineComponent({
     const searchString = ref('')
     const selectedChainId = ref('ethereum')
     const selectedDexId = ref('uniswap_v3')
-    const selectedNetwork = computed<Chain | null>(
+    const selectedNetwork = computed<Network | null>(
       () => allNetworks.value.find((elem) => elem.id === selectedChainId.value) ?? null
     )
     const chainId = computed(() => selectedNetwork.value?.chainIdentifier ?? null)

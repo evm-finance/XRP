@@ -176,3 +176,78 @@ export const XRPScreenerGQL = gql`
     }
   }
 `
+export const AaveMarketsQGL = gql`
+  query AaveMarketsQGL($chainId: Int!, $version: String!) {
+    aavePools(chainId: $chainId, version: $version) {
+      id
+      underlyingAsset
+      name
+      symbol
+      decimals
+      totalLiquidity
+      price {
+        id
+        priceInEth
+        priceUsd
+      }
+      liquidityRate
+      stableBorrowRate
+      variableBorrowRate
+      aEmissionPerSecond
+      vEmissionPerSecond
+      sEmissionPerSecond
+      availableLiquidity
+      utilizationRate
+      totalATokenSupply
+      totalCurrentVariableDebt
+      totalPrincipalStableDebt
+      addresses {
+        aTokenAddress
+        aTokenSymbol
+        stableDebtTokenAddress
+        variableDebtTokenAddress
+        decimals
+        address
+        symbol
+      }
+      portfolioVal {
+        totalDeposits
+        walletBal
+        stableBorrow
+        variableBorrow
+      }
+      totalLiquidityAsCollateral
+      baseLTVasCollateral
+      reserveLiquidationThreshold
+      reserveLiquidationBonus
+      usageAsCollateralEnabled
+
+      borrowingEnabled
+      stableBorrowRateEnabled
+    }
+  }
+`
+
+export const SupportedChainsGQL = gql`
+  query SupportedChainsGQL {
+    networks {
+      id
+      chainIdentifier
+      name
+      symbol
+      nativeTokenSymbol
+      rpcUrl
+      blockExplorerUrl
+      dex {
+        name
+        value
+        symbol
+      }
+      weth {
+        chainId
+        address
+        symbol
+      }
+    }
+  }
+`

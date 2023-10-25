@@ -20,7 +20,9 @@
         mobile-breakpoint="0"
       >
         <template #expanded-item="{ headers, item }">
-          <td :colspan="headers.length"><aave-market-details :pool="item" /></td>
+          <td :colspan="headers.length">
+            <aave-market-details :pool="item" />
+          </td>
         </template>
 
         <!--      Cols-->
@@ -36,13 +38,15 @@
                 <v-row no-gutters>
                   <v-col>
                     <nuxt-link
-                      class="text-capitalize font-weight-bold pink--text text-decoration-none"
+                      class="text-capitalize font-weight-bold pink--text text-decoration-none d-inline-block text-truncate"
+                      style="max-width: 150px"
                       :to="{
                         path: `/token/${item.symbol}`,
                         query: { name: item.name, contract: item.addresses.address, decimals: item.addresses.decimals },
                       }"
-                      v-text="item.name"
-                    />
+                    >
+                      {{ item.name }}
+                    </nuxt-link>
                   </v-col>
                 </v-row>
                 <v-row no-gutters>
@@ -64,11 +68,39 @@
         </template>
 
         <template #item.portfolio.walletBal="{ item }">
-          <div v-text="$f(item.portfolio.walletBal, { minDigits: 2, maxDigits: 6 })" />
-          <div
-            :class="textClass"
-            v-text="$f(item.portfolio.walletBal * item.price.priceUsd, { minDigits: 2, pre: '$ ' })"
-          />
+          <div v-if="item.portfolio.isWrapped">
+            <v-row no-gutters>
+              <v-col>
+                <span class="grey--text" style="display: inline-block; width: 50px">
+                  <!--                  {{ item.balanceNew.nativeSymbol }}-->
+                  {{ item.portfolio.networkSymbol }}
+                </span>
+                <span class="mx-3">{{ $f(item.portfolio.nativeBalance, { minDigits: 2, maxDigits: 6 }) }}</span>
+                <span class="grey--text">
+                  {{ $f(item.portfolio.nativeBalance * item.price.priceUsd, { minDigits: 2, pre: '$ ' }) }}
+                </span>
+              </v-col>
+            </v-row>
+            <v-row no-gutters>
+              <v-col>
+                <span class="grey--text" style="display: inline-block; width: 50px">
+                  {{ item.symbol }}
+                </span>
+                <span class="mx-3">{{ $f(item.portfolio.walletBal, { minDigits: 2, maxDigits: 6 }) }}</span>
+                <span class="grey--text">
+                  {{ $f(item.portfolio.walletBal * item.price.priceUsd, { minDigits: 2, pre: '$ ' }) }}
+                </span>
+              </v-col>
+            </v-row>
+          </div>
+
+          <div v-else>
+            <div v-text="$f(item.portfolio.walletBal, { minDigits: 2, maxDigits: 6 })" />
+            <div
+              :class="textClass"
+              v-text="$f(item.portfolio.walletBal * item.price.priceUsd, { minDigits: 2, pre: '$ ' })"
+            />
+          </div>
         </template>
 
         <template #item.portfolio.totalDeposits="{ item }">
@@ -180,12 +212,13 @@ import {
   useStore,
   watch,
 } from '@nuxtjs/composition-api'
-import { AavePoolModel, aaveActions, actionTypes } from '~/composables/useAavePools'
+import { aaveActions, AavePoolModel, actionTypes } from '~/composables/useAavePools'
 import { State } from '~/types/state'
 import AaveMarketDetails from '~/components/pools/AaveMarketDetails.vue'
 import { EmitEvents } from '~/types/events'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
-import { Chain } from '~/types/apollo/main/types'
+import { Network } from '~/types/global'
+
 type Props = {
   pools: AavePoolModel[]
   loading: boolean
@@ -328,9 +361,10 @@ export default defineComponent<Props>({
         })
       }
     }
+
     // METHODS
     function navigateToExplorer(address: string) {
-      const currentChain: Chain = getters['configs/chainInfo'](chainId.value ?? 1)
+      const currentChain: Network = getters['configs/chainInfo'](chainId.value ?? 1)
       const url = `${currentChain.blockExplorerUrl}address/${address}`
       window.open(url)
     }
