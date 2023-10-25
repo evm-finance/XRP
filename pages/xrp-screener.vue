@@ -73,7 +73,7 @@
                       >
                       <span class="text-caption">{{ item.value }}</span>
                     </v-btn>
-                    <v-dialog 
+                    <v-dialog
                       v-if="isOpen"
                       v-model="isOpen">
                       <h2> Enter Order Data</h2>
@@ -82,8 +82,8 @@
                         hide-details
                         required
                       ></v-text-field>
-                      <v-btn @click = "buy()">Submit Order</v-btn> 
-                      <v-btn @click = "closeDialog()">Cancel</v-btn> 
+                      <v-btn @click = "buy()">Submit Order</v-btn>
+                      <v-btn @click = "closeDialog()">Cancel</v-btn>
                     </v-dialog>
                   </div>
                 </template>
@@ -102,7 +102,6 @@ import { computed, defineComponent, ref, useContext } from '@nuxtjs/composition-
 import { useQuery } from '@vue/apollo-composable/dist'
 import { XRPScreenerGQL } from '~/apollo/queries'
 import  useXrpTrade from '~/composables/useXrpTrade'
-import { isInstalled, getAddress } from "@gemwallet/api";
 
 
 interface XRPScreenerElem {
@@ -231,11 +230,11 @@ export default defineComponent({
       loading,
       cols,
       screenerDataFormatted,
-      buy, 
+      buy,
       sell,
       connectWallet,
       isOpen,
-      openDialog, 
+      openDialog,
       closeDialog
     }
   },
