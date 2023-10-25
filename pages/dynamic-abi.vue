@@ -31,7 +31,7 @@ import { BigNumber, ethers } from 'ethers'
 // import { DefiEvents, EmitEvents } from '~/types/events'
 import type { ContractTransaction } from 'ethers'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
-import { Chain, AbiElem, EventElem, AbiEvent, CalldataAbi, inputAbi, calldataTemplate } from '~/types/apollo/main/types'
+import { AbiElem, EventElem, AbiEvent, CalldataAbi, inputAbi, calldataTemplate } from '~/types/apollo/main/types'
 import { ConstructorFragment } from 'ethers/lib/utils';
 
 export default defineComponent({
