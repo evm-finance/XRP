@@ -62,8 +62,6 @@
 </template>
 
 <script lang="ts">
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { computed, defineComponent, inject, ref } from '@nuxtjs/composition-api'
 import ScreenerGrid from '~/components/ScreenerGrid.vue'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
@@ -79,7 +77,9 @@ export default defineComponent({
   setup() {
     const { allNetworks } = inject(WEB3_PLUGIN_KEY) as Web3
     const supportedNetworks = computed(() =>
-      allNetworks.value.filter((elem) => ['ethereum', 'polygon-pos', 'binance-smart-chain'].includes(elem.id))
+      allNetworks.value.filter((elem) =>
+        ['ethereum', 'polygon-pos', 'binance-smart-chain', 'avalanche'].includes(elem.id)
+      )
     )
     const searchString = ref('')
     const selectedChainId = ref('ethereum')
