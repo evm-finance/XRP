@@ -31,7 +31,7 @@
           <v-list-item-group color="primary">
             <v-list-item v-for="(item, i) in walletActions" :key="i" @click="item.action">
               <v-list-item-icon><v-icon size="18" v-text="item.icon" /></v-list-item-icon>
-              <v-list-item-content><v-list-item-title v-text="item.text" /></v-list-item-content>
+              <v-list-item-content><v-list-item-title />{{ item.text }}</v-list-item-content>
             </v-list-item>
           </v-list-item-group>
         </v-list>

@@ -23,6 +23,7 @@ export default {
     '~/plugins/emitter.client.ts',
 
     '~/plugins/web3/web3.ts',
+    '~/plugins/web3/xrp.client.ts',
     '~/plugins/typer.client.ts',
   ],
 

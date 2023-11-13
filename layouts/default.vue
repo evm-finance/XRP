@@ -37,8 +37,9 @@
         <global-search />
         <gas-info class="hidden-xs-and-down" />
         <network-selection />
+        <wallet-connector class="hidden-sm-and-down" />
+        <gem-wallet-connector class="hidden-sm-and-down" />
       </client-only>
-      <wallet-connector class="hidden-sm-and-down" />
     </v-app-bar>
 
     <v-main>
@@ -46,7 +47,6 @@
         <nuxt />
       </v-container>
     </v-main>
-    <wallet-select-dialog />
 
     <v-navigation-drawer v-model="drawer" fixed temporary>
       <v-list elevation="0">
@@ -59,6 +59,7 @@
     </v-navigation-drawer>
 
     <client-only>
+      <wallet-select-dialog />
       <main-footer />
     </client-only>
   </v-app>
@@ -74,9 +75,11 @@ import { State } from '~/types/state'
 import MainFooter from '~/components/common/ui/footers/MainFooter.vue'
 import NetworkSelection from '~/components/common/NetworkSelection.vue'
 import GlobalSearch from '~/components/common/GlobalSearch.vue'
+import GemWalletConnector from '~/components/common/GemWalletConnector.vue'
 
 export default defineComponent({
   components: {
+    GemWalletConnector,
     GlobalSearch,
     NetworkSelection,
     MainFooter,

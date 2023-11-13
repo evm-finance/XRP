@@ -89,7 +89,8 @@ export default (context: Context): void => {
         }
         if (account) {
           pluginState.walletState = 'connected'
-          context.$cookies.set(Cookies.walletConnected, wallet)
+          const inFifteenMinutes = new Date(new Date().getTime() + 15 * 60 * 1000)
+          context.$cookies.set(Cookies.walletConnected, wallet, { expires: inFifteenMinutes })
         }
       } catch (err) {
         pluginState.walletState = 'disconnected'
