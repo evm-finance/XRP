@@ -1,0 +1,83 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Master Task List for XRP Project
+
+## 1. Integrate and summarize requirements from xrp-amm-specs.mdc, xrpl-finance-spec.mdc, and xrp-token-pages.mdc
+- [x] Read and summarize requirements from all three spec files
+- [x] Document the summary for future reference
+
+## 2. Generate a master actionable task list from all specs
+- [ ] Break down each major requirement into detailed, actionable sub-tasks
+- [ ] Organize tasks by feature/module (AMM, Token Pages, Analytics, Wallet, etc.)
+- [ ] Ensure each sub-task is clear and testable
+
+## 3. Set up progress tracking in tasks-progress.mdc
+- [ ] Copy the master task list to tasks-progress.mdc
+- [ ] Add checkboxes for each sub-task
+- [ ] Mark progress as tasks are completed
+
+## 4. Audit all files in [xrp-structure] for documentation, style, and API handler compliance
+- [ ] Review all files listed in [xrp-structure] for documentation
+- [ ] Check for code style and consistency
+- [ ] Ensure API handlers follow project conventions
+
+## 5. Implement wallet integration (GEM wallet)
+- [ ] Integrate GEM wallet for authentication and transactions
+- [ ] Display XRP balances and transactions in the UI
+- [ ] Support wallet connection only when needed (not on page load)
+- [ ] Support multiple wallet addresses (EVM and XRP)
+
+## 6. Implement AMM interface and swap functionality
+- [ ] Set up xrpl.js in the frontend
+- [ ] Implement AMM swap function (AMMTrade/OfferCreate)
+- [ ] Build UI for swap operations
+- [ ] Handle transaction signing and submission
+- [ ] Display swap results and errors
+
+## 7. Update and improve XRP token pages (UI, data, copy icon, USD/XRP toggle)
+- [ ] Remove Uniswap/Aave interfaces
+- [ ] Add XRP screener fields (issuer, price, volume, etc.)
+- [ ] Add copy icon for issuer address
+- [ ] Add AMM chart data (tabs for 1H, 1D, 1W)
+- [ ] Show wallet transactions and transaction summary links
+- [ ] Add USD/XRP price toggle
+
+## 8. Add and display XRP balances and transactions on relevant pages
+- [ ] Show balances and transactions on balances, screener, and portfolio pages
+- [ ] Add widgets for XRP balance display
+
+## 9. Add block summary records and analytics (heatmap, liquidity, top traded tokens)
+- [ ] Implement block reader for summary records (5m, 15m, 1h, etc.)
+- [ ] Display top traded tokens and volumes per interval
+- [ ] Add heatmap for XRPL liquidity pairings
+- [ ] Create analytics dashboard
+
+## 10. Remove non-XRP blockchain references and interfaces
+- [ ] Remove all non-XRP code, UI, and references
+- [ ] Clean up navigation and top bar
+
+## 11. Add Trust line interface
+- [ ] Implement Trust line management in the UI
+- [ ] Integrate with GEM wallet
+
+## 12. Add new token mints page and DEX/liquidity pool displays
+- [ ] Create new token mints page
+- [ ] Show liquidity and analytics for new tokens
+- [ ] Add DEX/liquidity pool displays
+
+## 13. Add Smokeyinthebox meme coin interface
+- [ ] Design and implement meme coin interface
+
+## 14. Support for multiple wallets and blockchains
+- [ ] Add support for multiple wallet types and addresses
+- [ ] Allow user to select which blockchains to display
+
+## 15. Ongoing: Mark tasks as completed in tasks-progress.mdc after each step
+- [ ] Update progress tracker after each completed task
+
+
+
+

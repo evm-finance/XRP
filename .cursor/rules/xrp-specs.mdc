@@ -1,0 +1,44 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Cursor Rules for XRP Project
+
+[xrp-structure]
+# XRP-related files and folders in the project
+app/plugins/web3/xrp.client.ts
+app/pages/xrp-screener.vue
+app/pages/xrp-portfolio.vue
+app/pages/xrp-explorer/index.vue
+app/pages/xrp-explorer/tx/_id.vue
+app/pages/xrp-explorer/ledger/_id.vue
+
+[include]
+# Only include XRP-related code for navigation and search
+app/xrp/**
+components/xrp/**
+pages/xrp-explorer/**
+composables/useXrp*.ts
+
+[exclude]
+# Exclude test data and mock files
+**/xrp/tests/**
+**/xrp/mocks/**
+
+[require-docs]
+# Require documentation for all XRP composables and components
+composables/useXrp*.ts
+components/xrp/**/*.vue
+
+[enforce-style]
+# Enforce camelCase for XRP variable names
+variable:camelCase
+
+[custom-rule]
+# All XRP network calls must use the centralized API handler
+pattern: useXrpApiHandler
+files: app/xrp/**, composables/useXrp*.ts
+
+
+
