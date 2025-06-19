@@ -25,8 +25,8 @@ alwaysApply: false
 - [x] Ensure API handlers follow project conventions
 
 ### 5. Implement wallet integration (GEM wallet)
-- [ ] Integrate GEM wallet for authentication and transactions
-- [ ] Display XRP balances and transactions in the UI
+- [x] Integrate GEM wallet for authentication and transactions
+- [x] Display XRP balances and transactions in the UI
 - [ ] Support wallet connection only when needed (not on page load)
 - [ ] Support multiple wallet addresses (EVM and XRP)
 
@@ -46,8 +46,8 @@ alwaysApply: false
 - [ ] Add USD/XRP price toggle
 
 ### 8. Add and display XRP balances and transactions on relevant pages
-- [ ] Show balances and transactions on balances, screener, and portfolio pages
-- [ ] Add widgets for XRP balance display
+- [x] Show balances and transactions on balances, screener, and portfolio pages
+- [x] Add widgets for XRP balance display
 
 ### 9. Add block summary records and analytics (heatmap, liquidity, top traded tokens)
 - [ ] Implement block reader for summary records (5m, 15m, 1h, etc.)

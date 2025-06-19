@@ -23,7 +23,7 @@ This document provides an overview and documentation for all XRP-related files i
 ## app/pages/xrp-screener.vue
 **Purpose:**
 - Displays a table of XRP tokens and their market data (price, volume, issuer, etc.).
-- Uses Apollo GraphQL to fetch screener data.
+- Uses Apollo GraphQL for data fetching.
 
 **Key Features:**
 - Vuetify data table for displaying tokens.
@@ -65,7 +65,7 @@ This document provides an overview and documentation for all XRP-related files i
 ## app/pages/xrp-explorer/tx/_id.vue
 **Purpose:**
 - Displays detailed information about a specific XRP transaction.
-- Fetches transaction data by hash using Apollo GraphQL.
+- Uses Apollo GraphQL to fetch transaction data by hash.
 
 **Key Features:**
 - Shows transaction summary, ledger info, and affected nodes.
@@ -79,7 +79,7 @@ This document provides an overview and documentation for all XRP-related files i
 ## app/pages/xrp-explorer/ledger/_id.vue
 **Purpose:**
 - Displays details for a specific XRP ledger, including transactions and summary info.
-- Fetches ledger data by index using Apollo GraphQL.
+- Uses Apollo GraphQL to fetch ledger data by index.
 
 **Key Features:**
 - Shows ledger summary, properties, and a table of transactions.
@@ -90,7 +90,48 @@ This document provides an overview and documentation for all XRP-related files i
 
 ---
 
+## components/xrp/xrpBalances.vue
+**Purpose:**
+- Displays XRP account balances in a card-based layout similar to PortfolioBalanceGrid.
+- Integrates with GEM wallet for authentication and balance retrieval.
+
+**Key Features:**
+- GEM wallet integration with connect/disconnect functionality.
+- Apollo GraphQL query for XRP account balances.
+- Vuetify data table with currency, balance, price, and value columns.
+- Loading states and wallet connection prompts.
+- Total balance calculation and display.
+
+**Implementation Details:**
+- Uses XRP_PLUGIN_KEY injection for wallet functionality.
+- Conditional rendering based on wallet connection status.
+- Formatted balance display with proper number formatting.
+- Error handling for wallet connection failures.
+
+**Recommendations:**
+- Add error handling for GraphQL query failures.
+- Consider adding refresh functionality for balance updates.
+
+---
+
+## components/xrp/xrpAccountHistory.vue
+**Purpose:**
+- Displays XRP account transaction history.
+
+**Key Features:**
+- Basic table structure defined with columns for hash, from, action, to, amount, fee.
+- Currently lacks data fetching and display logic.
+
+**Recommendations:**
+- Implement GraphQL query for transaction history.
+- Add wallet integration similar to xrpBalances.
+- Implement proper data display and formatting.
+
+---
+
 # General Recommendations
 - All files should include a file-level comment describing their purpose.
 - Public functions and components should have JSDoc or equivalent comments.
-- Remove or document any commented-out or legacy code for clarity. 
+- Remove or document any commented-out or legacy code for clarity.
+- Implement consistent error handling across all components.
+- Add loading states and user feedback for better UX. 
