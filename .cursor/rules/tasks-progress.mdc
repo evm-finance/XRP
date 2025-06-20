@@ -48,6 +48,11 @@ alwaysApply: false
 ### 8. Add and display XRP balances and transactions on relevant pages
 - [x] Show balances and transactions on balances, screener, and portfolio pages
 - [x] Add widgets for XRP balance display
+- [x] Enhanced XRP balance components with proper data display
+- [x] Enhanced XRP transaction history with copy functionality
+- [x] Added XRP balance widget to portfolio page
+- [x] Added XRP balance widget to screener page
+- [x] Integrated wallet-aware balance display
 
 ### 9. Add block summary records and analytics (heatmap, liquidity, top traded tokens)
 - [ ] Implement block reader for summary records (5m, 15m, 1h, etc.)

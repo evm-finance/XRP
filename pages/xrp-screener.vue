@@ -8,6 +8,14 @@
           </v-col>
           <!--          <v-btn @click="connectWallet()"> </v-btn>-->
         </v-row>
+        
+        <!-- XRP Balance Widget -->
+        <v-row justify="center" class="mb-4">
+          <v-col cols="12" lg="6">
+            <xrp-balance-widget />
+          </v-col>
+        </v-row>
+        
         <v-row justify="center">
           <v-col md="12">
             <v-card tile outlined height="1330">
@@ -22,72 +30,36 @@
                   class="elevation-0 row-height-50"
                   mobile-breakpoint="0"
                 >
-                  <template #item.currency="{ item }">
-                    <div class="my-1">
-                      <v-row no-gutters align="center">
-                        <v-col cols="2" class="mr-3">
-                          <v-avatar size="24" class="ml-2">
-                            <img :src="item.icon" alt="" @error="$setAltImageUrl" />
-                          </v-avatar>
-                        </v-col>
-                        <v-col>
-                          <v-row no-gutters>
-                            <v-col>
-                              <nuxt-link
-                                class="text-capitalize font-weight-bold pink--text text-decoration-none"
-                                to="#"
-                              >
-                                {{ item.tokenName }}</nuxt-link
-                              >
-                            </v-col>
-                          </v-row>
-                          <v-row no-gutters>
-                            <v-col>
-                              <span class="grey--text text-caption">{{ item.currencyShort }}</span>
-                            </v-col>
-                          </v-row>
-                        </v-col>
-                      </v-row>
+                  <template #[`item.currency`]="{ item }">
+                    <div class="text-no-wrap overflow-x-hidden">
+                      <v-avatar size="20" class="mr-2">
+                        <v-img
+                          :src="$imageUrlBySymbol(item.currency.toLowerCase())"
+                          :lazy-src="$imageUrlBySymbol(item.currency.toLowerCase())"
+                        />
+                      </v-avatar>
+                      <nuxt-link
+                        class="text-capitalize text-decoration-none white--text"
+                        :to="`/token/${item.currency}?issuer=${item.issuerAddress}`"
+                      >
+                        {{ item.currency }}
+                      </nuxt-link>
                     </div>
                   </template>
-                  <!--                <template #item.buy="{ item }">-->
-                  <!--                  <v-btn-->
-                  <!--                    text:-->
-                  <!--                    outlined:-->
-                  <!--                    color="green"-->
-                  <!--                    class="pa-1 ma-1"-->
-                  <!--                    height="26"-->
-                  <!--                    @click="buy()"-->
-                  <!--                  >-->
-                  <!--                    <span class="text-caption">{{ item.value }}</span>-->
-                  <!--                  </v-btn>-->
-                  <!--                </template>-->
-                  <!--                <template #item.sell="{ item }">-->
-                  <!--                  <div>-->
-                  <!--                    <v-btn-->
-                  <!--                      text:-->
-                  <!--                      outlined:-->
-                  <!--                      color="pink"-->
-                  <!--                      class="pa-1 ma-1"-->
-                  <!--                      height="26"-->
-                  <!--                      @click="openDialog()"-->
-                  <!--                      >-->
-                  <!--                      <span class="text-caption">{{ item.value }}</span>-->
-                  <!--                    </v-btn>-->
-                  <!--                    <v-dialog-->
-                  <!--                      v-if="isOpen"-->
-                  <!--                      v-model="isOpen">-->
-                  <!--                      <h2> Enter Order Data</h2>-->
-                  <!--                      <v-text-field-->
-                  <!--                        label="Amount"-->
-                  <!--                        hide-details-->
-                  <!--                        required-->
-                  <!--                      ></v-text-field>-->
-                  <!--&lt;!&ndash;                      <v-btn @click = "buy()">Submit Order</v-btn>&ndash;&gt;-->
-                  <!--&lt;!&ndash;                      <v-btn @click = "closeDialog()">Cancel</v-btn>&ndash;&gt;-->
-                  <!--                    </v-dialog>-->
-                  <!--                  </div>-->
-                  <!--                </template>-->
+
+                  <template #[`item.issuerAddressShort`]="{ item }">
+                    <div class="d-flex align-center">
+                      <span class="font-family-mono">{{ item.issuerAddressShort }}</span>
+                      <v-btn
+                        icon
+                        x-small
+                        class="ml-1"
+                        @click="copyToClipboard(item.issuerAddress)"
+                      >
+                        <v-icon size="16">mdi-content-copy</v-icon>
+                      </v-btn>
+                    </div>
+                  </template>
                 </v-data-table>
               </client-only>
             </v-card>
@@ -102,6 +74,7 @@
 import { computed, defineComponent, ref, useContext } from '@nuxtjs/composition-api'
 import { useQuery } from '@vue/apollo-composable/dist'
 import { XRPScreenerGQL } from '~/apollo/queries'
+import XrpBalanceWidget from '~/components/portfolio/XrpBalanceWidget.vue'
 // import  useXrpTrade from '~/composables/useXrpTrade'
 
 interface XRPScreenerElem {
@@ -116,6 +89,9 @@ interface XRPScreenerElem {
 }
 
 export default defineComponent({
+  components: {
+    XrpBalanceWidget,
+  },
   setup() {
     const { $f } = useContext()
     const loading = ref(true)
@@ -138,6 +114,15 @@ export default defineComponent({
         volume24HFormatted: $f(elem.volume24H, { minDigits: 2, after: '' }),
       }))
     )
+
+    const copyToClipboard = async (text: string) => {
+      try {
+        await navigator.clipboard.writeText(text)
+        // You could add a toast notification here
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    }
 
     // EVENTS
     onResult((queryResult: any) => {
@@ -230,6 +215,7 @@ export default defineComponent({
       loading,
       cols,
       screenerDataFormatted,
+      copyToClipboard,
       // buy,
       // sell,
       // connectWallet,
@@ -241,3 +227,9 @@ export default defineComponent({
   head: {},
 })
 </script>
+
+<style scoped>
+.font-family-mono {
+  font-family: 'Courier New', monospace;
+}
+</style>

@@ -68,6 +68,20 @@
                           </td>
                           <td class="grey--text" v-text="$f(elem.total, { pre: '$ ', minDigits: 2 })" />
                         </tr>
+                        <tr v-if="xrpTotalBalance > 0">
+                          <td>
+                            <div class="text-no-wrap overflow-x-hidden">
+                              <v-avatar size="20" class="mr-2">
+                                <v-img
+                                  :src="$imageUrlBySymbol('xrp')"
+                                  :lazy-src="$imageUrlBySymbol('xrp')"
+                                />
+                              </v-avatar>
+                              XRP Ledger
+                            </div>
+                          </td>
+                          <td class="grey--text" v-text="$f(xrpTotalBalance, { pre: '$ ', minDigits: 2 })" />
+                        </tr>
                       </tbody>
                     </template>
                   </v-simple-table>
@@ -95,6 +109,10 @@
             <v-col v-for="balance in balanceData" :key="balance.chainId" lg="6" md="12">
               <portfolio-balance-grid :data="balance" />
             </v-col>
+            
+            <v-col lg="6" md="12">
+              <xrp-balance-widget />
+            </v-col>
           </v-row>
 
           <!--          <balance-protocols v-show="!loading" :balances="balanceData" />-->
@@ -108,6 +126,7 @@
 import { computed, defineComponent, inject, ref, useRoute } from '@nuxtjs/composition-api'
 import usePortfolioBalances from '~/composables/usePortfolioBalances'
 import PortfolioBalanceGrid from '~/components/portfolio/PortfolioBalanceGrid.vue'
+import XrpBalanceWidget from '~/components/portfolio/XrpBalanceWidget.vue'
 import BalancesChart from '~/components/portfolio/BalancesChart.vue'
 import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
 // import BalanceProtocols from '~/components/portfolio/BalanceProtocols.vue'
@@ -125,13 +144,14 @@ export default defineComponent({
     // BalanceProtocols,
     BalancesChart,
     PortfolioBalanceGrid,
+    XrpBalanceWidget,
   },
   setup() {
     // COMPOSABLES
     const { getNetworkByChainNumber } = inject(WEB3_PLUGIN_KEY) as Web3
     const { loading, balanceData, error, totalBalance, isWalletReady, account } = usePortfolioBalances()
 
-    // COMPUtED
+    // COMPUTED
     const stats = computed(() =>
       balanceData.value.map((item) => ({
         name: getNetworkByChainNumber(item.chainId)?.name ?? '',
@@ -140,10 +160,17 @@ export default defineComponent({
       }))
     )
 
+    // Mock XRP total balance for now - in real implementation this would come from XRP widget
+    const xrpTotalBalance = ref(0)
+
     // META TAGS
     useMetaTags('balances', useRoute().value.path)
     const dialog = ref(true)
-    return { loading, balanceData, error, stats, totalBalance, isWalletReady, messages, dialog, account }
+    return { 
+      //methods
+      //data
+      loading, balanceData, error, stats, totalBalance, isWalletReady, messages, dialog, account, xrpTotalBalance 
+    }
   },
   head: {},
 })

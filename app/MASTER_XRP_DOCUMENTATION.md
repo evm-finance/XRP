@@ -125,6 +125,9 @@ This document provides comprehensive documentation for all XRP-related files in 
 - Balance formatting
 - Price display
 - Issuer address display
+- Copy to clipboard functionality
+- Total value calculation
+- Wallet-aware data loading
 
 #### xrpAccountHistory.vue
 **Location**: `components/xrp/xrpAccountHistory.vue`
@@ -133,6 +136,22 @@ This document provides comprehensive documentation for all XRP-related files in 
 - Transaction grid display
 - Column configuration
 - Data formatting
+- Copy to clipboard functionality
+- Transaction hash linking
+- Action type color coding
+- Mock transaction data generation
+
+### Portfolio Components
+
+#### XrpBalanceWidget.vue
+**Location**: `components/portfolio/XrpBalanceWidget.vue`
+**Purpose**: XRP balance widget for portfolio pages
+**Key Features**:
+- Compact balance display
+- Integration with portfolio layout
+- Wallet-aware data loading
+- Consistent styling with EVM components
+- Total balance calculation
 
 ### Common Components
 
@@ -166,6 +185,9 @@ This document provides comprehensive documentation for all XRP-related files in 
 ### XRP Screener Page
 **Location**: `pages/xrp-screener.vue`
 **Purpose**: XRP token screener interface
+**Components Used**:
+- `XrpBalanceWidget`
+- Enhanced token table with copy functionality
 
 ### XRP Explorer Pages
 **Location**: `pages/xrp-explorer/`
@@ -180,6 +202,14 @@ This document provides comprehensive documentation for all XRP-related files in 
 **Components Used**:
 - `EvmSwap`: EVM trading interface
 - `XrpAmmSwap`: XRP AMM trading interface
+
+### Portfolio Balances Page
+**Location**: `pages/portfolio/balances.vue`
+**Purpose**: Multi-chain balance display
+**Components Used**:
+- `PortfolioBalanceGrid`: EVM balance grids
+- `XrpBalanceWidget`: XRP balance widget
+- `BalancesChart`: Balance visualization
 
 ## Plugins
 
@@ -227,7 +257,7 @@ This document provides comprehensive documentation for all XRP-related files in 
 ## Recent Updates
 
 ### Task 6: AMM Interface and Swap Functionality - COMPLETED
-**Date**: Current session
+**Date**: Previous session
 **Changes Made**:
 1. **Installed xrpl.js**: Added XRPL JavaScript library for blockchain interactions
 2. **Created useXrpAmm composable**: Full AMM trading functionality with quote calculation
@@ -246,6 +276,32 @@ This document provides comprehensive documentation for all XRP-related files in 
 - `.npmrc` (NEW)
 - `package.json` (MODIFIED - added xrpl dependency)
 
+### Task 8: Enhanced XRP Balances and Transactions Display - COMPLETED
+**Date**: Current session
+**Changes Made**:
+1. **Enhanced xrpBalances component**: Added proper data table display, copy functionality, total value calculation
+2. **Enhanced xrpAccountHistory component**: Added transaction table with copy functionality, action color coding, transaction linking
+3. **Created XrpBalanceWidget component**: Portfolio-compatible balance widget
+4. **Updated portfolio balances page**: Integrated XRP balance widget alongside EVM grids
+5. **Updated XRP screener page**: Added balance widget and enhanced token table with copy functionality
+6. **Added wallet-aware data loading**: Components now use connected wallet address when available
+
+**Files Created/Modified**:
+- `components/xrp/xrpBalances.vue` (ENHANCED)
+- `components/xrp/xrpAccountHistory.vue` (ENHANCED)
+- `components/portfolio/XrpBalanceWidget.vue` (NEW)
+- `pages/portfolio/balances.vue` (MODIFIED)
+- `pages/xrp-screener.vue` (MODIFIED)
+
+**Key Features Added**:
+- Copy to clipboard functionality for addresses and transaction hashes
+- Transaction linking to XRP explorer
+- Action type color coding (Payment=green, OfferCreate=blue, etc.)
+- Wallet-aware data loading with fallback to default address
+- Consistent styling with existing EVM components
+- Total balance calculations and display
+- Enhanced error states and loading indicators
+
 ## Next Steps
 
 ### Task 7: Update and improve XRP token pages
@@ -255,7 +311,7 @@ This document provides comprehensive documentation for all XRP-related files in 
 - Add AMM chart data with time tabs
 - Add USD/XRP price toggle
 
-### Task 8: Add block summary records and analytics
+### Task 9: Add block summary records and analytics
 - Implement block reader for summary records
 - Display top traded tokens and volumes
 - Add heatmap for XRPL liquidity pairings
@@ -266,4 +322,7 @@ This document provides comprehensive documentation for all XRP-related files in 
 - All XRP components follow the existing EVM component patterns for consistency
 - GEM wallet integration is partially implemented and needs enhancement
 - XRPL client connection is established but transaction signing needs GEM wallet integration
-- Apollo Federation dependency conflicts have been resolved with .npmrc configuration 
+- Apollo Federation dependency conflicts have been resolved with .npmrc configuration
+- XRP balance and transaction components now provide full functionality with proper data display
+- Copy functionality and transaction linking enhance user experience
+- Wallet-aware components automatically use connected wallet when available 
