@@ -153,6 +153,11 @@ export default defineComponent({
         to: '/team',
       },
       {
+        icon: 'mdi-handshake',
+        title: 'XRP Trust Lines',
+        to: '/xrp-trust-lines',
+      },
+      {
         icon: 'mdi-ethereum',
         title: 'Crypto',
         href: 'https://quantifycrypto.com/terminal',
