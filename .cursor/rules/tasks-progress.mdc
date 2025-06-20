@@ -38,12 +38,12 @@ alwaysApply: false
 - [x] Display swap results and errors
 
 ### 7. Update and improve XRP token pages (UI, data, copy icon, USD/XRP toggle)
-- [ ] Remove Uniswap/Aave interfaces
-- [ ] Add XRP screener fields (issuer, price, volume, etc.)
-- [ ] Add copy icon for issuer address
-- [ ] Add AMM chart data (tabs for 1H, 1D, 1W)
-- [ ] Show wallet transactions and transaction summary links
-- [ ] Add USD/XRP price toggle
+- [x] Remove Uniswap/Aave interfaces
+- [x] Add XRP screener fields (issuer, price, volume, etc.)
+- [x] Add copy icon for issuer address
+- [x] Add AMM chart data (tabs for 1H, 1D, 1W)
+- [x] Show wallet transactions and transaction summary links
+- [x] Add USD/XRP price toggle
 
 ### 8. Add and display XRP balances and transactions on relevant pages
 - [x] Show balances and transactions on balances, screener, and portfolio pages
@@ -60,25 +60,14 @@ alwaysApply: false
 - [ ] Add heatmap for XRPL liquidity pairings
 - [ ] Create analytics dashboard
 
-### 10. Remove non-XRP blockchain references and interfaces
-- [ ] Remove all non-XRP code, UI, and references
-- [ ] Clean up navigation and top bar
-
-### 11. Add Trust line interface
+### 10. Add Trust line interface
 - [ ] Implement Trust line management in the UI
 - [ ] Integrate with GEM wallet
 
-### 12. Add new token mints page and DEX/liquidity pool displays
+### 11. Add new token mints page and DEX/liquidity pool displays
 - [ ] Create new token mints page
 - [ ] Show liquidity and analytics for new tokens
 - [ ] Add DEX/liquidity pool displays
-
-### 13. Add Smokeyinthebox meme coin interface
-- [ ] Design and implement meme coin interface
-
-### 14. Support for multiple wallets and blockchains
-- [ ] Add support for multiple wallet types and addresses
-- [ ] Allow user to select which blockchains to display
 
 ### 15. Ongoing: Mark tasks as completed in tasks-progress.mdc after each step
 - [x] Update progress tracker after each completed task

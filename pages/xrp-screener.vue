@@ -40,7 +40,7 @@
                       </v-avatar>
                       <nuxt-link
                         class="text-capitalize text-decoration-none white--text"
-                        :to="`/token/${item.currency}?issuer=${item.issuerAddress}`"
+                        :to="`/xrp-token/${item.currency}?issuer=${item.issuerAddress}`"
                       >
                         {{ item.currency }}
                       </nuxt-link>
