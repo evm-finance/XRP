@@ -217,6 +217,28 @@ This document provides comprehensive documentation for all XRP-related files in 
 **Components Used**:
 - `useXrpTrustLines`: Reusable composable for Trust line operations and data management
 
+### XRP Token Mints & Liquidity Pools Page
+**Location**: `pages/xrp-token-mints.vue`
+**Purpose**: Display recently minted XRP tokens and DEX/AMM liquidity pools with analytics
+**Components Used**:
+- `useXrpTokenMints`: Composable for token mints and pool data
+
+**Key Features**:
+- Table of recently minted XRP tokens with filters (time, market cap, volume, liquidity)
+- Table of DEX/AMM liquidity pools with analytics (TVL, volume, APR, fees, price changes, trades, unique traders)
+- Stats cards for new tokens, total market cap, 24H volume, and total TVL
+- Sorting and filtering for pools
+- Copy-to-clipboard for addresses
+- Responsive design
+- Mock data for development
+- Navigation link in main menu
+
+**Technical Implementation**:
+- Apollo GraphQL queries for token mints and pools (mocked for now)
+- Vue 3 Composition API for state management
+- TypeScript interfaces for type safety
+- Vuetify data tables and UI components
+
 ## Plugins
 
 ### XRP Client Plugin
@@ -381,6 +403,28 @@ This document provides comprehensive documentation for all XRP-related files in 
 - Consistent styling with existing EVM components
 - Total balance calculations and display
 - Enhanced error states and loading indicators
+
+### Task 10: Add new token mints page and DEX/liquidity pool displays - COMPLETED
+**Date**: Current session
+**Changes Made**:
+1. **Created XRP Token Mints page**: `/xrp-token-mints.vue` for new tokens and pools
+2. **Created useXrpTokenMints composable**: Data management for mints and pools
+3. **Added analytics and filtering**: TVL, volume, APR, fees, price changes, trades, unique traders
+4. **Added navigation link**: Main menu access
+5. **Added mock data**: For development and demo
+
+**Files Created/Modified**:
+- `app/pages/xrp-token-mints.vue` (NEW)
+- `app/composables/useXrpTokenMints.ts` (NEW)
+- `components/common/ui/menu/MainNavigationMenu.vue` (MODIFIED)
+
+**Key Features Added**:
+- Token mints and pool analytics
+- Filtering, sorting, and stats
+- Responsive, user-friendly UI
+- TypeScript and GraphQL integration
+- Navigation integration
+- Mock data for development
 
 ## Next Steps
 

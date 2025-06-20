@@ -162,6 +162,11 @@ export default defineComponent({
         title: 'Crypto',
         href: 'https://quantifycrypto.com/terminal',
       },
+      {
+        icon: 'mdi-cube-scan',
+        title: 'XRP Token Mints',
+        to: '/xrp-token-mints',
+      },
     ])
 
     // COMPOSABLE

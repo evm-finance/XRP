@@ -59,9 +59,12 @@ alwaysApply: false
 - [x] Integrate with GEM wallet
 
 ### 10. Add new token mints page and DEX/liquidity pool displays
-- [ ] Create new token mints page
-- [ ] Show liquidity and analytics for new tokens
-- [ ] Add DEX/liquidity pool displays
+- [x] Create new token mints page
+- [x] Show liquidity and analytics for new tokens
+- [x] Add DEX/liquidity pool displays
+
+### 11. Add Smokeyinthebox meme coin interface
+- [ ] Design and implement meme coin interface
 
 ### 15. Ongoing: Mark tasks as completed in tasks-progress.mdc after each step
 - [x] Update progress tracker after each completed task
