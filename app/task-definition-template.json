@@ -1,0 +1,59 @@
+{
+  "executionRoleArn": "arn:aws:iam::488443597418:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/evmx-ui",
+          "awslogs-region": "us-west-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "portMappings": [
+        {
+          "hostPort": 3000,
+          "protocol": "tcp",
+          "containerPort": 3000
+        }
+      ],
+      "cpu": 0,
+      "environment": [
+        {
+          "name": "AMCHARTS_LICENSE",
+          "value": "$AMCHARTS_LICENSE"
+        },
+        {
+          "name": "BASE_GRAPHQL_SERVER_URL",
+          "value": "$BASE_GRAPHQL_SERVER_URL"
+        },
+        {
+          "name": "BASE_GRAPHQL_WEBSOCKET_URL",
+          "value": "$BASE_GRAPHQL_WEBSOCKET_URL"
+        },
+        {
+          "name": "BASE_URL",
+          "value": "$BASE_URL"
+        },
+        {
+          "name": "SERVER_HOST",
+          "value": "$SERVER_HOST"
+        },
+        {
+          "name": "GA_ID",
+          "value": "$GA_ID"
+        }
+      ],
+      "image": "$IMAGE_NAME",
+      "name": "$CONTAINER_NAME"
+    }
+  ],
+  "taskRoleArn": "arn:aws:iam::488443597418:role/ecsTaskExecutionRole",
+  "family": "$CONTAINER_NAME",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "networkMode": "awsvpc",
+  "memory": "$MEMORY",
+  "cpu": "$CPU"
+}

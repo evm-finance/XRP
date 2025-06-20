@@ -14,4 +14,4 @@ Whenever you come across any file in the system, add or update a summary and com
 
 Always proceed immediately and continue with the next step.
 
-Before writing any new files from scratch, look through the existing xrp files, and see what is already completed of tasks in the list.
+before writing any new files from scratch, look through the existing xrp files, and see what is already completed of tasks in the list

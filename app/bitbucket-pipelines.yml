@@ -1,0 +1,96 @@
+options:
+  size: 2x
+
+definitions:
+  services:
+    docker:
+      memory: 4096
+
+
+pipelines:
+  custom:
+    deploy-staging:
+      - step:
+          image: python:3.9-alpine
+          name: Build Image
+          services:
+            - docker
+          caches:
+            - pip
+            - docker
+          script:
+            - pip3 install awscli
+            - pip3 install awscli
+            - eval $(aws ecr get-login --no-include-email --region "${AWS_REGION}" | sed 's;https://;;g')
+            - docker build -t  $DEV_IMAGE_NAME --build-arg BASE_GRAPHQL_SERVER_URL=$STAGING_BASE_GRAPHQL_SERVER_URL --build-arg BASE_GRAPHQL_WEBSOCKET_URL=$STAGING_BASE_GRAPHQL_WEBSOCKET_URL --build-arg AMCHARTS_LICENSE=$AMCHARTS_LICENSE --build-arg BASE_URL=$STAGING_BASE_URL  --build-arg GA_ID=$GA_ID .
+            - docker push $DEV_IMAGE_NAME
+
+      - step:
+          image: atlassian/default-image:2
+          name: Deploy to Staging
+          deployment: staging
+          caches:
+            - pip
+            - docker
+          script:
+            # Replace the docker image name in the task definition with the newly pushed image.
+            - export BASE_GRAPHQL_SERVER_URL=$STAGING_BASE_GRAPHQL_SERVER_URL
+            - export BASE_GRAPHQL_WEBSOCKET_URL=$STAGING_BASE_GRAPHQL_WEBSOCKET_URL
+            - export BASE_URL=$STAGING_BASE_URL
+            - export IMAGE_NAME=$DEV_IMAGE_NAME
+            - export CONTAINER_NAME="evmx-ui"
+            - export MEMORY="2048"
+            - export CPU="1024"
+            - envsubst < task-definition-template.json >  task-definition.json
+
+            # Update the task definition.
+            - pipe: atlassian/aws-ecs-deploy:1.0.0
+              variables:
+                AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+                AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+                AWS_DEFAULT_REGION: $AWS_REGION
+                CLUSTER_NAME: 'EVMX-Staging'
+                SERVICE_NAME: 'evmx-ui'
+                TASK_DEFINITION: 'task-definition.json'
+                FORCE_NEW_DEPLOYMENT: "True"
+
+    deploy-production:
+      - step:
+          image: python:3.9-alpine
+          name: Build Image
+          services:
+            - docker
+          caches:
+            - pip
+            - docker
+          script:
+            - pip3 install awscli
+            - pip3 install awscli
+            - eval $(aws ecr get-login --no-include-email --region "${AWS_REGION}" | sed 's;https://;;g')
+            - docker build -t  $IMAGE_NAME --build-arg BASE_GRAPHQL_SERVER_URL=$BASE_GRAPHQL_SERVER_URL  --build-arg BASE_GRAPHQL_WEBSOCKET_URL=$BASE_GRAPHQL_WEBSOCKET_URL  --build-arg AMCHARTS_LICENSE=$AMCHARTS_LICENSE --build-arg BASE_URL=$BASE_URL  --build-arg GA_ID=$GA_ID .
+            - docker push $IMAGE_NAME
+
+      - step:
+          image: atlassian/default-image:2
+          name: Deploy to Production
+          deployment: production
+          caches:
+            - pip
+            - docker
+          script:
+            # Replace the docker image name in the task definition with the newly pushed image.
+            - export CONTAINER_NAME="evmx-ui"
+            - export MEMORY="2048"
+            - export CPU="1024"
+            - envsubst < task-definition-template.json >  task-definition.json
+
+            # Update the task definition.
+            - pipe: atlassian/aws-ecs-deploy:1.0.0
+              variables:
+                AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+                AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+                AWS_DEFAULT_REGION: $AWS_REGION
+                CLUSTER_NAME: 'EVMX-Production'
+                SERVICE_NAME: 'evmx-ui'
+                TASK_DEFINITION: 'task-definition.json'
+                FORCE_NEW_DEPLOYMENT: "True"

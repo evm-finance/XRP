@@ -19,6 +19,7 @@
   "dependencies": {
     "@amcharts/amcharts4": "^4.10.25",
     "@gemwallet/api": "^3.5.1",
+    "@mdi/js": "^7.3.67",
     "@nuxtjs/apollo": "^4.0.1-rc.5",
     "@nuxtjs/composition-api": "^0.33.1",
     "@uniswap/sdk": "^3.0.3",
@@ -33,14 +34,15 @@
     "graphql-tag": "^2.12.5",
     "mitt": "^3.0.0",
     "nuxt": "^2.15.8",
+    "pinia": "^2.1.7",
+    "pinia-plugin-persistedstate": "^3.2.0",
     "transformer": "^1.2.8",
     "vue": "^2.7.10",
     "vue-server-renderer": "^2.7.10",
     "vue-template-compiler": "^2.7.10",
     "vue-typer": "^1.2.0",
     "vuetify": "^2.6.10",
-    "webpack": "^4.46.0",
-    "xrpl": "^4.3.0"
+    "webpack": "^4.46.0"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.19.1",

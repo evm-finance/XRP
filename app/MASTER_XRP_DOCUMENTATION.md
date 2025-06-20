@@ -1,137 +1,269 @@
-# Master Documentation: XRP Project Files
+# MASTER XRP DOCUMENTATION
 
-This document provides an overview and documentation for all XRP-related files in the system, including their purpose, structure, and recommendations for further documentation.
+This document provides comprehensive documentation for all XRP-related files in the project.
 
----
+## Table of Contents
+1. [Composables](#composables)
+2. [Components](#components)
+3. [Pages](#pages)
+4. [Plugins](#plugins)
+5. [Types](#types)
+6. [Configuration](#configuration)
 
-## app/plugins/web3/xrp.client.ts
-**Purpose:**
-- Provides a Nuxt.js plugin for integrating the GEM wallet with the frontend.
-- Handles wallet connection, disconnection, and state management for XRP accounts.
+## Composables
 
-**Key Functions:**
-- `connectWallet`: Connects to GEM wallet and retrieves the user's XRP address.
-- `disconnectWallet`: Disconnects the wallet and clears session cookies.
-- Listens for 'login' and 'logout' events to trigger wallet actions.
+### useXrpAmm.ts
+**Location**: `composables/useXrpAmm.ts`
+**Purpose**: Provides XRP AMM (Automated Market Maker) trading functionality
+**Key Features**:
+- XRPL client initialization and connection
+- Account balance retrieval
+- AMM swap quote calculation
+- Transaction preparation and submission
+- Error handling and state management
 
-**Recommendations:**
-- Add file-level and function-level JSDoc comments.
-- Improve error messages for debugging.
+**Key Functions**:
+- `initializeClient()`: Connects to XRPL network
+- `getAccountInfo()`: Retrieves account balances
+- `calculateSwapQuote()`: Calculates expected output for swaps
+- `performSwap()`: Executes AMM trades
+- `resetTransaction()`: Resets transaction state
 
----
+**Interfaces**:
+- `XRPToken`: Represents XRP tokens with currency, issuer, symbol, name, decimals
+- `XRPSwapParams`: Parameters for swap operations
+- `XRPSwapResult`: Result of swap operations
 
-## app/pages/xrp-screener.vue
-**Purpose:**
-- Displays a table of XRP tokens and their market data (price, volume, issuer, etc.).
-- Uses Apollo GraphQL for data fetching.
+### useXrpTrade.ts
+**Location**: `composables/useXrpTrade.ts`
+**Purpose**: Provides XRP trading functionality using GEM wallet
+**Key Features**:
+- GEM wallet integration
+- Offer creation for trading
+- Buy/sell operations
+- Dialog management
 
-**Key Features:**
-- Vuetify data table for displaying tokens.
-- Computed properties for formatting data.
-- Some commented-out code for wallet/trade actions.
+**Key Functions**:
+- `connectWallet()`: Connects to GEM wallet
+- `buy()`: Creates buy offers
+- `sell()`: Creates sell offers
+- `openDialog()` / `closeDialog()`: Manages UI dialogs
 
-**Recommendations:**
-- Add file-level and function-level comments.
-- Clean up or document commented-out code.
+### useXrpAccounts.ts
+**Location**: `composables/useXrpAccounts.ts`
+**Purpose**: Manages XRP account data and transactions
+**Key Features**:
+- Account balance queries
+- Transaction history
+- Apollo GraphQL integration
 
----
+### useXrpScrerener.ts
+**Location**: `composables/useXrpScrerener.ts`
+**Purpose**: Provides XRP token screener functionality
+**Key Features**:
+- Token listing and filtering
+- Price and volume data
+- Market statistics
 
-## app/pages/xrp-portfolio.vue
-**Purpose:**
-- Displays the user's XRP account history and balances using subcomponents.
+## Components
 
-**Key Features:**
-- Minimal logic in the setup function.
-- Uses `<xrpAccountHistory>` and `<xrpBalances>` components.
+### Trading Components
 
-**Recommendations:**
-- Add file-level comments describing the page's role.
+#### XrpAmmSwap.vue
+**Location**: `components/trading/XrpAmmSwap.vue`
+**Purpose**: Main XRP AMM swap interface component
+**Key Features**:
+- Token input/output fields
+- Swap quote display
+- Transaction execution
+- Error handling
+- Loading states
 
----
+**Props**:
+- `height`: Component height
+- `width`: Component width
+- `inToken`: Input token configuration
+- `outToken`: Output token configuration
 
-## app/pages/xrp-explorer/index.vue
-**Purpose:**
-- Main page for the XRP explorer, showing event composition and ledger charts.
+#### XrpTokenInputField.vue
+**Location**: `components/trading/XrpTokenInputField.vue`
+**Purpose**: Token input field for XRP trading
+**Key Features**:
+- Amount input with validation
+- Token selection button
+- Balance display
+- Price display
 
-**Key Features:**
-- Uses composables and chart components for data visualization.
-- Displays event composition and block data.
+**Props**:
+- `formTradeDirection`: Input or output direction
+- `token`: Token configuration
+- `balance`: User's token balance
+- `fiatPrice`: Token's fiat price
+- `expectedConvertQuote`: Expected output amount
+- `loading`: Loading state
 
-**Recommendations:**
-- Add file-level and function-level comments.
+#### XrpTokenMenuDialog.vue
+**Location**: `components/trading/XrpTokenMenuDialog.vue`
+**Purpose**: Token selection dialog for XRP trading
+**Key Features**:
+- Token search functionality
+- Common XRP tokens list
+- Token selection with icons
 
----
+#### XrpOfferInput.vue
+**Location**: `components/trading/XrpOfferInput.vue`
+**Purpose**: XRP offer input component (legacy)
+**Status**: Basic implementation, needs enhancement
 
-## app/pages/xrp-explorer/tx/_id.vue
-**Purpose:**
-- Displays detailed information about a specific XRP transaction.
-- Uses Apollo GraphQL to fetch transaction data by hash.
+### XRP-Specific Components
 
-**Key Features:**
-- Shows transaction summary, ledger info, and affected nodes.
-- Uses computed properties for data formatting.
+#### xrpBalances.vue
+**Location**: `components/xrp/xrpBalances.vue`
+**Purpose**: Displays XRP account balances
+**Key Features**:
+- Apollo GraphQL integration
+- Balance formatting
+- Price display
+- Issuer address display
 
-**Recommendations:**
-- Add file-level and function-level comments.
+#### xrpAccountHistory.vue
+**Location**: `components/xrp/xrpAccountHistory.vue`
+**Purpose**: Displays XRP account transaction history
+**Key Features**:
+- Transaction grid display
+- Column configuration
+- Data formatting
 
----
+### Common Components
 
-## app/pages/xrp-explorer/ledger/_id.vue
-**Purpose:**
-- Displays details for a specific XRP ledger, including transactions and summary info.
-- Uses Apollo GraphQL to fetch ledger data by index.
+#### GemWalletConnector.vue
+**Location**: `components/common/GemWalletConnector.vue`
+**Purpose**: GEM wallet connection interface
+**Key Features**:
+- Wallet connection status
+- Address display
+- Wallet actions menu
+- Explorer navigation
 
-**Key Features:**
-- Shows ledger summary, properties, and a table of transactions.
-- Uses computed properties for formatting and navigation.
+#### GlobalSearch.vue
+**Location**: `components/common/GlobalSearch.vue`
+**Purpose**: Global search functionality including XRP
+**Key Features**:
+- XRP ledger search
+- Transaction hash validation
+- Address type detection
+- Search result categorization
 
-**Recommendations:**
-- Add file-level and function-level comments.
+## Pages
 
----
+### XRP Portfolio Page
+**Location**: `pages/xrp-portfolio.vue`
+**Purpose**: XRP portfolio overview
+**Components Used**:
+- `xrpAccountHistory`
+- `xrpBalances`
 
-## components/xrp/xrpBalances.vue
-**Purpose:**
-- Displays XRP account balances in a card-based layout similar to PortfolioBalanceGrid.
-- Integrates with GEM wallet for authentication and balance retrieval.
+### XRP Screener Page
+**Location**: `pages/xrp-screener.vue`
+**Purpose**: XRP token screener interface
 
-**Key Features:**
-- GEM wallet integration with connect/disconnect functionality.
-- Apollo GraphQL query for XRP account balances.
-- Vuetify data table with currency, balance, price, and value columns.
-- Loading states and wallet connection prompts.
-- Total balance calculation and display.
+### XRP Explorer Pages
+**Location**: `pages/xrp-explorer/`
+**Purpose**: XRP ledger exploration
+- `index.vue`: Main explorer interface
+- `ledger/_id.vue`: Individual ledger view
+- `tx/_id.vue`: Transaction details
 
-**Implementation Details:**
-- Uses XRP_PLUGIN_KEY injection for wallet functionality.
-- Conditional rendering based on wallet connection status.
-- Formatted balance display with proper number formatting.
-- Error handling for wallet connection failures.
+### Swap Page
+**Location**: `pages/swap.vue`
+**Purpose**: Trading interface
+**Components Used**:
+- `EvmSwap`: EVM trading interface
+- `XrpAmmSwap`: XRP AMM trading interface
 
-**Recommendations:**
-- Add error handling for GraphQL query failures.
-- Consider adding refresh functionality for balance updates.
+## Plugins
 
----
+### XRP Client Plugin
+**Location**: `plugins/web3/xrp.client.ts`
+**Purpose**: XRP wallet and client management
+**Key Features**:
+- GEM wallet integration
+- Address management
+- Connection state management
+- Event handling
 
-## components/xrp/xrpAccountHistory.vue
-**Purpose:**
-- Displays XRP account transaction history.
+**Key Functions**:
+- `connectWallet()`: Connects to GEM wallet
+- `disconnectWallet()`: Disconnects wallet
+- `getAddress()`: Retrieves wallet address
+- `isInstalled()`: Checks wallet installation
 
-**Key Features:**
-- Basic table structure defined with columns for hash, from, action, to, amount, fee.
-- Currently lacks data fetching and display logic.
+## Types
 
-**Recommendations:**
-- Implement GraphQL query for transaction history.
-- Add wallet integration similar to xrpBalances.
-- Implement proper data display and formatting.
+### XRP Types
+**Location**: `types/apollo/main/types.ts`
+**Purpose**: TypeScript type definitions for XRP data
 
----
+**Key Types**:
+- `XRPDefiData`: XRP DeFi data structure
+- `XRPAccountBalances`: Account balance data
+- `XrpTransaction`: Transaction data structure
 
-# General Recommendations
-- All files should include a file-level comment describing their purpose.
-- Public functions and components should have JSDoc or equivalent comments.
-- Remove or document any commented-out or legacy code for clarity.
-- Implement consistent error handling across all components.
-- Add loading states and user feedback for better UX. 
+## Configuration
+
+### Package Configuration
+**Location**: `package.json`
+**XRP Dependencies**:
+- `xrpl`: XRPL JavaScript library
+- `@gemwallet/api`: GEM wallet API
+
+### NPM Configuration
+**Location**: `.npmrc`
+**Purpose**: Resolves dependency conflicts
+**Settings**:
+- `engine-strict=false`: Suppresses engine warnings
+- `legacy-peer-deps=true`: Uses legacy peer dependency resolution
+
+## Recent Updates
+
+### Task 6: AMM Interface and Swap Functionality - COMPLETED
+**Date**: Current session
+**Changes Made**:
+1. **Installed xrpl.js**: Added XRPL JavaScript library for blockchain interactions
+2. **Created useXrpAmm composable**: Full AMM trading functionality with quote calculation
+3. **Created XrpAmmSwap component**: Complete swap interface with token selection
+4. **Created XrpTokenInputField component**: Token input with balance display
+5. **Created XrpTokenMenuDialog component**: Token selection dialog
+6. **Updated swap page**: Integrated both EVM and XRP AMM interfaces
+7. **Added .npmrc**: Resolved Apollo Federation dependency conflicts
+
+**Files Created/Modified**:
+- `composables/useXrpAmm.ts` (NEW)
+- `components/trading/XrpAmmSwap.vue` (NEW)
+- `components/trading/XrpTokenInputField.vue` (NEW)
+- `components/trading/XrpTokenMenuDialog.vue` (NEW)
+- `pages/swap.vue` (MODIFIED)
+- `.npmrc` (NEW)
+- `package.json` (MODIFIED - added xrpl dependency)
+
+## Next Steps
+
+### Task 7: Update and improve XRP token pages
+- Remove Uniswap/Aave interfaces from XRP pages
+- Add XRP screener fields (issuer, price, volume)
+- Add copy icon for issuer addresses
+- Add AMM chart data with time tabs
+- Add USD/XRP price toggle
+
+### Task 8: Add block summary records and analytics
+- Implement block reader for summary records
+- Display top traded tokens and volumes
+- Add heatmap for XRPL liquidity pairings
+- Create analytics dashboard
+
+## Notes
+
+- All XRP components follow the existing EVM component patterns for consistency
+- GEM wallet integration is partially implemented and needs enhancement
+- XRPL client connection is established but transaction signing needs GEM wallet integration
+- Apollo Federation dependency conflicts have been resolved with .npmrc configuration 

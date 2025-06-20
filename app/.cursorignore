@@ -1,0 +1,70 @@
+# Environment files
+.env
+.env.*
+*.env
+
+# Secrets and keys
+**/secrets/*
+**/keys/*
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+*.keystore
+.git-credentials
+**/.git-credentials
+
+# Configuration files that might contain sensitive data
+config.json
+**/config/*.json
+**/configs/*.json
+settings.json
+**/settings/*.json
+
+# Other sensitive files
+credentials.json
+*.password
+*.secret
+*secret*
+*credential*
+*password*
+
+# Database files that might contain sensitive data
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files that might contain sensitive information
+*.log
+logs/
+**/logs/*
+
+# Backup files that might contain sensitive data
+*.bak
+*.backup
+**/backup/*
+**/backups/*
+
+# CI/CD Configuration files that might contain sensitive data
+bitbucket-pipelines.yml
+**/bitbucket-pipelines.yml
+.gitlab-ci.yml
+**/jenkins/*.groovy
+Jenkinsfile
+.github/workflows/*.yml
+azure-pipelines.yml
+**/deployment/*.yml
+**/deploy/*.yml
+
+# Docker configuration files that might contain sensitive data
+docker-compose.yml
+docker-compose.*.yml
+**/docker-compose*.yml
+**/docker/*.yml
+Dockerfile
+**/Dockerfile*
+.docker/*.yml
+.dockerignore
+docker.env
+**/docker/*.env 
