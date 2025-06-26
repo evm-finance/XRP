@@ -170,12 +170,12 @@ export default function useXrpTokenMints() {
   })
 
   // Queries
-  const { onResult: onTokenMintsResult } = useQuery(XRPTokenMintsGQL, { 
+  const { onResult: onTokenMintsResult, refetch: refetchTokenMints } = useQuery(XRPTokenMintsGQL, { 
     fetchPolicy: 'no-cache', 
     pollInterval: 60000 
   })
   
-  const { onResult: onLiquidityPoolsResult } = useQuery(XRPLiquidityPoolsGQL, { 
+  const { onResult: onLiquidityPoolsResult, refetch: refetchLiquidityPools } = useQuery(XRPLiquidityPoolsGQL, { 
     fetchPolicy: 'no-cache', 
     pollInterval: 30000 
   })
@@ -327,127 +327,108 @@ export default function useXrpTokenMints() {
     }
   }
 
-  // Mock data generation for development
-  const generateMockData = () => {
-    const mockTokenMints: TokenMint[] = [
-      {
-        id: '1',
-        name: 'Mock Token 1',
-        symbol: 'MT1',
-        issuer: 'rMockIssuer1Address123456789',
-        currency: 'MT1',
-        marketcap: 1000000,
-        volume24H: 50000,
-        price: 0.1,
-        change24H: 5.2,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: '2',
-        name: 'Mock Token 2',
-        symbol: 'MT2',
-        issuer: 'rMockIssuer2Address123456789',
-        currency: 'MT2',
-        marketcap: 2500000,
-        volume24H: 75000,
-        price: 0.25,
-        change24H: -2.1,
-        createdAt: new Date().toISOString()
-      }
-    ]
-
-    const mockLiquidityPools: LiquidityPool[] = [
-      {
-        id: '1',
-        name: 'MT1/XRP Pool',
-        token1: 'MT1',
-        token2: 'XRP',
-        tvl: 500000,
-        volume24H: 25000,
-        apr: 12.5,
-        fees: 0.3,
-        priceChange24H: 1.2,
-        trades24H: 150,
-        uniqueTraders: 45
-      },
-      {
-        id: '2',
-        name: 'MT2/XRP Pool',
-        token1: 'MT2',
-        token2: 'XRP',
-        tvl: 750000,
-        volume24H: 35000,
-        apr: 15.2,
-        fees: 0.3,
-        priceChange24H: -0.8,
-        trades24H: 200,
-        uniqueTraders: 60
-      }
-    ]
-
-    return { mockTokenMints, mockLiquidityPools }
+  // Data fetching functions
+  const fetchData = async () => {
+    loading.value = true
+    error.value = null
+    try {
+      await refetchTokenMints()
+      await refetchLiquidityPools()
+    } catch (err) {
+      error.value = 'Failed to fetch data'
+      console.error('Error fetching data:', err)
+    } finally {
+      loading.value = false
+    }
   }
 
   const fetchTokenMints = async () => {
-    loading.value = true
-    error.value = null
-    
     try {
-      // TODO: Replace with actual GraphQL query
-      // const { data } = await $apollo.query({
-      //   query: require('~/apollo/main/token-mints.query.graphql')
-      // })
-      
-      // For now, use mock data
-      const { mockTokenMints } = generateMockData()
-      tokenMints.value = mockTokenMints
+      await refetchTokenMints()
     } catch (err) {
       error.value = 'Failed to fetch token mints'
       console.error('Error fetching token mints:', err)
-    } finally {
-      loading.value = false
     }
   }
 
   const fetchLiquidityPools = async () => {
-    loading.value = true
-    error.value = null
-    
     try {
-      // TODO: Replace with actual GraphQL query
-      // const { data } = await $apollo.query({
-      //   query: require('~/apollo/main/liquidity-pools.query.graphql')
-      // })
-      
-      // For now, use mock data
-      const { mockLiquidityPools } = generateMockData()
-      liquidityPools.value = mockLiquidityPools
+      await refetchLiquidityPools()
     } catch (err) {
       error.value = 'Failed to fetch liquidity pools'
       console.error('Error fetching liquidity pools:', err)
-    } finally {
-      loading.value = false
     }
-  }
-
-  const fetchData = async () => {
-    await Promise.all([fetchTokenMints(), fetchLiquidityPools()])
   }
 
   // Event handlers
   onTokenMintsResult((queryResult: any) => {
     const mints = queryResult.data?.xrpTokenMints ?? []
-    tokenMints.value = mints
+    
+    // Transform GraphQL data to component format
+    const transformedMints: TokenMint[] = mints.map((mint: any) => ({
+      id: mint.currency || '',
+      name: mint.tokenName || mint.currency || '',
+      symbol: mint.currency || '',
+      issuer: mint.issuerAddress || '',
+      currency: mint.currency || '',
+      marketcap: mint.marketcap || 0,
+      volume24H: mint.volume24H || 0,
+      price: mint.price || 0,
+      change24H: mint.change24H || 0,
+      createdAt: mint.mintDate || new Date().toISOString()
+    }))
+    
+    tokenMints.value = transformedMints
     loading.value = false
   })
 
   onLiquidityPoolsResult((queryResult: any) => {
     const pools = queryResult.data?.xrpLiquidityPools ?? []
-    liquidityPools.value = pools
+    
+    // Transform GraphQL data to component format
+    const transformedPools: LiquidityPool[] = pools.map((pool: any) => ({
+      id: pool.poolId || '',
+      name: `${pool.asset1?.symbol || ''}/${pool.asset2?.symbol || ''} Pool`,
+      token1: pool.asset1?.symbol || '',
+      token2: pool.asset2?.symbol || '',
+      tvl: pool.tvl || 0,
+      volume24H: pool.volume24H || 0,
+      apr: pool.apr || 0,
+      fees: pool.fees24H || 0,
+      priceChange24H: pool.priceChange24H || 0,
+      trades24H: pool.transactions24H || 0,
+      uniqueTraders: pool.uniqueTraders24H || 0
+    }))
+    
+    liquidityPools.value = transformedPools
   })
 
-  // Initialize with mock data for development
-  generateMockData()
+  // Add error handling
+  const { onError: onTokenMintsError } = useQuery(
+    XRPTokenMintsGQL,
+    null,
+    { fetchPolicy: 'no-cache', pollInterval: 60000 }
+  )
+
+  const { onError: onLiquidityPoolsError } = useQuery(
+    XRPLiquidityPoolsGQL,
+    null,
+    { fetchPolicy: 'no-cache', pollInterval: 30000 }
+  )
+
+  onTokenMintsError((error: any) => {
+    console.error('GraphQL Error in useXrpTokenMints token mints:', error)
+    loading.value = false
+    error.value = 'Failed to fetch token mints'
+  })
+
+  onLiquidityPoolsError((error: any) => {
+    console.error('GraphQL Error in useXrpTokenMints liquidity pools:', error)
+    error.value = 'Failed to fetch liquidity pools'
+  })
+
+  // Remove mock data generation - rely entirely on live data
+  // generateMockData() - REMOVED
   loading.value = false
 
   return {
@@ -477,6 +458,6 @@ export default function useXrpTokenMints() {
     copyToClipboard,
     fetchData,
     fetchTokenMints,
-    fetchLiquidityPools
+    fetchLiquidityPools,
   }
 } 

@@ -1,7 +1,7 @@
 import { reactive, Ref, computed, toRefs, onGlobalSetup, provide, ref } from '@nuxtjs/composition-api'
 import { Context } from '@nuxt/types'
 import { ethers } from 'ethers'
-import { MetamaskConnector } from '~/plugins/web3/metamask.connector'
+import { MetamaskConnector } from '~/app/plugins/web3/metamask.connector'
 import { ConnectorInterface, Web3ErrorInterface } from '~/plugins/web3/connector'
 import { Cookies } from '~/types/cookies'
 import { Network } from '~/types/global'
@@ -29,7 +29,7 @@ export type Web3 = {
   currentNetwork: Ref<Network | null>
   getCustomProviderByNetworkId: (networkId: string) => ethers.providers.JsonRpcProvider | null
   getNetworkById: (networkId: string) => Network | null
-  getNetworkByChainNumber: (chainIdentifier: number) => Network | null
+  getNetworkByChainNumber: (chainId: number) => Network | null
   isWrapped: (address: string, network: Network) => boolean
 }
 
@@ -59,9 +59,9 @@ export default (context: Context): void => {
     const walletReady = computed(() => {
       return !!(pluginState.connector && pluginState.connector.provider && pluginState.walletState === 'connected')
     })
-    const allNetworks = computed<Network[]>(() => context.store.state.configs.networks)
+    const allNetworks = ref<Network[]>([])
     const currentNetwork = computed<Network | null>(
-      () => allNetworks.value.find((elem) => elem.chainIdentifier === chainId.value) ?? null
+      () => allNetworks.value.find((elem) => elem.id === chainId.value?.toString()) ?? null
     )
 
     // METHODS
@@ -111,8 +111,8 @@ export default (context: Context): void => {
       return null
     }
 
-    const getNetworkByChainNumber = (chainIdentifier: number): Network | null => {
-      const network = allNetworks.value.find((elem) => elem.chainIdentifier === chainIdentifier)
+    const getNetworkByChainNumber = (chainId: number): Network | null => {
+      const network = allNetworks.value.find((elem) => elem.id === chainId.toString())
       if (network) {
         return network
       }

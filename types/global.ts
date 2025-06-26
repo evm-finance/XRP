@@ -16,15 +16,14 @@ export type Dex = {
   value: string
 }
 
-export type Network = {
-  blockExplorerUrl: string
-  chainIdentifier: number
-  dex: Dex[]
+export interface Network {
   id: string
   name: string
-  rpcUrl: string
-  nativeTokenSymbol: string
   symbol: string
+  nativeTokenSymbol: string
+  rpcUrl: string
+  blockExplorerUrl: string
+  dex: Dex[]
   weth: UniswapToken
 }
 

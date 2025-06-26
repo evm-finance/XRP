@@ -6,7 +6,7 @@ export function useHelpers() {
   const isNativeToken = (chainId: number, symbol: string) => {
     const chainIdAdjusted: number = chainId === 1337 ? 1 : chainId
     const chain = state.configs.networks.find(
-      (elem) => elem.chainIdentifier === chainIdAdjusted && elem.symbol === symbol
+      (elem) => parseInt(elem.id) === chainIdAdjusted && elem.symbol === symbol
     )
     return !!chain
   }

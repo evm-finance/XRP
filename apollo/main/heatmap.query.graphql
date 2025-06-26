@@ -1,0 +1,107 @@
+# XRP Heatmap Queries
+
+query XRPHeatmap($timeFrame: String, $blockSize: String, $limit: Int) {
+  xrpHeatmap(timeFrame: $timeFrame, blockSize: $blockSize, limit: $limit) {
+    currency
+    name
+    price_usd
+    price_xrp
+    price_change_1h
+    price_change_4h
+    price_change_24h
+    price_change_7d
+    price_change_30d
+    marketcap
+    volume_24h
+    liquidity
+    tvl
+    issuer
+    hasAmmPool
+    hasTrustLine
+  }
+}
+
+query XRPAMMHeatmap($timeFrame: String, $blockSize: String, $limit: Int) {
+  xrpAmmHeatmap(timeFrame: $timeFrame, blockSize: $blockSize, limit: $limit) {
+    poolId
+    token1 {
+      currency
+      symbol
+      name
+      issuer
+    }
+    token2 {
+      currency
+      symbol
+      name
+      issuer
+    }
+    liquidity
+    volume24h
+    volume7d
+    fee
+    apr
+    priceChange24h
+    priceChange7d
+    tvl
+    transactions24h
+    uniqueTraders24h
+  }
+}
+
+query XRPHeatmapUpdates($currencies: [String!], $timeFrame: String) {
+  xrpHeatmapUpdates(currencies: $currencies, timeFrame: $timeFrame) {
+    currency
+    price_usd
+    price_xrp
+    price_change_1h
+    price_change_4h
+    price_change_24h
+    price_change_7d
+    price_change_30d
+    marketcap
+    volume_24h
+    liquidity
+    tvl
+  }
+}
+
+# Subscriptions for real-time updates
+subscription XRPHeatmapUpdatesSubscription($currencies: [String!]) {
+  xrpHeatmapUpdates(currencies: $currencies) {
+    currency
+    price_usd
+    price_xrp
+    price_change_1h
+    price_change_4h
+    price_change_24h
+    price_change_7d
+    price_change_30d
+    marketcap
+    volume_24h
+    liquidity
+    tvl
+  }
+}
+
+subscription XRPAMMHeatmapUpdatesSubscription {
+  xrpAmmHeatmapUpdates {
+    poolId
+    token1 {
+      currency
+      symbol
+      name
+    }
+    token2 {
+      currency
+      symbol
+      name
+    }
+    liquidity
+    volume24h
+    fee
+    apr
+    priceChange24h
+    tvl
+  }
+} 

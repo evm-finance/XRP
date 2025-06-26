@@ -218,7 +218,6 @@ type LogEventParams {
 
 type Network {
   blockExplorerUrl: String!
-  chainIdentifier: Int!
   dex: [Dex!]!
   id: String!
   name: String!

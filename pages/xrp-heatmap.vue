@@ -8,9 +8,9 @@
               <div class="d-flex align-center">
                 <v-icon large class="mr-3" color="primary">🔥</v-icon>
                 <div>
-                  <h1 class="text-h4 font-weight-bold">XRP Token Heatmap</h1>
+                  <h1 class="text-h4 font-weight-bold">XRP AMM Heatmap</h1>
                   <p class="text-subtitle-1 grey--text mb-0">
-                    Visualize XRP token performance across the XRP Ledger
+                    Visualize XRP AMM pool liquidity across the XRP Ledger
                   </p>
                 </div>
               </div>
@@ -26,26 +26,26 @@
               <v-row>
                 <v-col cols="12" md="3">
                   <div class="text-center">
-                    <div class="text-h6 font-weight-bold">{{ totalTokens }}</div>
-                    <div class="text-caption grey--text">Total Tokens</div>
+                    <div class="text-h6 font-weight-bold">{{ totalPools }}</div>
+                    <div class="text-caption grey--text">Total Pools</div>
                   </div>
                 </v-col>
                 <v-col cols="12" md="3">
                   <div class="text-center">
-                    <div class="text-h6 font-weight-bold text-success">{{ gainersCount }}</div>
-                    <div class="text-caption grey--text">Gainers (24h)</div>
+                    <div class="text-h6 font-weight-bold text-success">{{ highLiquidityCount }}</div>
+                    <div class="text-caption grey--text">High Liquidity</div>
                   </div>
                 </v-col>
                 <v-col cols="12" md="3">
                   <div class="text-center">
-                    <div class="text-h6 font-weight-bold text-error">{{ losersCount }}</div>
-                    <div class="text-caption grey--text">Losers (24h)</div>
+                    <div class="text-h6 font-weight-bold text-warning">{{ mediumLiquidityCount }}</div>
+                    <div class="text-caption grey--text">Medium Liquidity</div>
                   </div>
                 </v-col>
                 <v-col cols="12" md="3">
                   <div class="text-center">
-                    <div class="text-h6 font-weight-bold">${{ totalMarketCap }}</div>
-                    <div class="text-caption grey--text">Total Market Cap</div>
+                    <div class="text-h6 font-weight-bold">${{ totalLiquidity }}</div>
+                    <div class="text-caption grey--text">Total Liquidity</div>
                   </div>
                 </v-col>
               </v-row>
@@ -54,23 +54,80 @@
         </v-col>
       </v-row>
 
-      <v-row no-gutters>
+      <!-- Controls -->
+      <v-row no-gutters class="mb-4">
         <v-col>
-          <xrp-token-heatmap :height="heatmapHeight" :user-can-access-trend="true" />
+          <v-card tile outlined>
+            <v-card-text>
+              <v-row align="center">
+                <v-col cols="12" md="3">
+                  <v-select
+                    v-model="blockSize"
+                    :items="blockSizeOptions"
+                    label="Tile Size"
+                    outlined
+                    dense
+                  />
+                </v-col>
+                <v-col cols="12" md="3">
+                  <v-btn
+                    color="primary"
+                    @click="refreshData"
+                    :loading="isLoading"
+                    block
+                  >
+                    <v-icon left>mdi-refresh</v-icon>
+                    Refresh
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
         </v-col>
       </v-row>
 
+      <!-- Heatmap Chart -->
+      <v-row no-gutters>
+        <v-col>
+          <v-card tile outlined class="mb-4">
+            <v-card-text class="pa-0">
+              <div v-if="isLoading" class="text-center py-8">
+                <v-progress-circular indeterminate color="primary" size="64" />
+                <div class="mt-4 text-h6">Loading AMM data...</div>
+              </div>
+              <div v-else-if="hasError" class="text-center py-8">
+                <v-icon color="error" size="64">mdi-alert-circle</v-icon>
+                <div class="mt-4 text-h6">Error loading AMM data</div>
+                <v-btn color="primary" @click="refreshData" class="mt-4">
+                  Try Again
+                </v-btn>
+              </div>
+              <div v-else>
+                <xrp-heatmap-chart
+                  :data="heatmapData"
+                  :tile-body="tileConfigs[timeFrame].text"
+                  :tile-tooltip="tileConfigs[timeFrame].toolTip"
+                  :chart-height="heatmapHeight"
+                  :block-size="blockSize"
+                />
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Pools Table -->
       <v-row no-gutters class="mt-4">
         <v-col>
           <v-card tile outlined>
             <v-card-title class="py-3">
-              <span class="text-h6">Top XRP Tokens by Market Cap</span>
+              <span class="text-h6">Top XRP AMM Pools by Liquidity</span>
               <v-spacer />
               <v-btn
                 text
                 color="primary"
                 @click="refreshData"
-                :loading="loading"
+                :loading="isLoading"
               >
                 <v-icon left>mdi-refresh</v-icon>
                 Refresh
@@ -79,54 +136,44 @@
             <v-card-text>
               <v-data-table
                 :headers="tableHeaders"
-                :items="topTokens"
-                :loading="loading"
+                :items="topPools"
+                :loading="isLoading"
                 :items-per-page="10"
                 class="elevation-0"
                 hide-default-footer
               >
-                <template #item.tokenName="{ item }">
+                <template #item.poolId="{ item }">
                   <div class="d-flex align-center">
-                    <span class="mr-2">{{ item.icon }}</span>
                     <div>
-                      <div class="font-weight-medium">{{ item.tokenName }}</div>
-                      <div class="text-caption grey--text">{{ item.currency }}</div>
+                      <div class="font-weight-medium">{{ item.poolId }}</div>
+                      <div class="text-caption grey--text">Pool ID</div>
                     </div>
                   </div>
                 </template>
-                <template #item.price="{ item }">
-                  <span class="font-weight-medium">${{ formatPrice(item.price) }}</span>
+                <template #item.totalLiquidityUsd="{ item }">
+                  <span class="font-weight-medium">${{ formatNumber(item.totalLiquidityUsd) }}</span>
                 </template>
-                <template #item.price24h="{ item }">
-                  <span :class="item.price24h >= 0 ? 'text-success' : 'text-error'">
-                    {{ item.price24h >= 0 ? '+' : '' }}{{ formatPercentage(item.price24h) }}%
-                  </span>
+                <template #item.asset1ValueUsd="{ item }">
+                  <span class="font-weight-medium">${{ formatNumber(item.asset1ValueUsd) }}</span>
                 </template>
-                <template #item.marketcap="{ item }">
-                  <span class="font-weight-medium">${{ formatNumber(item.marketcap) }}</span>
+                <template #item.asset2ValueUsd="{ item }">
+                  <span class="font-weight-medium">${{ formatNumber(item.asset2ValueUsd) }}</span>
                 </template>
-                <template #item.volume24h="{ item }">
-                  <span class="font-weight-medium">${{ formatNumber(item.volume24h) }}</span>
+                <template #item.asset1Percentage="{ item }">
+                  <span class="font-weight-medium">{{ formatPercentage(item.asset1Percentage) }}%</span>
                 </template>
-                <template #item.issuer="{ item }">
-                  <div class="d-flex align-center">
-                    <span class="text-caption font-family-mono">{{ formatAddress(item.issuer) }}</span>
-                    <v-btn
-                      icon
-                      x-small
-                      class="ml-1"
-                      @click="copyToClipboard(item.issuer)"
-                    >
-                      <v-icon x-small>mdi-content-copy</v-icon>
-                    </v-btn>
-                  </div>
+                <template #item.asset2Percentage="{ item }">
+                  <span class="font-weight-medium">{{ formatPercentage(item.asset2Percentage) }}%</span>
+                </template>
+                <template #item.priceImpact="{ item }">
+                  <span class="font-weight-medium">{{ formatPercentage(item.priceImpact) }}%</span>
                 </template>
                 <template #item.actions="{ item }">
                   <v-btn
                     small
                     text
                     color="primary"
-                    @click="viewToken(item)"
+                    @click="viewPool(item)"
                   >
                     View
                   </v-btn>
@@ -141,126 +188,89 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from '@nuxtjs/composition-api'
-import { useQuery } from '@vue/apollo-composable'
-import { XRPScreenerGQL } from '~/apollo/queries'
-import XrpTokenHeatmap from '~/components/xrp/XrpTokenHeatmap.vue'
+import { computed, defineComponent, onMounted, ref, useContext } from '@nuxtjs/composition-api'
+import { useXrpHeatmap } from '~/composables/useXrpHeatmap'
+import XrpHeatmapChart from '~/components/xrp/XrpHeatmapChart.vue'
 
 export default defineComponent({
   components: {
-    XrpTokenHeatmap,
+    XrpHeatmapChart,
   },
   setup() {
     const { $f } = useContext()
-    const loading = ref(true)
-    const tokensData = ref<any[]>([])
     
+    // Use the AMM heatmap composable
+    const {
+      heatmapData,
+      processedData,
+      isLoading,
+      hasError,
+      refreshData,
+      blockSize,
+    } = useXrpHeatmap()
+
     // Heatmap height
     const heatmapHeight = ref(600)
-    
-    // Apollo query for XRP screener data
-    const { onResult, refetch } = useQuery(XRPScreenerGQL, { 
-      fetchPolicy: 'no-cache', 
-      pollInterval: 60000 
-    })
+
+    // Options for controls
+    const blockSizeOptions = [
+      { text: 'Total Liquidity USD', value: 'totalLiquidityUsd' },
+      { text: 'Asset 1 Value USD', value: 'asset1ValueUsd' },
+      { text: 'Asset 2 Value USD', value: 'asset2ValueUsd' },
+      { text: 'Price Impact', value: 'priceImpact' },
+    ]
 
     // Table headers
     const tableHeaders = [
-      { text: 'Token', value: 'tokenName', sortable: false },
-      { text: 'Price', value: 'price', align: 'right' },
-      { text: '24h Change', value: 'price24h', align: 'right' },
-      { text: 'Market Cap', value: 'marketcap', align: 'right' },
-      { text: '24h Volume', value: 'volume24h', align: 'right' },
-      { text: 'Issuer', value: 'issuer', sortable: false },
+      { text: 'Pool ID', value: 'poolId', sortable: false },
+      { text: 'Total Liquidity', value: 'totalLiquidityUsd', align: 'right' },
+      { text: 'Asset 1 Value', value: 'asset1ValueUsd', align: 'right' },
+      { text: 'Asset 2 Value', value: 'asset2ValueUsd', align: 'right' },
+      { text: 'Asset 1 %', value: 'asset1Percentage', align: 'right' },
+      { text: 'Asset 2 %', value: 'asset2Percentage', align: 'right' },
+      { text: 'Price Impact', value: 'priceImpact', align: 'right' },
       { text: 'Actions', value: 'actions', sortable: false, align: 'center' },
     ]
 
     // Computed properties
-    const topTokens = computed(() => {
-      return tokensData.value
-        .map(item => ({
-          ...item,
-          price24h: (Math.random() - 0.5) * 10, // Mock price change
-        }))
-        .sort((a, b) => (b.marketcap || 0) - (a.marketcap || 0))
+    const topPools = computed(() => {
+      return heatmapData.value
+        .sort((a, b) => b.totalLiquidityUsd - a.totalLiquidityUsd)
         .slice(0, 20)
     })
 
-    const totalTokens = computed(() => tokensData.value.length)
-    const gainersCount = computed(() => 
-      topTokens.value.filter(token => token.price24h > 0).length
+    const totalPools = computed(() => heatmapData.value.length)
+    
+    const highLiquidityCount = computed(() => 
+      heatmapData.value.filter(pool => pool.totalLiquidityUsd > 1000000).length
     )
-    const losersCount = computed(() => 
-      topTokens.value.filter(token => token.price24h < 0).length
+    
+    const mediumLiquidityCount = computed(() => 
+      heatmapData.value.filter(pool => 
+        pool.totalLiquidityUsd > 100000 && pool.totalLiquidityUsd <= 1000000
+      ).length
     )
-    const totalMarketCap = computed(() => 
-      $f(tokensData.value.reduce((sum, token) => sum + (token.marketcap || 0), 0), { 
+    
+    const totalLiquidity = computed(() => 
+      $f(heatmapData.value.reduce((sum, pool) => sum + pool.totalLiquidityUsd, 0), { 
         minDigits: 0, 
         after: '' 
       })
     )
 
     // Methods
-    const formatPrice = (price: number) => {
-      return $f(price, { minDigits: 6, after: '' })
+    const formatNumber = (num: number) => {
+      return $f(num, { minDigits: 0, after: '' })
     }
 
     const formatPercentage = (percentage: number) => {
       return $f(percentage, { minDigits: 2, after: '' })
     }
 
-    const formatNumber = (num: number) => {
-      return $f(num, { minDigits: 0, after: '' })
+    const viewPool = (pool: any) => {
+      // Navigate to pool page
+      window.location.href = `/xrp-amm-pools/${pool.poolId}`
     }
-
-    const formatAddress = (address: string) => {
-      return `${address.slice(0, 10)}...${address.slice(-10)}`
-    }
-
-    const copyToClipboard = async (text: string) => {
-      try {
-        await navigator.clipboard.writeText(text)
-        // You could add a toast notification here
-      } catch (err) {
-        console.error('Failed to copy text: ', err)
-      }
-    }
-
-    const viewToken = (token: any) => {
-      const route = useRoute()
-      const router = useRouter()
-      router.push({
-        path: `/token/${token.currency}/xrp`,
-        query: { issuer: token.issuerAddress }
-      })
-    }
-
-    const refreshData = async () => {
-      loading.value = true
-      await refetch()
-    }
-
-    // Handle query results
-    onResult((queryResult: any) => {
-      if (queryResult.data?.xrpScreener) {
-        tokensData.value = queryResult.data.xrpScreener
-      } else {
-        // Initialize with mock data for development
-        tokensData.value = [
-          { currency: 'USDC', issuerAddress: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh', tokenName: 'USD Coin', issuerName: 'Circle', marketcap: 1000000, price: 1.0, volume24H: 500000, icon: '🪙' },
-          { currency: 'USDT', issuerAddress: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh', tokenName: 'Tether', issuerName: 'Tether', marketcap: 800000, price: 1.0, volume24H: 400000, icon: '💎' },
-          { currency: 'BTC', issuerAddress: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh', tokenName: 'Bitcoin', issuerName: 'BitGo', marketcap: 500000, price: 45000, volume24H: 200000, icon: '₿' },
-          { currency: 'ETH', issuerAddress: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh', tokenName: 'Ethereum', issuerName: 'BitGo', marketcap: 300000, price: 3000, volume24H: 150000, icon: 'Ξ' },
-          { currency: 'SOL', issuerAddress: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh', tokenName: 'Solana', issuerName: 'Solana', marketcap: 200000, price: 100, volume24H: 100000, icon: '◎' },
-          { currency: 'ADA', issuerAddress: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh', tokenName: 'Cardano', issuerName: 'IOG', marketcap: 150000, price: 0.5, volume24H: 75000, icon: '₳' },
-          { currency: 'DOT', issuerAddress: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh', tokenName: 'Polkadot', issuerName: 'Web3 Foundation', marketcap: 120000, price: 8, volume24H: 60000, icon: '●' },
-          { currency: 'LINK', issuerAddress: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh', tokenName: 'Chainlink', issuerName: 'Chainlink', marketcap: 100000, price: 15, volume24H: 50000, icon: '🔗' },
-          { currency: 'UNI', issuerAddress: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh', tokenName: 'Uniswap', issuerName: 'Uniswap', marketcap: 80000, price: 8, volume24H: 40000, icon: '🦄' },
-          { currency: 'AAVE', issuerAddress: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh', tokenName: 'Aave', issuerName: 'Aave', marketcap: 60000, price: 300, volume24H: 30000, icon: '👻' },
-        ]
-      }
-      loading.value = false
-    })
 
     onMounted(() => {
       // Set responsive height
@@ -270,32 +280,32 @@ export default defineComponent({
     })
 
     return {
-      loading,
-      tokensData,
-      topTokens,
-      totalTokens,
-      gainersCount,
-      losersCount,
-      totalMarketCap,
-      heatmapHeight,
-      tableHeaders,
-      formatPrice,
-      formatPercentage,
-      formatNumber,
-      formatAddress,
-      copyToClipboard,
-      viewToken,
+      heatmapData,
+      processedData,
+      isLoading,
+      hasError,
       refreshData,
+      blockSize,
+      blockSizeOptions,
+      topPools,
+      totalPools,
+      highLiquidityCount,
+      mediumLiquidityCount,
+      totalLiquidity,
+      tableHeaders,
+      formatNumber,
+      formatPercentage,
+      viewPool,
     }
   },
   head() {
     return {
-      title: 'XRP Token Heatmap - EVM Finance',
+      title: 'XRP AMM Heatmap - EVM Finance',
       meta: [
         {
           hid: 'description',
           name: 'description',
-          content: 'Visualize XRP token performance across the XRP Ledger with our interactive heatmap. Track price changes, market cap, and volume for all XRP tokens.',
+          content: 'Visualize XRP AMM pool liquidity across the XRP Ledger with our interactive heatmap. Track liquidity, asset values, and price impact for all XRP AMM pools.',
         },
       ],
     }

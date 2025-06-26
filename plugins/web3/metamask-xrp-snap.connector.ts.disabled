@@ -1,0 +1,286 @@
+import { ConnectorInterface, Web3ErrorInterface } from '~/plugins/web3/connector'
+
+export class MetamaskXrpSnapConnector implements ConnectorInterface {
+  public id = 'metamask-xrp-snap'
+  public provider: any = null
+  public chainId: number = 144 // XRP Ledger
+  public active: boolean = false
+  public account: string = ''
+  private error: Web3ErrorInterface = { status: false, message: null }
+  private snapId: string = 'npm:@metamask/xrp-snap'
+
+  async connect(): Promise<{ account: string | null; error: Web3ErrorInterface }> {
+    try {
+      // Check if MetaMask is installed
+      if (!window.ethereum) {
+        return { 
+          account: null, 
+          error: { status: true, message: 'MetaMask is not installed' } 
+        }
+      }
+
+      // Check if XRP Snap is installed
+      const isInstalled = await this.isXrpSnapInstalled()
+      if (!isInstalled) {
+        const installResult = await this.installXrpSnap()
+        if (!installResult.success) {
+          return { account: null, error: { status: true, message: installResult.error || 'Failed to install XRP Snap' } }
+        }
+      }
+
+      // Connect to XRP Snap
+      const result = await this.connectToXrpSnap()
+      if (result.success) {
+        this.account = result.account
+        this.active = true
+        this.provider = window.ethereum
+        return { account: result.account, error: { status: false, message: null } }
+      } else {
+        return { account: null, error: { status: true, message: result.error } }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      return { account: null, error: { status: true, message: errorMessage } }
+    }
+  }
+
+  async disconnect(): Promise<void> {
+    this.account = ''
+    this.active = false
+    this.provider = null
+    this.error = { status: false, message: null }
+  }
+
+  async switchChain(chainId: number): Promise<{ success: boolean; error?: string }> {
+    // XRP Snap doesn't support chain switching
+    return { success: true }
+  }
+
+  async signMessage(message: string): Promise<{ signature: string | null; error?: string }> {
+    try {
+      if (!this.active || !this.account) {
+        return { signature: null, error: 'Wallet not connected' }
+      }
+
+      // Use XRP Snap to sign message
+      const result = await this.signMessageWithXrpSnap(message)
+      return result
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      return { signature: null, error: errorMessage }
+    }
+  }
+
+  async sendTransaction(transaction: any): Promise<{ hash: string | null; error?: string }> {
+    try {
+      if (!this.active || !this.account) {
+        return { hash: null, error: 'Wallet not connected' }
+      }
+
+      // Use XRP Snap to send transaction
+      const result = await this.sendTransactionWithXrpSnap(transaction)
+      return result
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      return { hash: null, error: errorMessage }
+    }
+  }
+
+  private async isXrpSnapInstalled(): Promise<boolean> {
+    try {
+      const snaps = await window.ethereum.request({
+        method: 'wallet_getSnaps'
+      })
+      return Object.keys(snaps).includes(this.snapId)
+    } catch {
+      return false
+    }
+  }
+
+  private async installXrpSnap(): Promise<{ success: boolean; error?: string }> {
+    try {
+      await window.ethereum.request({
+        method: 'wallet_installSnaps',
+        params: [this.snapId]
+      })
+      return { success: true }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to install XRP Snap'
+      return { success: false, error: errorMessage }
+    }
+  }
+
+  private async connectToXrpSnap(): Promise<{ success: boolean; account?: string; error?: string }> {
+    try {
+      const result = await window.ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [this.snapId, { method: 'connect' }]
+      })
+      
+      if (result && result.address) {
+        return { success: true, account: result.address }
+      } else {
+        return { success: false, error: 'Failed to get account from XRP Snap' }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to connect to XRP Snap'
+      return { success: false, error: errorMessage }
+    }
+  }
+
+  private async signMessageWithXrpSnap(message: string): Promise<{ signature: string | null; error?: string }> {
+    try {
+      const result = await window.ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [this.snapId, { 
+          method: 'signMessage',
+          params: { message }
+        }]
+      })
+      
+      if (result && result.signature) {
+        return { signature: result.signature }
+      } else {
+        return { signature: null, error: 'Failed to sign message' }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to sign message'
+      return { signature: null, error: errorMessage }
+    }
+  }
+
+  private async sendTransactionWithXrpSnap(transaction: any): Promise<{ hash: string | null; error?: string }> {
+    try {
+      const result = await window.ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [this.snapId, { 
+          method: 'sendTransaction',
+          params: { transaction }
+        }]
+      })
+      
+      if (result && result.hash) {
+        return { hash: result.hash }
+      } else {
+        return { hash: null, error: 'Failed to send transaction' }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to send transaction'
+      return { hash: null, error: errorMessage }
+    }
+  }
+
+  async signTransaction(transaction: any): Promise<{ success: boolean; signedTx?: any; error?: string }> {
+    try {
+      const ethereum = (window as any).ethereum
+      
+      const result = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: {
+          snapId: this.snapId,
+          request: {
+            method: 'signTransaction',
+            params: {
+              transaction
+            }
+          }
+        }
+      })
+      
+      if (result && result.signedTransaction) {
+        return {
+          success: true,
+          signedTx: result.signedTransaction
+        }
+      } else {
+        return {
+          success: false,
+          error: 'Transaction signing failed'
+        }
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Failed to sign transaction'
+      }
+    }
+  }
+
+  async getAccountInfo(): Promise<{ success: boolean; accountInfo?: any; error?: string }> {
+    try {
+      const ethereum = (window as any).ethereum
+      
+      const result = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: {
+          snapId: this.snapId,
+          request: {
+            method: 'getAccountInfo'
+          }
+        }
+      })
+      
+      if (result) {
+        return {
+          success: true,
+          accountInfo: result
+        }
+      } else {
+        return {
+          success: false,
+          error: 'Failed to get account info'
+        }
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Failed to get account info'
+      }
+    }
+  }
+
+  async getBalance(): Promise<{ success: boolean; balance?: string; error?: string }> {
+    try {
+      const ethereum = (window as any).ethereum
+      
+      const result = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: {
+          snapId: this.snapId,
+          request: {
+            method: 'getBalance'
+          }
+        }
+      })
+      
+      if (result && result.balance) {
+        return {
+          success: true,
+          balance: result.balance
+        }
+      } else {
+        return {
+          success: false,
+          error: 'Failed to get balance'
+        }
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Failed to get balance'
+      }
+    }
+  }
+
+  resetErrors(): void {
+    this.error = { status: false, message: null }
+  }
+
+  getAccount(): string {
+    return this.account
+  }
+
+  getError(): Web3ErrorInterface {
+    return this.error
+  }
+} 

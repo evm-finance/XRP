@@ -1,0 +1,43 @@
+import { heatmapConfigInterface } from '~/types/heatmap'
+
+export default {
+  data() {
+    return {
+      currentConfigs: {
+        timeFrame: '1d',
+        blockSize: 'marketcap',
+        blueTile: false,
+        displayFavorites: false,
+        numOfCoins: 100,
+        displayGainersAndLosers: false,
+        grouped: false
+      } as heatmapConfigInterface
+    }
+  },
+
+  methods: {
+    changeConfigs(type: string) {
+      if (type === 'blue-tile') {
+        this.currentConfigs.blueTile = !this.currentConfigs.blueTile
+      } else if (type === 'grouped') {
+        this.currentConfigs.grouped = !this.currentConfigs.grouped
+      } else if (type === 'favorites') {
+        this.currentConfigs.displayFavorites = !this.currentConfigs.displayFavorites
+      } else if (type === 'gainers-losers') {
+        this.currentConfigs.displayGainersAndLosers = !this.currentConfigs.displayGainersAndLosers
+      } else if (type === 'ungrouped') {
+        this.currentConfigs.grouped = false
+      }
+      this.$emit('change-configs', { type, configs: this.currentConfigs })
+    },
+
+    // method for landing page (favorite coins)
+    switchToBlueTile(value: boolean): void {
+      this.changeConfigs('blue-tile')
+      this.$store.dispatch('config/updateConfig', {
+        path: 'landing.heatmap.blueTile',
+        value,
+      })
+    }
+  }
+}

@@ -1,5 +1,4 @@
 import { ref, computed } from '@nuxtjs/composition-api'
-import { useEnhancedXrpWallet } from '~/composables/useEnhancedXrpWallet'
 
 interface XrplTransactionResult {
   hash: string
@@ -26,155 +25,95 @@ interface XrplTransactionReceipt {
   priceImpact?: number
 }
 
-export default function useXrplTransaction() {
-  const { address, isWalletReady } = useEnhancedXrpWallet()
-  
+export const useXrplTransaction = () => {
   // State
+  const isSubmitting = ref(false)
+  const transactionHash = ref<string>('')
+  const error = ref<string | null>(null)
+  const isConfirmed = ref(false)
+  const lastTransaction = ref<XrplTransactionResult | null>(null)
+  
+  // Additional state for compatibility
   const submitting = ref(false)
   const confirming = ref(false)
-  const lastTransaction = ref<XrplTransactionResult | null>(null)
-  const error = ref<string | null>(null)
   
-  // XRPL WebSocket connection (would be initialized in real implementation)
-  let wsConnection: WebSocket | null = null
-  
-  // Initialize WebSocket connection to XRPL
-  const initializeConnection = () => {
-    try {
-      // In real implementation, this would connect to XRPL WebSocket
-      // wsConnection = new WebSocket('wss://s.altnet.rippletest.net:51233')
-      console.log('XRPL WebSocket connection initialized')
-    } catch (err) {
-      console.error('Failed to initialize XRPL connection:', err)
-    }
-  }
-  
-  // Submit transaction to XRPL
-  const submitTransaction = async (signedTx: any): Promise<XrplTransactionResult> => {
-    if (!isWalletReady.value) {
-      throw new Error('Wallet not connected')
-    }
-    
+  const submitTransaction = async (transaction: any) => {
+    isSubmitting.value = true
     submitting.value = true
     error.value = null
+    isConfirmed.value = false
     
     try {
-      // In real implementation, this would submit to XRPL via WebSocket
-      console.log('Submitting transaction to XRPL:', signedTx)
-      
-      // Simulate network delay
+      // Mock transaction submission
       await new Promise(resolve => setTimeout(resolve, 2000))
       
-      // Simulate successful submission
-      const result: XrplTransactionResult = {
-        hash: '0x' + Math.random().toString(16).substr(2, 64),
-        status: 'success',
-        ledgerIndex: Math.floor(Math.random() * 1000000),
-        timestamp: Date.now()
+      transactionHash.value = 'A1B2C3D4E5F6789012345678901234567890ABCDEF1234567890ABCDEF123456'
+      isConfirmed.value = true
+      
+      return {
+        hash: transactionHash.value,
+        confirmed: true
       }
-      
-      lastTransaction.value = result
-      return result
-      
     } catch (err: any) {
-      const errorResult: XrplTransactionResult = {
-        hash: '',
-        status: 'error',
-        ledgerIndex: 0,
-        timestamp: Date.now(),
-        error: err.message
-      }
-      
-      error.value = err.message
-      lastTransaction.value = errorResult
+      error.value = err.message || 'Transaction failed'
       throw err
     } finally {
+      isSubmitting.value = false
       submitting.value = false
     }
   }
-  
-  // Wait for transaction confirmation
-  const waitForConfirmation = async (hash: string, timeoutMs: number = 30000): Promise<XrplTransactionResult> => {
-    if (!hash) {
-      throw new Error('No transaction hash provided')
-    }
-    
-    confirming.value = true
-    error.value = null
-    
+
+  const submitAndConfirm = async (transaction: any) => {
     try {
-      // In real implementation, this would poll XRPL for confirmation
-      console.log('Waiting for transaction confirmation:', hash)
-      
-      const startTime = Date.now()
-      
-      while (Date.now() - startTime < timeoutMs) {
-        // Simulate polling
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        // Simulate confirmation after 3 seconds
-        if (Date.now() - startTime > 3000) {
-          const result: XrplTransactionResult = {
-            hash,
-            status: 'success',
-            ledgerIndex: Math.floor(Math.random() * 1000000),
-            timestamp: Date.now()
-          }
-          
-          lastTransaction.value = result
-          return result
-        }
-      }
-      
-      throw new Error('Transaction confirmation timeout')
-      
-    } catch (err: any) {
-      const errorResult: XrplTransactionResult = {
-        hash,
-        status: 'error',
-        ledgerIndex: 0,
-        timestamp: Date.now(),
-        error: err.message
-      }
-      
-      error.value = err.message
-      lastTransaction.value = errorResult
+      const result = await submitTransaction(transaction)
+      await waitForConfirmation(result.hash)
+      return result
+    } catch (err) {
       throw err
-    } finally {
-      confirming.value = false
     }
   }
-  
-  // Submit and confirm transaction
-  const submitAndConfirm = async (signedTx: any, timeoutMs: number = 30000): Promise<XrplTransactionReceipt> => {
-    // Submit transaction
-    const submission = await submitTransaction(signedTx)
+
+  const waitForConfirmation = async (hash: string, maxAttempts = 30) => {
+    confirming.value = true
+    let attempts = 0
     
-    if (submission.status === 'error') {
-      throw new Error(submission.error || 'Transaction submission failed')
+    while (attempts < maxAttempts) {
+      try {
+        // Mock confirmation check
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Simulate confirmation after 3 attempts
+        if (attempts >= 2) {
+          isConfirmed.value = true
+          confirming.value = false
+          return true
+        }
+        
+        attempts++
+      } catch (err) {
+        attempts++
+        if (attempts >= maxAttempts) {
+          confirming.value = false
+          throw new Error('Transaction confirmation timeout')
+        }
+      }
     }
     
-    // Wait for confirmation
-    const confirmation = await waitForConfirmation(submission.hash, timeoutMs)
-    
-    if (confirmation.status === 'error') {
-      throw new Error(confirmation.error || 'Transaction confirmation failed')
-    }
-    
-    // Create receipt
-    const receipt: XrplTransactionReceipt = {
-      hash: confirmation.hash,
-      from: address.value || '',
-      value: signedTx.Amount || 0,
-      gasUsed: '0.000012',
-      gasPrice: '0.00001',
-      status: 1,
-      blockNumber: confirmation.ledgerIndex,
-      timestamp: confirmation.timestamp,
-      type: signedTx.TransactionType || 'Unknown'
-    }
-    
-    return receipt
+    confirming.value = false
+    return false
+  }
+
+  const resetTransaction = () => {
+    isSubmitting.value = false
+    submitting.value = false
+    confirming.value = false
+    transactionHash.value = ''
+    error.value = null
+    isConfirmed.value = false
+  }
+
+  const clearTransactionState = () => {
+    resetTransaction()
   }
   
   // Get transaction status
@@ -227,36 +166,31 @@ export default function useXrplTransaction() {
     }
   }
   
-  // Clear transaction state
-  const clearTransactionState = () => {
-    lastTransaction.value = null
-    error.value = null
-  }
-  
   // Computed properties
-  const isSubmitting = computed(() => submitting.value)
-  const isConfirming = computed(() => confirming.value)
   const hasError = computed(() => !!error.value)
   const lastTxHash = computed(() => lastTransaction.value?.hash || null)
   const lastTxStatus = computed(() => lastTransaction.value?.status || null)
   
   return {
     // State
-    submitting: isSubmitting,
-    confirming: isConfirming,
+    isSubmitting,
+    transactionHash,
     error,
+    isConfirmed,
     hasError,
     lastTransaction,
     lastTxHash,
     lastTxStatus,
+    submitting,
+    confirming,
     
     // Methods
-    initializeConnection,
     submitTransaction,
-    waitForConfirmation,
     submitAndConfirm,
+    waitForConfirmation,
+    resetTransaction,
+    clearTransactionState,
     getTransactionStatus,
     getAccountTransactions,
-    clearTransactionState,
   }
 } 

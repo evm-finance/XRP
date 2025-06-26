@@ -34,11 +34,11 @@
       <v-spacer />
 
       <client-only>
-        <global-search />
+        <!-- <global-search /> -->
         <gas-info class="hidden-xs-and-down" />
         <network-selection />
         <wallet-connector class="hidden-sm-and-down" />
-        <enhanced-xrp-wallet-connector class="hidden-sm-and-down" />
+        <!-- <enhanced-xrp-wallet-connector class="hidden-sm-and-down" /> -->
       </client-only>
     </v-app-bar>
 
@@ -59,7 +59,7 @@
     </v-navigation-drawer>
 
     <client-only>
-      <enhanced-wallet-select-dialog />
+      <!-- <enhanced-wallet-select-dialog /> -->
       <main-footer />
     </client-only>
   </v-app>
@@ -69,21 +69,21 @@
 import { computed, defineComponent, ref, useStore } from '@nuxtjs/composition-api'
 import GasInfo from '~/components/common/GasInfo.vue'
 import WalletConnector from '~/components/common/WalletConnector.vue'
-import useInitTheme from '~/composables/useInitTheme'
-import EnhancedWalletSelectDialog from '~/components/common/EnhancedWalletSelectDialog.vue'
+import { useInitTheme } from '~/composables/useInitTheme'
+// import EnhancedWalletSelectDialog from '~/components/common/EnhancedWalletSelectDialog.vue'
 import { State } from '~/types/state'
 import MainFooter from '~/components/common/ui/footers/MainFooter.vue'
 import NetworkSelection from '~/components/common/NetworkSelection.vue'
-import GlobalSearch from '~/components/common/GlobalSearch.vue'
-import EnhancedXrpWalletConnector from '~/components/common/EnhancedXrpWalletConnector.vue'
+// import GlobalSearch from '~/components/common/GlobalSearch.vue'
+// import EnhancedXrpWalletConnector from '~/components/common/EnhancedXrpWalletConnector.vue'
 
 export default defineComponent({
   components: {
-    EnhancedXrpWalletConnector,
-    GlobalSearch,
+    // EnhancedXrpWalletConnector,
+    // GlobalSearch,
     NetworkSelection,
     MainFooter,
-    EnhancedWalletSelectDialog,
+    // EnhancedWalletSelectDialog,
     WalletConnector,
     GasInfo,
   },
@@ -91,7 +91,7 @@ export default defineComponent({
     // STATE
     const searchOverlay = ref(true)
     const notificationComponent = ref<Notification>()
-    const globalSearchComponentRef = ref<any>(null)
+    // const globalSearchComponentRef = ref<any>(null) // Removed since GlobalSearch is disabled
     const drawer = ref(false)
     const links = ref([
       { name: 'Aave', to: '/markets/aave' },
@@ -103,17 +103,21 @@ export default defineComponent({
       { name: 'XRP-Screener', to: '/xrp-screener' },
       { name: 'XRP-Balances', to: '/xrp-balances' },
       { name: 'XRP-Transactions', to: '/xrp-transactions' },
+      { name: 'XRP-Terminal', to: '/xrp-terminal' },
+      { name: 'XRP-AMM-Heatmap', to: '/xrp-amm-heatmap' },
+      { name: 'Terminal', to: '/terminal' },
+      { name: 'Heatmap', to: '/heatmap' },
     ])
 
     // COMPOSABLE
     const { state } = useStore<State>()
     useInitTheme()
 
-    const onInitSearch = () => {
-      try {
-        globalSearchComponentRef.value.openDialog()
-      } catch (e) {}
-    }
+    // const onInitSearch = () => {
+    //   try {
+    //     globalSearchComponentRef.value.openDialog()
+    //   } catch (e) {}
+    // }
 
     // COMPUTED
     const imageUrl = computed(() => `/img/logo/evmfinance-logo.svg`)
@@ -125,8 +129,8 @@ export default defineComponent({
       imageUrl,
       drawer,
       searchOverlay,
-      globalSearchComponentRef,
-      onInitSearch,
+      // globalSearchComponentRef, // Removed since GlobalSearch is disabled
+      // onInitSearch, // Removed since GlobalSearch is disabled
     }
   },
 })

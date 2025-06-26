@@ -20,13 +20,9 @@ export default {
   plugins: [
     '~/plugins/initConfigs.ts',
     '~/plugins/helper.ts',
-    // '~/plugins/errorhandler.apollo.js',
     '~/plugins/apolloClient.ts',
     '~/plugins/emitter.client.ts',
-
-    '~/plugins/web3/web3.ts',
     '~/plugins/web3/xrp.client.ts',
-    '~/plugins/web3/enhanced-xrp.client.ts',
     '~/plugins/typer.client.ts',
   ],
 
@@ -64,9 +60,13 @@ export default {
   apollo: {
     clientConfigs: {
       default: {
-        httpEndpoint: process.env.BASE_GRAPHQL_SERVER_URL,
-        wsEndpoint: process.env.BASE_GRAPHQL_WEBSOCKET_URL,
+        httpEndpoint: process.env.BASE_GRAPHQL_SERVER_URL || 'https://api.github.com/graphql',
+        wsEndpoint: process.env.BASE_GRAPHQL_WEBSOCKET_URL || null,
         websocketsOnly: false,
+        // Add error handling for missing server
+        onError: (error) => {
+          console.warn('GraphQL server not available:', error.message)
+        }
       },
     },
   },
@@ -128,7 +128,29 @@ export default {
     },
 
     extractCSS: false,
-    extend(config, ctx) {},
+    extend(config, ctx) {
+      // Exclude quantify subproject from build
+      config.watchOptions = {
+        ...config.watchOptions,
+        ignored: [
+          ...(config.watchOptions?.ignored || []),
+          '**/quantify/**',
+          '**/qc-front-end-server/**'
+        ]
+      }
+      
+      // Exclude quantify directory from webpack processing
+      if (config.module && config.module.rules) {
+        config.module.rules.push({
+          test: /\.(js|ts|vue)$/,
+          exclude: [
+            /node_modules/,
+            /quantify/,
+            /qc-front-end-server/
+          ]
+        })
+      }
+    },
     transpile: [
       // 'tslib',
       // '@apollo/client',
@@ -144,14 +166,14 @@ export default {
 
   hooks: {
     render: {
-      errorMiddleware(app) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars,n/handle-callback-err
-        app.use((error, req, res, next) => {
-          console.error(error)
-          res.writeHead(307, { Location: '/about' })
-          res.end()
-        })
-      },
+      // errorMiddleware(app) {
+      //   // eslint-disable-next-line @typescript-eslint/no-unused-vars,n/handle-callback-err
+      //   app.use((error, req, res, next) => {
+      //     console.error(error)
+      //     res.writeHead(307, { Location: '/about' })
+      //     res.end()
+      //   })
+      // },
     },
   },
   env: {

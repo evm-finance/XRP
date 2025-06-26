@@ -90,3 +90,7 @@ sw.*
 *.swp
 
 .env
+
+# Quantify subproject - exclude from main build
+quantify/
+qc-front-end-server/

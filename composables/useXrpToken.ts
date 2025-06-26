@@ -142,69 +142,6 @@ export default function useXrpToken() {
     }
   }
   
-  // Mock data generation for development
-  const generateMockData = () => {
-    // Mock token data
-    tokenData.value = {
-      ...tokenData.value,
-      tokenName: `${tokenCurrency.value} Token`,
-      issuerName: 'Sample Issuer',
-      price: 0.001234,
-      marketcap: 1234567,
-      volume24H: 98765,
-      websiteUrl: 'https://example.com',
-      sourceCodeUrl: 'https://github.com/example',
-      telegramUrl: 'https://t.me/example',
-      twitterUrl: 'https://twitter.com/example',
-      discordUrl: 'https://discord.gg/example',
-    }
-    
-    // Mock balances
-    tokenBalances.value = [
-      {
-        account: 'rXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-        balance: 1000000,
-        value: 1234.56,
-      },
-      {
-        account: 'rYYYYYYYYYYYYYYYYYYYYYYYYYYYY',
-        balance: 500000,
-        value: 617.28,
-      },
-    ]
-    
-    // Mock transactions
-    walletTransactions.value = [
-      {
-        hash: 'E0C1D4B24D76B4180D2C96450438A0BE14304E69EDFBE91DF6211C923B344401',
-        account: 'rXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-        destination: 'rYYYYYYYYYYYYYYYYYYYYYYYYYYYY',
-        transactionType: 'Payment',
-        amount: 1000000,
-        currency: tokenCurrency.value,
-        fee: 12,
-        date: new Date().toISOString(),
-      },
-      {
-        hash: 'F1D2E5C35E87C5291E3D07561549B1CF25415F7AFEGC02EG7322D034C455502',
-        account: 'rYYYYYYYYYYYYYYYYYYYYYYYYYYYY',
-        destination: 'rXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-        transactionType: 'OfferCreate',
-        amount: 500000,
-        currency: tokenCurrency.value,
-        fee: 12,
-        date: new Date(Date.now() - 86400000).toISOString(),
-      },
-    ]
-    
-    // Mock AMM chart data
-    ammChartData.value = Array.from({ length: 24 }, (_, i) => ({
-      time: new Date(Date.now() - (23 - i) * 3600000).toISOString(),
-      price: 0.001 + Math.random() * 0.0005,
-      volume: Math.random() * 1000,
-    }))
-  }
-  
   // Event handlers
   onScreenerResult((queryResult: any) => {
     const screenerData = queryResult.data?.xrpScreener ?? []
@@ -215,11 +152,26 @@ export default function useXrpToken() {
     if (tokenInfo) {
       tokenData.value = {
         ...tokenData.value,
-        tokenName: tokenInfo.tokenName,
-        issuerName: tokenInfo.issuerName,
-        price: tokenInfo.price,
-        marketcap: tokenInfo.marketcap,
-        volume24H: tokenInfo.volume24H,
+        tokenName: tokenInfo.tokenName || `${tokenCurrency.value} Token`,
+        issuerName: tokenInfo.issuerName || 'Unknown Issuer',
+        price: tokenInfo.price || 0,
+        marketcap: tokenInfo.marketcap || 0,
+        volume24H: tokenInfo.volume24H || 0,
+        websiteUrl: tokenInfo.websiteUrl,
+        sourceCodeUrl: tokenInfo.sourceCodeUrl,
+        telegramUrl: tokenInfo.telegramUrl,
+        twitterUrl: tokenInfo.twitterUrl,
+        discordUrl: tokenInfo.discordUrl,
+      }
+    } else {
+      // Set default values if token not found in screener
+      tokenData.value = {
+        ...tokenData.value,
+        tokenName: `${tokenCurrency.value} Token`,
+        issuerName: 'Unknown Issuer',
+        price: 0,
+        marketcap: 0,
+        volume24H: 0,
       }
     }
     
@@ -229,8 +181,14 @@ export default function useXrpToken() {
   onTransactionsResult((queryResult: any) => {
     const transactions = queryResult.data?.xrpTransactions ?? []
     walletTransactions.value = transactions.map((tx: any) => ({
-      ...tx,
+      hash: tx.hash || '',
+      account: tx.account || '',
+      destination: tx.destination || '',
+      transactionType: tx.transactionType || 'Unknown',
+      amount: typeof tx.amount === 'string' ? parseFloat(tx.amount) : (tx.amount || 0),
       currency: tokenCurrency.value,
+      fee: typeof tx.fee === 'string' ? parseFloat(tx.fee) : (tx.fee || 0),
+      date: tx.date || new Date().toISOString(),
     }))
   })
   
@@ -239,14 +197,45 @@ export default function useXrpToken() {
     tokenBalances.value = balances
       .filter((token: any) => token.symbol === tokenCurrency.value)
       .map((token: any) => ({
-        account: token.issuer,
-        balance: token.balance,
-        value: token.value,
+        account: token.issuer || '',
+        balance: token.balance || 0,
+        value: token.value || 0,
       }))
   })
-  
-  // Initialize with mock data for development
-  generateMockData()
+
+  // Add error handling for all queries
+  const { onError: onScreenerError } = useQuery(XRPScreenerGQL, { 
+    fetchPolicy: 'no-cache', 
+    pollInterval: 60000 
+  })
+
+  const { onError: onTransactionsError } = useQuery(
+    XRPAccountTransactionsGQL,
+    () => ({ address: issuerAddress.value }),
+    { fetchPolicy: 'no-cache', pollInterval: 30000 }
+  )
+
+  const { onError: onBalancesError } = useQuery(
+    XRPAccountBalancesGQL,
+    () => ({ account: issuerAddress.value }),
+    { fetchPolicy: 'no-cache', pollInterval: 30000 }
+  )
+
+  onScreenerError((error: any) => {
+    console.error('GraphQL Error in useXrpToken screener:', error)
+    loading.value = false
+  })
+
+  onTransactionsError((error: any) => {
+    console.error('GraphQL Error in useXrpToken transactions:', error)
+  })
+
+  onBalancesError((error: any) => {
+    console.error('GraphQL Error in useXrpToken balances:', error)
+  })
+
+  // Remove mock data generation - rely entirely on live data
+  // generateMockData() - REMOVED
   loading.value = false
   
   return {

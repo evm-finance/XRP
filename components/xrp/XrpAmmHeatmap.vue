@@ -4,15 +4,43 @@
       <span class="subtitle-1">XRP AMM Heatmap</span>
 
       <v-spacer />
-      <v-btn icon elevation="0" class="mx-2" height="20" width="20" @click="displayFavorites = !displayFavorites">
-        <v-icon :color="displayFavorites ? 'orange' : ''">{{ icons.mdiStar }} </v-icon>
+      <v-btn icon elevation="0" class="mx-2" height="20" width="20" @click="refreshData">
+        <v-icon>mdi-refresh</v-icon>
       </v-btn>
 
-      <heatmap-config-menu icon></heatmap-config-menu>
+      <v-btn
+        text
+        color="primary"
+        to="/xrp-amm-heatmap"
+      >
+        View Full
+        <v-icon right>mdi-arrow-right</v-icon>
+      </v-btn>
     </v-card-title>
 
-    <v-card-text v-if="loading" class="d-flex justify-center align-center" style="height: 400px;">
+    <v-card-text v-if="isLoading" class="d-flex justify-center align-center" style="height: 400px;">
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
+    </v-card-text>
+
+    <v-card-text v-else-if="!isGraphQLEndpointAvailable" class="d-flex justify-center align-center" style="height: 400px;">
+      <v-alert type="warning" text>
+        <div class="text-center">
+          <v-icon large color="warning" class="mb-2">mdi-alert-circle</v-icon>
+          <div class="text-h6 mb-2">GraphQL Endpoint Not Configured</div>
+          <div class="text-body-2">Please configure BASE_GRAPHQL_SERVER_URL environment variable</div>
+        </div>
+      </v-alert>
+    </v-card-text>
+
+    <v-card-text v-else-if="hasError" class="d-flex justify-center align-center" style="height: 400px;">
+      <v-alert type="warning" text>
+        <div class="text-center">
+          <v-icon large color="warning" class="mb-2">mdi-alert-circle</v-icon>
+          <div class="text-h6 mb-2">Using Demo Data</div>
+          <div class="text-body-2">GraphQL server returned an error. Showing sample AMM data for demonstration.</div>
+          <v-btn color="primary" class="mt-2" @click="refreshData">Retry Connection</v-btn>
+        </div>
+      </v-alert>
     </v-card-text>
 
     <xrp-heatmap-chart
@@ -21,25 +49,19 @@
       :block-size="blockSize"
       :chart-height="chartHeight"
       :data="heatmapData"
-      :tile-body="tileText"
-      :tile-tooltip="tileTooltip"
-      :update-data="updateData"
-      heatmap-type="amm"
+      :tile-body="'Pool: {poolId}<br/>Liquidity: ${totalLiquidityUsd}'"
+      :tile-tooltip="'Pool: {poolId}<br/>Total Liquidity: ${totalLiquidityUsd}<br/>Asset 1: ${asset1ValueUsd}<br/>Asset 2: ${asset2ValueUsd}'"
     />
   </v-card>
 </template>
 
 <script lang="ts">
 import { computed, defineComponent } from '@nuxtjs/composition-api'
-import { mdiStar, mdiCog } from '@mdi/js'
 import XrpHeatmapChart from '~/components/xrp/XrpHeatmapChart.vue'
-import useXrpAmmHeatmap from '~/composables/useXrpAmmHeatmap'
-import HeatmapConfigMenu from '~/components/HeatmapConfigMenu.vue'
-import useHeatmapConfigs from '~/composables/useHeatmapConfigs'
+import { useXrpHeatmap } from '~/composables/useXrpHeatmap'
 
 export default defineComponent({
   components: {
-    HeatmapConfigMenu,
     XrpHeatmapChart,
   },
   props: {
@@ -47,29 +69,30 @@ export default defineComponent({
     userCanAccessTrend: { type: Boolean, default: false },
   },
   setup(props) {
-    // COMPOSABLES
-    const icons = { mdiStar, mdiCog }
-    const USER_CAN_READ_TREND_DATA = computed(() => props.userCanAccessTrend)
-    const { heatmapData, tileText, tileTooltip, updateData, loading } = useXrpAmmHeatmap(USER_CAN_READ_TREND_DATA)
-    const { displayFavorites, blockSize } = useHeatmapConfigs()
+    // Use the AMM heatmap composable
+    const {
+      heatmapData,
+      processedData,
+      isLoading,
+      hasError,
+      refreshData,
+      blockSize,
+      isGraphQLEndpointAvailable,
+    } = useXrpHeatmap()
 
-    // Calculate chart height (subtract header height)
-    const chartHeight = computed(() => {
-      const heightNum = typeof props.height === 'string' ? parseInt(props.height) : props.height
-      return heightNum - 60 // Subtract header height
-    })
+    // COMPUTED
+    const chartHeight = computed(() => Number(props.height) - 80) // Account for header
 
     return {
-      icons,
+      isLoading,
       heatmapData,
-      tileText,
-      tileTooltip,
-      updateData,
-      loading,
-      displayFavorites,
+      processedData,
+      hasError,
+      refreshData,
       blockSize,
       chartHeight,
+      isGraphQLEndpointAvailable,
     }
-  },
+  }
 })
 </script> 

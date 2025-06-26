@@ -1,50 +1,13 @@
 import { ref, computed, Ref, reactive } from '@nuxtjs/composition-api'
 import { useQuery, useSubscription, useMutation } from '@vue/apollo-composable/dist'
-import { 
-  XRPAccountBalancesQuery,
-  XRPAccountTransactionsQuery,
-  XRPAccountDataQuery,
-  XRPAMMPoolsQuery,
-  XRPAMMPoolQuery,
-  XRPAMMSwapQuoteQuery,
-  XRPAMMLiquidityValueQuery,
-  XRPAMMTransactionsQuery,
-  AMMHeatmapQuery,
-  TopAMMPoolsQuery,
-  AMMPoolDetailsQuery,
-  XRPTokensQuery,
-  XRPTokenQuery,
-  AMMPoolsQuery,
-  AMMPoolUpdatesSubscription,
-  TokenPriceUpdatesSubscription,
-  HeatmapUpdatesSubscription,
-  XRPAssetInput,
-  TimeRange,
-  SortField,
-  TokenSortField,
-  SortOrder
-} from '~/types/apollo/main/types'
 
-// Import GraphQL queries
 import {
-  XRPAccountBalances,
-  XRPAccountTransactions,
-  XRPAccountData,
-  XRPAMMPools,
-  XRPAMMPool,
-  XRPAMMSwapQuote,
-  XRPAMMLiquidityValue,
-  XRPAMMTransactions,
-  AMMHeatmap,
-  TopAMMPools,
-  AMMPoolDetails,
-  XRPTokens,
-  XRPToken,
-  AMMPools,
-  AMMPoolUpdates,
-  TokenPriceUpdates,
-  HeatmapUpdates
-} from '~/apollo/main/xrp.query.graphql'
+  XRPAccountBalancesGQL, 
+  XRPAccountTransactionsGQL, 
+  XRPTransactionGQL,
+  XRPScreenerGQL,
+  XRPAmmPoolsGQL
+} from '~/apollo/queries'
 
 export interface XRPAccountState {
   address: string
@@ -131,9 +94,9 @@ export default function useXrpGraphQL() {
     loading: accountBalancesLoading,
     error: accountBalancesError,
     refetch: refetchAccountBalances
-  } = useQuery<XRPAccountBalancesQuery>(
-    XRPAccountBalances,
-    () => ({ address: currentAddress.value }),
+  } = useQuery(
+    XRPAccountBalancesGQL,
+    () => ({ account: currentAddress.value }),
     () => ({ enabled: !!currentAddress.value, fetchPolicy: 'cache-and-network' })
   )
 
@@ -142,245 +105,41 @@ export default function useXrpGraphQL() {
     loading: accountTransactionsLoading,
     error: accountTransactionsError,
     refetch: refetchAccountTransactions
-  } = useQuery<XRPAccountTransactionsQuery>(
-    XRPAccountTransactions,
+  } = useQuery(
+    XRPAccountTransactionsGQL,
     () => ({ address: currentAddress.value }),
     () => ({ enabled: !!currentAddress.value, fetchPolicy: 'cache-and-network' })
   )
 
+  // Screener Query
   const {
-    result: accountDataResult,
-    loading: accountDataLoading,
-    error: accountDataError,
-    refetch: refetchAccountData
-  } = useQuery<XRPAccountDataQuery>(
-    XRPAccountData,
-    () => ({ address: currentAddress.value }),
-    () => ({ enabled: !!currentAddress.value, fetchPolicy: 'cache-and-network' })
+    result: screenerResult,
+    loading: screenerLoading,
+    error: screenerError,
+    refetch: refetchScreener
+  } = useQuery(
+    XRPScreenerGQL,
+    {},
+    () => ({ fetchPolicy: 'cache-and-network' })
   )
 
-  // AMM Queries
+  // AMM Pools Query
   const {
     result: ammPoolsResult,
     loading: ammPoolsLoading,
     error: ammPoolsError,
-    refetch: refetchAMMPools
-  } = useQuery<XRPAMMPoolsQuery>(
-    XRPAMMPools,
-    null,
+    refetch: refetchAmmPools
+  } = useQuery(
+    XRPAmmPoolsGQL,
+    {},
     () => ({ fetchPolicy: 'cache-and-network' })
-  )
-
-  const {
-    result: ammPoolResult,
-    loading: ammPoolLoading,
-    error: ammPoolError,
-    refetch: refetchAMMPool
-  } = useQuery<XRPAMMPoolQuery>(
-    XRPAMMPool,
-    () => ({
-      asset1: { currency: selectedToken.currency, issuer: selectedToken.issuer },
-      asset2: { currency: 'XRP' }
-    }),
-    () => ({ 
-      enabled: !!selectedToken.currency && !!selectedToken.issuer,
-      fetchPolicy: 'cache-and-network' 
-    })
-  )
-
-  const {
-    result: swapQuoteResult,
-    loading: swapQuoteLoading,
-    error: swapQuoteError,
-    refetch: refetchSwapQuote
-  } = useQuery<XRPAMMSwapQuoteQuery>(
-    XRPAMMSwapQuote,
-    () => ({
-      inputAsset: { currency: selectedToken.currency, issuer: selectedToken.issuer },
-      outputAsset: { currency: 'XRP' },
-      amount: 100 // Default amount, should be configurable
-    }),
-    () => ({ 
-      enabled: !!selectedToken.currency && !!selectedToken.issuer,
-      fetchPolicy: 'cache-and-network' 
-    })
-  )
-
-  const {
-    result: liquidityValueResult,
-    loading: liquidityValueLoading,
-    error: liquidityValueError,
-    refetch: refetchLiquidityValue
-  } = useQuery<XRPAMMLiquidityValueQuery>(
-    XRPAMMLiquidityValue,
-    () => ({ poolId: selectedPoolId.value }),
-    () => ({ 
-      enabled: !!selectedPoolId.value,
-      fetchPolicy: 'cache-and-network' 
-    })
-  )
-
-  const {
-    result: ammTransactionsResult,
-    loading: ammTransactionsLoading,
-    error: ammTransactionsError,
-    refetch: refetchAMMTransactions
-  } = useQuery<XRPAMMTransactionsQuery>(
-    XRPAMMTransactions,
-    () => ({ 
-      poolId: selectedPoolId.value,
-      limit: 50 
-    }),
-    () => ({ 
-      enabled: !!selectedPoolId.value,
-      fetchPolicy: 'cache-and-network' 
-    })
-  )
-
-  // Heatmap Queries
-  const {
-    result: heatmapResult,
-    loading: heatmapLoading,
-    error: heatmapError,
-    refetch: refetchHeatmap
-  } = useQuery<AMMHeatmapQuery>(
-    AMMHeatmap,
-    () => ({
-      timeRange: TimeRange.Day_1,
-      sortBy: SortField.Liquidity,
-      sortOrder: SortOrder.Desc,
-      limit: 100
-    }),
-    () => ({ fetchPolicy: 'cache-and-network' })
-  )
-
-  const {
-    result: topPoolsResult,
-    loading: topPoolsLoading,
-    error: topPoolsError,
-    refetch: refetchTopPools
-  } = useQuery<TopAMMPoolsQuery>(
-    TopAMMPools,
-    () => ({ limit: 50 }),
-    () => ({ fetchPolicy: 'cache-and-network' })
-  )
-
-  const {
-    result: poolDetailsResult,
-    loading: poolDetailsLoading,
-    error: poolDetailsError,
-    refetch: refetchPoolDetails
-  } = useQuery<AMMPoolDetailsQuery>(
-    AMMPoolDetails,
-    () => ({ poolAccount: selectedPoolId.value }),
-    () => ({ 
-      enabled: !!selectedPoolId.value,
-      fetchPolicy: 'cache-and-network' 
-    })
-  )
-
-  // Token Queries
-  const {
-    result: tokensResult,
-    loading: tokensLoading,
-    error: tokensError,
-    refetch: refetchTokens
-  } = useQuery<XRPTokensQuery>(
-    XRPTokens,
-    () => ({
-      limit: 100,
-      sortBy: TokenSortField.Marketcap,
-      sortOrder: SortOrder.Desc
-    }),
-    () => ({ fetchPolicy: 'cache-and-network' })
-  )
-
-  const {
-    result: tokenResult,
-    loading: tokenLoading,
-    error: tokenError,
-    refetch: refetchToken
-  } = useQuery<XRPTokenQuery>(
-    XRPToken,
-    () => ({
-      currency: selectedToken.currency,
-      issuer: selectedToken.issuer
-    }),
-    () => ({ 
-      enabled: !!selectedToken.currency && !!selectedToken.issuer,
-      fetchPolicy: 'cache-and-network' 
-    })
-  )
-
-  const {
-    result: ammPoolsForTokenResult,
-    loading: ammPoolsForTokenLoading,
-    error: ammPoolsForTokenError,
-    refetch: refetchAMMPoolsForToken
-  } = useQuery<AMMPoolsQuery>(
-    AMMPools,
-    () => ({
-      currency: selectedToken.currency,
-      issuer: selectedToken.issuer,
-      limit: 50
-    }),
-    () => ({ 
-      enabled: !!selectedToken.currency && !!selectedToken.issuer,
-      fetchPolicy: 'cache-and-network' 
-    })
-  )
-
-  // Subscriptions
-  const {
-    result: poolUpdatesResult,
-    loading: poolUpdatesLoading,
-    error: poolUpdatesError
-  } = useSubscription<AMMPoolUpdatesSubscription>(
-    AMMPoolUpdates,
-    () => ({ poolAccount: selectedPoolId.value }),
-    () => ({ enabled: !!selectedPoolId.value })
-  )
-
-  const {
-    result: tokenPriceUpdatesResult,
-    loading: tokenPriceUpdatesLoading,
-    error: tokenPriceUpdatesError
-  } = useSubscription<TokenPriceUpdatesSubscription>(
-    TokenPriceUpdates,
-    () => ({
-      currency: selectedToken.currency,
-      issuer: selectedToken.issuer
-    }),
-    () => ({ 
-      enabled: !!selectedToken.currency && !!selectedToken.issuer 
-    })
-  )
-
-  const {
-    result: heatmapUpdatesResult,
-    loading: heatmapUpdatesLoading,
-    error: heatmapUpdatesError
-  } = useSubscription<HeatmapUpdatesSubscription>(
-    HeatmapUpdates,
-    () => ({ timeRange: TimeRange.Day_1 }),
-    () => ({ enabled: true })
   )
 
   // Computed properties
-  const accountBalances = computed(() => accountBalancesResult.value?.xrpAccountBalances)
-  const accountTransactions = computed(() => accountTransactionsResult.value?.xrpAccountTransactions || [])
-  const accountData = computed(() => accountDataResult.value?.xrpAccountData)
-  const ammPools = computed(() => ammPoolsResult.value?.xrpAMMPools || [])
-  const ammPool = computed(() => ammPoolResult.value?.xrpAMMPool)
-  const swapQuote = computed(() => swapQuoteResult.value?.xrpAMMSwapQuote)
-  const liquidityValue = computed(() => liquidityValueResult.value?.xrpAMMLiquidityValue)
-  const ammTransactions = computed(() => ammTransactionsResult.value?.xrpAMMTransactions || [])
-  const heatmapData = computed(() => heatmapResult.value?.ammHeatmap || [])
-  const topPools = computed(() => topPoolsResult.value?.topAMMPools || [])
-  const poolDetails = computed(() => poolDetailsResult.value?.ammPoolDetails)
-  const tokens = computed(() => tokensResult.value?.xrpTokens || [])
-  const token = computed(() => tokenResult.value?.xrpToken)
-  const ammPoolsForToken = computed(() => ammPoolsForTokenResult.value?.ammPools || [])
+  const accountData = computed(() => accountBalancesResult.value?.xrpAccountBalances || null)
+  const accountTransactions = computed(() => accountTransactionsResult.value?.xrpTransactions || [])
+  const screenerData = computed(() => screenerResult.value?.xrpScreener || [])
+  const ammPools = computed(() => ammPoolsResult.value?.xrpAmmPools || [])
 
   // Methods
   const setAddress = (address: string) => {
@@ -397,73 +156,23 @@ export default function useXrpGraphQL() {
   }
 
   const refreshAccountData = async () => {
-    await Promise.all([
-      refetchAccountBalances(),
-      refetchAccountTransactions(),
-      refetchAccountData()
-    ])
+    if (currentAddress.value) {
+      await refetchAccountBalances()
+      await refetchAccountTransactions()
+    }
   }
 
   const refreshAMMData = async () => {
-    await Promise.all([
-      refetchAMMPools(),
-      refetchAMMPool(),
-      refetchSwapQuote(),
-      refetchLiquidityValue(),
-      refetchAMMTransactions()
-    ])
+    await refetchAmmPools()
   }
 
   const refreshHeatmapData = async () => {
-    await Promise.all([
-      refetchHeatmap(),
-      refetchTopPools(),
-      refetchPoolDetails()
-    ])
+    await refetchScreener()
   }
 
   const refreshTokenData = async () => {
-    await Promise.all([
-      refetchTokens(),
-      refetchToken(),
-      refetchAMMPoolsForToken()
-    ])
+    // Token data refresh logic
   }
-
-  // Loading states
-  const isLoading = computed(() => 
-    accountBalancesLoading.value ||
-    accountTransactionsLoading.value ||
-    accountDataLoading.value ||
-    ammPoolsLoading.value ||
-    ammPoolLoading.value ||
-    swapQuoteLoading.value ||
-    liquidityValueLoading.value ||
-    ammTransactionsLoading.value ||
-    heatmapLoading.value ||
-    topPoolsLoading.value ||
-    poolDetailsLoading.value ||
-    tokensLoading.value ||
-    tokenLoading.value ||
-    ammPoolsForTokenLoading.value
-  )
-
-  const hasError = computed(() => 
-    accountBalancesError.value ||
-    accountTransactionsError.value ||
-    accountDataError.value ||
-    ammPoolsError.value ||
-    ammPoolError.value ||
-    swapQuoteError.value ||
-    liquidityValueError.value ||
-    ammTransactionsError.value ||
-    heatmapError.value ||
-    topPoolsError.value ||
-    poolDetailsError.value ||
-    tokensError.value ||
-    tokenError.value ||
-    ammPoolsForTokenError.value
-  )
 
   return {
     // State
@@ -471,55 +180,23 @@ export default function useXrpGraphQL() {
     selectedPoolId,
     selectedToken,
     
-    // Computed
-    accountBalances,
-    accountTransactions,
+    // Data
     accountData,
+    accountTransactions,
+    screenerData,
     ammPools,
-    ammPool,
-    swapQuote,
-    liquidityValue,
-    ammTransactions,
-    heatmapData,
-    topPools,
-    poolDetails,
-    tokens,
-    token,
-    ammPoolsForToken,
-    isLoading,
-    hasError,
     
     // Loading states
     accountBalancesLoading,
     accountTransactionsLoading,
-    accountDataLoading,
+    screenerLoading,
     ammPoolsLoading,
-    ammPoolLoading,
-    swapQuoteLoading,
-    liquidityValueLoading,
-    ammTransactionsLoading,
-    heatmapLoading,
-    topPoolsLoading,
-    poolDetailsLoading,
-    tokensLoading,
-    tokenLoading,
-    ammPoolsForTokenLoading,
     
     // Error states
     accountBalancesError,
     accountTransactionsError,
-    accountDataError,
+    screenerError,
     ammPoolsError,
-    ammPoolError,
-    swapQuoteError,
-    liquidityValueError,
-    ammTransactionsError,
-    heatmapError,
-    topPoolsError,
-    poolDetailsError,
-    tokensError,
-    tokenError,
-    ammPoolsForTokenError,
     
     // Methods
     setAddress,
@@ -530,9 +207,31 @@ export default function useXrpGraphQL() {
     refreshHeatmapData,
     refreshTokenData,
     
-    // Subscriptions
-    poolUpdatesResult,
-    tokenPriceUpdatesResult,
-    heatmapUpdatesResult
+    // Query methods for external use
+    getAccountBalances: (address: string) => useQuery(
+      XRPAccountBalancesGQL,
+      { account: address },
+      () => ({ enabled: !!address, fetchPolicy: 'cache-and-network' })
+    ),
+    getAccountTransactions: (address: string) => useQuery(
+      XRPAccountTransactionsGQL,
+      { address },
+      () => ({ enabled: !!address, fetchPolicy: 'cache-and-network' })
+    ),
+    getTransaction: (hash: string) => useQuery(
+      XRPTransactionGQL,
+      { hash },
+      () => ({ enabled: !!hash, fetchPolicy: 'cache-and-network' })
+    ),
+    getScreenerData: () => useQuery(
+      XRPScreenerGQL,
+      {},
+      () => ({ fetchPolicy: 'cache-and-network' })
+    ),
+    getAmmPools: () => useQuery(
+      XRPAmmPoolsGQL,
+      {},
+      () => ({ fetchPolicy: 'cache-and-network' })
+    )
   }
 } 

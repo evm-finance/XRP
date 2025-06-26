@@ -1,128 +1,54 @@
-query BalancesGQL($chainIds: [Int!]!, $address: String! ) {
-  balances(chainIds: $chainIds, address: $address) {
-    address
-    updatedAt
-    nextUpdateAt
-    quoteCurrency
-    chainId
-    pagination {
-      hasMore
-    }
-    items {
-      contractDecimals
-      contractName
-      contractTickerSymbol
-      contractAddress
-      supportsErc
-      lastTransferredAt
-      type
+# XRP Portfolio Queries Only
+
+query XRPAccountBalances($account: String!) {
+  xrpAccountBalances(account: $account) {
+    account
+    xrpBalance
+    xrpPrice
+    xrpTokens {
+      symbol
+      issuer
+      name
       balance
-      balance24h
-      quoteRate
-      quoteRate24h
-      quote
-      disableQuoteRate
-      quote24h
-      nftData
-    }
-  }
-}
-
-query TransactionsGQL($chainId: Int!, $address: String!, $pageNumber: Int!, $pageSize: Int!) {
-  transactions(chainId: $chainId, address: $address, pageNumber: $pageNumber, pageSize: $pageSize){
-    pagination {
-      hasMore
-      pageSize
-      pageNumber
-    }
-    items{
-      blockSignedAt
-      txHash
-      successful
-      fromAddress
-      fromAddressName
-      fromAddressSymbol
-      fromAddressIsContract
-      toAddress
-      toAddressName
-      toAddressIsContract
-      toAddressSymbol
+      price
       value
-      valueQuote
-      gasQuote
-      gasPrice
-      gasSpent
-      callFunction
-      txDetails{
-        fromAddress
-        toAddress
-        value
-        tokenSymbolName
-        tokenContractSymbol
-        tokenContractDecimals
-        tokenAddress
-        tokenLogoUrl
-        priceUSD
-      }
-      logEvents{
-        logOffset
-        txHash
-        senderContractDecimals
-        senderName
-        senderContractTickerSymbol
-        senderAddress
-        senderLogoUrl
-        decoded {
-          name
-          signature
-          params {
-            name
-            type
-            decoded
-            value
-          }
-        }
-      }
     }
   }
 }
 
-query TransfersGQL($chainId: Int!, $address: String!, $contractAddress: String!,  $pageNumber: Int!, $pageSize: Int!) {
-  transfers(chainId: $chainId, address: $address,  contractAddress: $contractAddress, pageNumber: $pageNumber, pageSize: $pageSize){
-    pagination {
-      hasMore
-      pageSize
-      pageNumber
+query XRPAccountTransactions($address: String!) {
+  xrpAccountTransactions(address: $address) {
+    account
+    amount
+    destination
+    transactionType
+    fee
+    hash
+    ledgerIndex
+    date
+    validated
+  }
+}
+
+query XRPDefiData($address: String!) {
+  xrpDefiData(address: $address) {
+    account
+    xrpBalance
+    xrpPrice
+    xrpTransactions {
+      amount
+      destination
+      transactionType
+      fee
+      hash
+      ledgerIndex
     }
-    items{
-      blockSignedAt
-      txHash
-      successful
-      gasSpent
-      gasPrice
-      gasQuote
-      transfers{
-        fromAddress
-        fromAddressLabel
-        fromAddressName
-        fromAddressSymbol
-        fromAddressIsContract
-
-        toAddress
-        toAddressLabel
-        toAddressName
-        toAddressSymbol
-        toAddressIsContract
-
-        contractDecimals
-        contractName
-        contractTickerSymbol
-        contractAddress
-        logoUrl
-        transferType
-        delta
-        deltaQuote
-      }
+    xrpTokenBalances {
+      tokenSymbol
+      tokenIssuer
+      tokenName
+      balance
+      priceXrp
     }
   }
 }

@@ -1,59 +1,10 @@
-#query SupportedChainsGQL {
-#  chains {
-#    id
-#    chainIdentifier,
-#    name,
-#    symbol,
-#    rpcUrl,
-#    blockExplorerUrl,
-#    dex {
-#      name, value, symbol
-#    }
-#    weth{chainId, address, symbol}
-#  }
-#}
+# XRP-specific queries only
+# All other queries have been removed to focus on XRP functionality
 
-
-query GasGQL {
-  gas{
-    symbol,
-    blockExplorer
-    name,
-    gas
-    {
-      lastBlock,
-      safeGasPrice,
-      proposeGasPrice,
-      fastGasPrice,
-      suggestBaseFee
+query TestGraphQL {
+  __schema {
+    types {
+      name
     }
   }
-}
-
-query DeFiStats{
-  globalStats {
-    defiMarketCap,
-    ethMarketCap,
-    defiToEthRatio,
-    tradingVolume24h,
-    defiDominance,
-    topCoinName,
-    topCoinDefiDominance
-  }
-}
-
-
-query UniswapTokensGQL($chainId: Int!, $userWallet:String!, $searchString:String!  $source:[UniswapTokenSource!]!, $pageNumber:Int!, $pageSize:Int! ){
-  uniswapTokens(chainId: $chainId, userWallet:$userWallet , searchString:$searchString, source: $source, pageNumber:$pageNumber,  pageSize: $pageSize){
-    items{ chainId,address,symbol, name, decimals}
-    pagination{hasMore,pageNumber,pageSize,totalCount}
-  }
-}
-
-query RecentPricesGQL{
-  recentPrices
-}
-
-query FiatPricesGQL($addresses:[String!]!, $platform:String!){
-  fiatPrices(addresses: $addresses, platform: $platform )
 }

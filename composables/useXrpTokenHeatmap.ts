@@ -1,9 +1,36 @@
 import { computed, onBeforeUnmount, onMounted, ref, useContext, watch } from '@nuxtjs/composition-api'
 import { useQuery } from '@vue/apollo-composable'
 import { XRPScreenerGQL } from '~/apollo/queries'
-import type { HeatmapData, HeatmapRowData, HeatmapUpdateData } from '~/types/heatmap'
-import type { HeatmapIntervals } from '~/types/state'
+// import type { HeatmapData, HeatmapRowData, HeatmapUpdateData } from '~/types/heatmap'
+// import type { HeatmapIntervals } from '~/types/state'
 import useHeatmapConfigs from '~/composables/useHeatmapConfigs'
+
+// Define local types since the heatmap types are not available
+interface HeatmapData {
+  name: string
+  children: HeatmapRowData[]
+}
+
+interface HeatmapRowData {
+  qc_key: string
+  name: string
+  symbol: string
+  price: number
+  price24h: number
+  price1h: number
+  price7d: number
+  marketcap: number
+  volume24h: number
+  issuer: string
+  issuerName: string
+  icon: string
+  color: string
+  size: number
+}
+
+interface HeatmapUpdateData {
+  [key: string]: HeatmapRowData
+}
 
 // Color function for XRP token heatmap tiles
 const setXrpTokenColor = (x: number, blueTile: boolean) => {
@@ -27,12 +54,10 @@ const setXrpTokenColor = (x: number, blueTile: boolean) => {
   return ''
 }
 
-export default function useXrpTokenHeatmap(userCanAccessTrend: any) {
-  const { $f } = useContext()
-  const { $axios } = useContext()
-  
+export default function useXrpTokenHeatmap() {
   // State
   const loading = ref(true)
+  const error = ref<string | null>(null)
   const rowData = ref<any[]>([])
   const heatmapData = ref<HeatmapData[]>([])
   
@@ -76,7 +101,7 @@ export default function useXrpTokenHeatmap(userCanAccessTrend: any) {
           issuerName: item.issuerName,
           icon: item.icon,
           color: setXrpTokenColor(priceChange / 100, blueTile.value),
-          size: blockSize.value === 'marketcap_index' ? item.marketcap || 0 : item.volume24H || 0,
+          size: blockSize.value === 'marketcap' ? item.marketcap || 0 : item.volume24H || 0,
         }
       })
       .sort((a, b) => b.size - a.size)
@@ -104,12 +129,20 @@ export default function useXrpTokenHeatmap(userCanAccessTrend: any) {
     }
     const fieldName = timeFrameMap[timeFrame.value as keyof typeof timeFrameMap] || 'price24h'
     
-    return `{name}
-Price: $${$f('{price}', { minDigits: 6, after: '' })}
-Market Cap: $${$f('{marketcap}', { minDigits: 0, after: '' })}
-24h Volume: $${$f('{volume24h}', { minDigits: 0, after: '' })}
+    return (item: any) => {
+      const name = item.name || item.symbol || 'Unknown'
+      const price = item.price || 0
+      const marketcap = item.marketcap || 0
+      const volume24h = item.volume24h || 0
+      const issuerName = item.issuerName || 'Unknown'
+      
+      return `{name}
+Price: $${price.toLocaleString()}
+Market Cap: $${marketcap.toLocaleString()}
+24h Volume: $${volume24h.toLocaleString()}
 ${timeFrame.value} Change: {${fieldName}:numberFormat.2}%
 Issuer: {issuerName}`
+    }
   })
 
   // Group data by gainers and losers

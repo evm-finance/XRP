@@ -1,5 +1,6 @@
 import { gql } from 'graphql-tag'
 
+// XRP Block Queries
 export const BlocksXrpGQL = gql`
   query BlocksXrpGQL($network: String!) {
     blocks(network: $network) {
@@ -15,74 +16,9 @@ export const BlocksXrpGQL = gql`
   }
 `
 
-export const BlocksSubscriptionGQL = gql`
-  subscription BlocksStreamGQL($network: String!) {
-    block(network: $network) {
-      network
-      blockNumber
-      minedAt
-      txCount
-      swapCount
-      pairCreatedCount
-      mintCount
-      metrics {
-        items {
-          totalLiquidity
-          change1H
-          token0Symbol
-          token1Symbol
-        }
-      }
-      XRPLedger {
-        ledgerHash
-        eventsCount
-      }
-    }
-  }
-`
-
-export const EvmTransactionGQL = gql`
-  query EvmTransactionGQL($chainId: Int!, $hash: String!) {
-    evmTransaction(chainId: $chainId, hash: $hash) {
-      chainId
-      timestamp
-      block
-      status
-      from
-      gasPrice
-      transactionFee
-      gssLimit
-      hash
-      isPending
-      nonce
-      to
-      txDataHex
-      value
-      input {
-        methodSigDataStr
-        inputsSigDataStr
-        inputsMap
-        argsMap
-        fullFunctionSig
-        functionName
-      }
-      logEvents {
-        items {
-          network
-          contract
-          name
-          topic
-          address
-          signature
-          allFunctionParams
-          outputDataMapHex
-        }
-      }
-    }
-  }
-`
+// XRP Transaction Queries
 export const XRPTransactionGQL = gql`
-  query EvmTransactionGQL($hash: String!) {
+  query XRPTransactionGQL($hash: String!) {
     xrpTransaction(hash: $hash) {
       account
       amount
@@ -110,58 +46,39 @@ export const XRPTransactionGQL = gql`
   }
 `
 
-export const XRPDefiDataGQL = gql`
-query XRPDefiDataGQL ($address: String!) {
-  account
-  xrpBalance
-  xrpPrice
-  xrpTransactions {
-      amount
-      destination
-      transactionType
-      fee
-      hash
-      ledgerIndex
-  }
-  xrpTokenBalances {
-    tokenSymbol
-    tokenIssuer
-    tokenName
-    balance
-    priceXrp
-  }
-}`
-
+// XRP Account Queries
 export const XRPAccountTransactionsGQL = gql`
-query XRPAccountTransactionsGQL ($address: String!) {
-  xrpTransactions(address: $address) {
+  query XRPAccountTransactionsGQL($address: String!) {
+    xrpTransactions(address: $address) {
       amount
       destination
       transactionType
       fee
       hash
       ledgerIndex
-  }
-}`
-
-export const XRPAccountBalancesGQL = gql`
-query XRPAccountBalancesGQL ($account: String!) {
-  
-  xrpAccountBalances (account: $account) {
-    account
-    xrpBalance
-    xrpPrice
-    xrpTokens {
-      symbol
-      issuer
-      name
-      balance
-      price
-      value
     }
   }
-}`
+`
 
+export const XRPAccountBalancesGQL = gql`
+  query XRPAccountBalancesGQL($account: String!) {
+    xrpAccountBalances(account: $account) {
+      account
+      xrpBalance
+      xrpPrice
+      xrpTokens {
+        symbol
+        issuer
+        name
+        balance
+        price
+        value
+      }
+    }
+  }
+`
+
+// XRP Screener Queries
 export const XRPScreenerGQL = gql`
   query XRPScreenerGQL {
     xrpScreener {
@@ -177,6 +94,7 @@ export const XRPScreenerGQL = gql`
   }
 `
 
+// XRP AMM Queries
 export const XRPAmmPoolsGQL = gql`
   query XRPAmmPoolsGQL {
     xrpAmmPools {
@@ -198,11 +116,6 @@ export const XRPAmmPoolsGQL = gql`
       fee
       apr
       priceChange24h
-      token1Balance
-      token2Balance
-      totalSupply
-      createdAt
-      lastUpdated
     }
   }
 `
@@ -316,6 +229,7 @@ export const XRPAmmTransactionsGQL = gql`
   }
 `
 
+// XRP Token Queries
 export const XRPTokenPriceGQL = gql`
   query XRPTokenPriceGQL($currency: String!, $issuer: String) {
     xrpTokenPrice(currency: $currency, issuer: $issuer) {
@@ -343,77 +257,134 @@ export const XRPTokenBalancesGQL = gql`
   }
 `
 
-export const AaveMarketsQGL = gql`
-  query AaveMarketsQGL($chainId: Int!, $version: String!) {
-    aavePools(chainId: $chainId, version: $version) {
-      id
-      underlyingAsset
+// XRP Heatmap Queries
+export const XRPHeatmapGQL = gql`
+  query XRPHeatmapGQL($timeFrame: String, $blockSize: String, $limit: Int) {
+    xrpHeatmap(timeFrame: $timeFrame, blockSize: $blockSize, limit: $limit) {
+      currency
       name
-      symbol
-      decimals
-      totalLiquidity
-      price {
-        id
-        priceInEth
-        priceUsd
-      }
-      liquidityRate
-      stableBorrowRate
-      variableBorrowRate
-      aEmissionPerSecond
-      vEmissionPerSecond
-      sEmissionPerSecond
-      availableLiquidity
-      utilizationRate
-      totalATokenSupply
-      totalCurrentVariableDebt
-      totalPrincipalStableDebt
-      addresses {
-        aTokenAddress
-        aTokenSymbol
-        stableDebtTokenAddress
-        variableDebtTokenAddress
-        decimals
-        address
-        symbol
-      }
-      portfolioVal {
-        totalDeposits
-        walletBal
-        stableBorrow
-        variableBorrow
-      }
-      totalLiquidityAsCollateral
-      baseLTVasCollateral
-      reserveLiquidationThreshold
-      reserveLiquidationBonus
-      usageAsCollateralEnabled
-
-      borrowingEnabled
-      stableBorrowRateEnabled
+      price_usd
+      price_xrp
+      price_change_1h
+      price_change_4h
+      price_change_24h
+      price_change_7d
+      price_change_30d
+      marketcap
+      volume_24h
+      liquidity
+      tvl
+      issuer
+      hasAmmPool
+      hasTrustLine
     }
   }
 `
 
-export const SupportedChainsGQL = gql`
-  query SupportedChainsGQL {
-    networks {
-      id
-      chainIdentifier
-      name
-      symbol
-      nativeTokenSymbol
-      rpcUrl
-      blockExplorerUrl
-      dex {
+export const XRPAMMHeatmapGQL = gql`
+  query XRPAMMHeatmapGQL($timeFrame: String, $blockSize: String, $limit: Int) {
+    xrpAmmHeatmap(timeFrame: $timeFrame, blockSize: $blockSize, limit: $limit) {
+      poolId
+      token1 {
+        currency
+        symbol
         name
-        value
-        symbol
+        issuer
       }
-      weth {
-        chainId
-        address
+      token2 {
+        currency
         symbol
+        name
+        issuer
+      }
+      liquidity
+      volume24h
+      volume7d
+      fee
+      apr
+      priceChange24h
+      priceChange7d
+      tvl
+      transactions24h
+      uniqueTraders24h
+    }
+  }
+`
+
+export const XRPHeatmapUpdatesGQL = gql`
+  query XRPHeatmapUpdatesGQL($currencies: [String!], $timeFrame: String) {
+    xrpHeatmapUpdates(currencies: $currencies, timeFrame: $timeFrame) {
+      currency
+      price_usd
+      price_xrp
+      price_change_1h
+      price_change_4h
+      price_change_24h
+      price_change_7d
+      price_change_30d
+      marketcap
+      volume_24h
+      liquidity
+      tvl
+    }
+  }
+`
+
+// XRP AMM Liquidity Queries
+export const XRPAMMLiquidityValuesGQL = gql`
+  query XRPAMMLiquidityValues {
+    xrpAMMLiquidityValues {
+      poolId
+      asset1ValueUsd
+      asset2ValueUsd
+      totalLiquidityUsd
+      asset1Percentage
+      asset2Percentage
+      priceImpact
+    }
+  }
+`
+
+export const SimpleAMMLiquidityValuesGQL = gql`
+  query SimpleAMMLiquidityValues {
+    xrpAMMLiquidityValues {
+      poolId
+      asset1ValueUsd
+      asset2ValueUsd
+      totalLiquidityUsd
+    }
+  }
+`
+
+export const GetAllAMMLiquidityValuesGQL = gql`
+  query GetAllAMMLiquidityValues {
+    xrpAMMLiquidityValues {
+      poolId
+      asset1 {
+        currency
+        issuer
+      }
+      asset2 {
+        currency
+        issuer
+      }
+      asset1Balance
+      asset2Balance
+      asset1ValueUsd
+      asset2ValueUsd
+      totalLiquidityUsd
+      fee
+      createdAt
+    }
+  }
+`
+
+// Test Query
+export const TestGraphQLGQL = gql`
+  query TestGraphQL {
+    __schema {
+      types {
+        name
       }
     }
   }

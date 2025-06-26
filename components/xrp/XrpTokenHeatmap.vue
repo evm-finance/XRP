@@ -18,7 +18,7 @@
     <xrp-heatmap-chart
       v-else
       data-nosnippet
-      :block-size="blockSize"
+      :block-size="blockSizeValue"
       :chart-height="chartHeight"
       :data="heatmapData"
       :tile-body="tileText"
@@ -30,11 +30,11 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from '@nuxtjs/composition-api'
+import { computed, defineComponent, ref } from '@nuxtjs/composition-api'
 import { mdiStar, mdiCog } from '@mdi/js'
 import XrpHeatmapChart from '~/components/xrp/XrpHeatmapChart.vue'
 import useXrpTokenHeatmap from '~/composables/useXrpTokenHeatmap'
-import HeatmapConfigMenu from '~/components/HeatmapConfigMenu.vue'
+import HeatmapConfigMenu from '~/components/heatmaps/HeatmapConfigMenu.vue'
 import useHeatmapConfigs from '~/composables/useHeatmapConfigs'
 
 export default defineComponent({
@@ -49,27 +49,26 @@ export default defineComponent({
   setup(props) {
     // COMPOSABLES
     const icons = { mdiStar, mdiCog }
-    const USER_CAN_READ_TREND_DATA = computed(() => props.userCanAccessTrend)
-    const { heatmapData, tileText, tileTooltip, updateData, loading } = useXrpTokenHeatmap(USER_CAN_READ_TREND_DATA)
-    const { displayFavorites, blockSize } = useHeatmapConfigs()
+    const { loading, heatmapData, tileText, tileTooltip, updateData } = useXrpTokenHeatmap()
+    const { displayFavorites, blueTile, blockSize, timeFrame } = useHeatmapConfigs()
 
-    // Calculate chart height (subtract header height)
-    const chartHeight = computed(() => {
-      const heightNum = typeof props.height === 'string' ? parseInt(props.height) : props.height
-      return heightNum - 60 // Subtract header height
-    })
+    // COMPUTED
+    const chartHeight = computed(() => Number(props.height))
+    const blockSizeValue = computed(() => blockSize.value)
 
     return {
       icons,
+      loading,
       heatmapData,
       tileText,
       tileTooltip,
       updateData,
-      loading,
-      displayFavorites,
-      blockSize,
       chartHeight,
+      blockSizeValue,
+      displayFavorites,
+      blueTile,
+      timeFrame,
     }
-  },
+  }
 })
 </script> 

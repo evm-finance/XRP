@@ -270,14 +270,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, useContext } from '@nuxtjs/composition-api'
+import { defineComponent, ref, computed, onMounted, useContext, useRoute } from '@nuxtjs/composition-api'
 import { useQuery } from '@vue/apollo-composable'
 import { XRPAccountTransactionsGQL } from '~/apollo/queries'
 
 export default defineComponent({
   setup() {
     const { $f } = useContext()
-    const { query } = useRoute()
+    const route = useRoute()
     
     // State
     const address = ref<string>('')
@@ -295,8 +295,8 @@ export default defineComponent({
 
     // Get address from query params
     onMounted(() => {
-      if (query.address) {
-        address.value = query.address as string
+      if (route.value.query.address) {
+        address.value = route.value.query.address as string
         loadAddressData()
       }
     })
@@ -343,7 +343,7 @@ export default defineComponent({
       let filtered = transactions.value
       
       if (transactionType.value !== 'all') {
-        filtered = filtered.filter(tx => tx.transactionType === transactionType.value)
+        filtered = filtered.filter((tx: any) => tx.transactionType === transactionType.value)
       }
       
       return filtered

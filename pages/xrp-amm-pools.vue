@@ -117,7 +117,10 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, useContext } from '@nuxtjs/composition-api'
+import { computed, defineComponent, ref, useContext, inject } from '@nuxtjs/composition-api'
+import { useQuery } from '@vue/apollo-composable/dist'
+import { XRPAmmPoolsGQL } from '~/apollo/queries'
+import { XRP_PLUGIN_KEY, XrpClient } from '~/plugins/web3/xrp.client'
 import XrpBalanceWidget from '~/components/portfolio/XrpBalanceWidget.vue'
 
 interface XRPAmmPool {
@@ -140,89 +143,65 @@ export default defineComponent({
     const loading = ref(true)
     const poolsRawData = ref<XRPAmmPool[]>([])
 
-    // Mock AMM data - in real implementation this would come from XRPL AMM API
-    const mockAmmData = [
-      {
-        id: 'amm_1',
-        token1: { symbol: 'XRP', name: 'XRP', icon: '⚡' },
-        token2: { symbol: 'USDC', name: 'USD Coin', icon: '🪙', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
-        liquidity: 2500000,
-        volume24h: 1800000,
-        fee: 0.003,
-        apr: 12.5,
-        priceChange24h: 2.3,
-      },
-      {
-        id: 'amm_2',
-        token1: { symbol: 'XRP', name: 'XRP', icon: '⚡' },
-        token2: { symbol: 'USDT', name: 'Tether', icon: '💎', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
-        liquidity: 1800000,
-        volume24h: 1200000,
-        fee: 0.003,
-        apr: 15.2,
-        priceChange24h: -1.8,
-      },
-      {
-        id: 'amm_3',
-        token1: { symbol: 'XRP', name: 'XRP', icon: '⚡' },
-        token2: { symbol: 'BTC', name: 'Bitcoin', icon: '₿', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
-        liquidity: 1200000,
-        volume24h: 800000,
-        fee: 0.003,
-        apr: 18.7,
-        priceChange24h: 4.1,
-      },
-      {
-        id: 'amm_4',
-        token1: { symbol: 'XRP', name: 'XRP', icon: '⚡' },
-        token2: { symbol: 'ETH', name: 'Ethereum', icon: 'Ξ', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
-        liquidity: 900000,
-        volume24h: 600000,
-        fee: 0.003,
-        apr: 22.1,
-        priceChange24h: -0.5,
-      },
-      {
-        id: 'amm_5',
-        token1: { symbol: 'rLUSD', name: 'rLUSD', icon: '💵' },
-        token2: { symbol: 'USDC', name: 'USD Coin', icon: '🪙', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
-        liquidity: 800000,
-        volume24h: 400000,
-        fee: 0.001,
-        apr: 8.3,
-        priceChange24h: 0.1,
-      },
-      {
-        id: 'amm_6',
-        token1: { symbol: 'rLUSD', name: 'rLUSD', icon: '💵' },
-        token2: { symbol: 'USDT', name: 'Tether', icon: '💎', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
-        liquidity: 600000,
-        volume24h: 300000,
-        fee: 0.001,
-        apr: 9.8,
-        priceChange24h: -0.2,
-      },
-      {
-        id: 'amm_7',
-        token1: { symbol: 'XRP', name: 'XRP', icon: '⚡' },
-        token2: { symbol: 'SOL', name: 'Solana', icon: '◎', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
-        liquidity: 500000,
-        volume24h: 250000,
-        fee: 0.003,
-        apr: 25.4,
-        priceChange24h: 6.7,
-      },
-      {
-        id: 'amm_8',
-        token1: { symbol: 'XRP', name: 'XRP', icon: '⚡' },
-        token2: { symbol: 'ADA', name: 'Cardano', icon: '₳', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
-        liquidity: 400000,
-        volume24h: 200000,
-        fee: 0.003,
-        apr: 28.9,
-        priceChange24h: -2.1,
-      },
-    ]
+    // Connect to live GraphQL data
+    const { onResult } = useQuery(
+      XRPAmmPoolsGQL,
+      null,
+      { fetchPolicy: 'no-cache', pollInterval: 30000 }
+    )
+
+    // Handle query results
+    onResult((queryResult: any) => {
+      if (queryResult.data?.xrpAmmPools) {
+        const pools = queryResult.data.xrpAmmPools
+        
+        // Transform GraphQL data to component format
+        const transformedPools: XRPAmmPool[] = pools.map((pool: any) => ({
+          id: pool.id || '',
+          token1: {
+            symbol: pool.token1?.symbol || 'XRP',
+            name: pool.token1?.name || 'XRP',
+            icon: pool.token1?.icon || '⚡',
+            issuer: pool.token1?.issuer || ''
+          },
+          token2: {
+            symbol: pool.token2?.symbol || '',
+            name: pool.token2?.name || '',
+            icon: pool.token2?.icon || '🪙',
+            issuer: pool.token2?.issuer || ''
+          },
+          liquidity: pool.liquidity || 0,
+          volume24h: pool.volume24h || 0,
+          fee: pool.fee || 0,
+          apr: pool.apr || 0,
+          priceChange24h: pool.priceChange24h || 0,
+          token1Balance: pool.token1Balance || 0,
+          token2Balance: pool.token2Balance || 0,
+          totalSupply: pool.totalSupply || 0,
+          createdAt: pool.createdAt || '',
+          lastUpdated: pool.lastUpdated || ''
+        }))
+        
+        poolsRawData.value = transformedPools
+      } else {
+        // No pools found
+        poolsRawData.value = []
+      }
+      loading.value = false
+    })
+
+    // Add error handling
+    const { onError } = useQuery(
+      XRPAmmPoolsGQL,
+      null,
+      { fetchPolicy: 'no-cache', pollInterval: 30000 }
+    )
+
+    onError((error: any) => {
+      console.error('GraphQL Error in xrp-amm-pools:', error)
+      loading.value = false
+      // You could add error state handling here
+    })
 
     const poolsDataFormatted = computed(() =>
       poolsRawData.value.map((elem) => ({
@@ -263,15 +242,6 @@ export default defineComponent({
       // Navigate to pool detail page
       window.location.href = `/xrp-amm-pools/${pool.id}`
     }
-
-    // Initialize with mock data
-    const initializeData = () => {
-      poolsRawData.value = mockAmmData
-      loading.value = false
-    }
-
-    // Initialize data on mount
-    initializeData()
 
     const cols = computed(() => {
       return [

@@ -1,3 +1,96 @@
+# XRP Token Queries Only
+
+query XRPTokenPrice($currency: String!, $issuer: String) {
+  xrpTokenPrice(currency: $currency, issuer: $issuer) {
+    currency
+    issuer
+    price
+    priceChange24h
+    volume24h
+    marketcap
+    lastUpdated
+  }
+}
+
+query XRPTokenBalances($address: String!) {
+  xrpTokenBalances(address: $address) {
+    currency
+    issuer
+    balance
+    price
+    value
+    lastUpdated
+  }
+}
+
+query XRPScreener {
+  xrpScreener {
+    currency
+    issuerAddress
+    icon
+    tokenName
+    issuerName
+    marketcap
+    price
+    volume24H
+  }
+}
+
+# XRP Block Queries
+query BlocksXrpGQL($network: String!) {
+  blocks(network: $network) {
+    network
+    blockNumber
+    minedAt
+    txCount
+    XRPLedger {
+      ledgerHash
+      eventsCount
+    }
+  }
+}
+
+query BlockGQL($network: String!, $blockNumber: Int!) {
+  block(network: $network, blockNumber: $blockNumber) {
+    network
+    blockNumber
+    minedAt
+    txCount
+    XRPLedger {
+      ledgerHash
+      eventsCount
+      ledger {
+        ledgerHash
+        parentHash
+        transactionHash
+        closeTimeHuman
+        totalCoins
+        totalCoins1
+      }
+    }
+    XRPTransactions {
+      items {
+        hash
+        account
+        destination
+        transactionType
+        amount
+        fee
+        metadata
+      }
+    }
+  }
+}
+
+# Test Query
+query TestGraphQL {
+  __schema {
+    types {
+      name
+    }
+  }
+}
+
 query TokenQueryGQL($qcKey: String!, $walletAddress: String!, $interval: TimeInterval!, $contractAddress: String!, $chainId:Int! , $decimals: Int!){
   token(qcKey: $qcKey, walletAddress: $walletAddress , interval: $interval, contractAddress: $contractAddress, chainId: $chainId, decimals: $decimals){
     ID
@@ -66,9 +159,6 @@ query TokenQueryGQL($qcKey: String!, $walletAddress: String!, $interval: TimeInt
   }
 }
 
-
-
-
 query DailyChartGQL($coinGeckoID:String!){
   dailyChart(coinGeckoID: $coinGeckoID){
     date
@@ -100,14 +190,11 @@ query ScreenerGQL($network: String!, $dex:String!, $sortBy: String!, $sort:Strin
   }
 }
 
-
-
 subscription TimeGQL{
   currentTime {
     timeStamp, unixTime
   }
 }
-
 
 subscription PriceStreamGQL($network:String!, $dex:String!, $address: [String!]!){
   priceStream(network:$network,dex: $dex, address:$address){
@@ -120,77 +207,6 @@ subscription PriceStreamGQL($network:String!, $dex:String!, $address: [String!]!
     reserveRatio
   }
 }
-
-query BlocksGQL($network:String!){
-  blocks(network:$network){
-    network
-    blockNumber
-    minedAt
-    txCount
-    swapCount
-    pairCreatedCount
-    mintCount
-    metrics{
-      items
-      {
-        totalLiquidity
-        change1H
-        token0Symbol
-        token1Symbol
-      }
-    }
-  }
-}
-
-
-query BlocksXrpGQL($network:String!){
-  blocks(network:$network){
-    network
-    blockNumber
-    minedAt
-    txCount
-    XRPLedger {
-      ledgerHash
-      eventsCount
-    }
-  }
-}
-
-query BlockGQL($network:String!, $blockNumber:Int!){
-  block(network:$network, blockNumber: $blockNumber){
-    network
-    blockNumber
-    minedAt
-    txCount
-    XRPLedger {
-      ledgerHash
-      eventsCount
-      ledger {
-        ledgerHash
-        parentHash,
-        transactionHash,
-        closeTimeHuman,
-        totalCoins
-        totalCoins1
-
-      }
-    }
-    XRPTransactions {
-      items {
-        hash
-        account
-        destination
-        transactionType
-        amount
-        fee
-        metadata
-      }
-    }
-  }
-}
-
-
-
 
 subscription BlocksStreamGQL($network:String!){
   block(network:$network){

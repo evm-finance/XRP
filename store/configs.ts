@@ -2,32 +2,27 @@ import type { ActionTree, MutationTree, GetterTree } from 'vuex'
 import { Context } from '@nuxt/types'
 import { ConfigState } from '~/types/state'
 import { SearchResult, Network } from '~/types/global'
-import { SupportedChainsGQL } from '~/apollo/queries'
 
 const defaultChain: Network = {
-  weth: {
-    chainId: 1,
-    symbol: 'WETH',
-    decimals: 18,
-    address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    name: 'Wrapped Ether',
-  },
-  dex: [
-    { value: 'uniswap_v2', name: 'Uniswap V2', symbol: 'UNI' },
-    { value: 'uniswap_v3', name: 'Uniswap V3', symbol: 'UNI' },
-  ],
-  id: 'ethereum',
-  blockExplorerUrl: 'https://etherscan.io/',
-  chainIdentifier: 1,
-  name: 'Ethereum Main Net',
-  rpcUrl: 'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161/',
+  id: '1',
+  name: 'Ethereum',
   symbol: 'ETH',
   nativeTokenSymbol: 'ETH',
+  rpcUrl: 'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
+  blockExplorerUrl: 'https://etherscan.io',
+  dex: [],
+  weth: {
+    chainId: 1,
+    address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    symbol: 'WETH',
+    name: 'Wrapped Ether',
+    decimals: 18
+  }
 }
 
 export const state = () =>
   ({
-    title: 'EVM',
+    title: 'XRP',
     globalStats: null,
     gasStats: null,
     networks: [],
@@ -43,13 +38,26 @@ export const mutations: MutationTree<ConfigState> = {
 
 export const actions: ActionTree<ConfigState, ConfigState> = {
   async initConfigs({ commit }, context: Context): Promise<void> {
+    // XRP-only configuration - no need for network queries
     try {
-      const client = context.app.apolloProvider?.defaultClient
-      const query = await client?.query({ query: SupportedChainsGQL, fetchPolicy: 'no-cache' })
-
-      if (query && query.data) {
-        commit('SET_CONFIG', query.data)
+      // Initialize with default XRP network
+      const xrpNetwork: Network = {
+        id: 'xrp',
+        name: 'XRP Ledger',
+        symbol: 'XRP',
+        nativeTokenSymbol: 'XRP',
+        rpcUrl: 'wss://xrplcluster.com',
+        blockExplorerUrl: 'https://livenet.xrpl.org',
+        dex: [],
+        weth: {
+          chainId: 0,
+          address: '',
+          symbol: 'XRP',
+          name: 'XRP',
+          decimals: 6
+        }
       }
+      commit('SET_CONFIG', { networks: [xrpNetwork] })
     } catch {}
   },
 
@@ -57,7 +65,14 @@ export const actions: ActionTree<ConfigState, ConfigState> = {
     await commit('SET_SEARCH_RESULT', { searchResult })
   },
 }
+
 export const getters: GetterTree<ConfigState, ConfigState> = {
   chainInfo: (state: ConfigState) => (chainId: number) =>
-    state.networks.find((elem: Network) => elem.chainIdentifier === chainId) ?? defaultChain,
+    state.networks.find((elem: Network) => elem.id === chainId.toString()) ?? defaultChain,
 } as any
+
+export const getNetworkByChainId = (chainId: number): Network => {
+  // This function should be used within a component with access to the store
+  // For now, return defaultChain as fallback
+  return defaultChain
+}

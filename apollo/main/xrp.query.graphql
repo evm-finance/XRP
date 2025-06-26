@@ -152,6 +152,27 @@ query XRPAMMLiquidityValue($poolId: String!) {
   }
 }
 
+query GetAllAMMLiquidityValues {
+  xrpAMMLiquidityValues {
+    poolId
+    asset1 {
+      currency
+      issuer
+    }
+    asset2 {
+      currency
+      issuer
+    }
+    asset1Balance
+    asset2Balance
+    asset1ValueUsd
+    asset2ValueUsd
+    totalLiquidityUsd
+    fee
+    createdAt
+  }
+}
+
 query XRPAMMTransactions($poolId: String, $transactionType: String, $limit: Int) {
   xrpAMMTransactions(poolId: $poolId, transactionType: $transactionType, limit: $limit) {
     transactionHash

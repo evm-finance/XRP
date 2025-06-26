@@ -35,6 +35,8 @@
   "exclude": [
     "node_modules",
     ".nuxt",
-    "dist"
+    "dist",
+    "quantify",
+    "qc-front-end-server"
   ]
 }

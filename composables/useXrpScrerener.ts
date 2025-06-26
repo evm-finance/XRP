@@ -2,7 +2,7 @@ import * as process from 'process'
 import { ref, computed, watch, useContext, Ref, reactive, inject } from '@nuxtjs/composition-api'
 import { useQuery, useSubscription } from '@vue/apollo-composable/dist'
 import { Block } from '@/types/apollo/main/types'
-import { BlocksSubscriptionGQL, BlocksXrpGQL } from '~/apollo/queries'
+import { BlocksXrpGQL } from '~/apollo/queries'
 
 type BlockObserver = Block & {
   updateOption?: { status: boolean; color: string | null }
@@ -25,7 +25,7 @@ export default function () {
   })
 
   const { result: liveBlock } = process.browser
-    ? useSubscription(BlocksSubscriptionGQL, () => ({ network: 'ripple' }), {
+    ? useSubscription(BlocksXrpGQL, () => ({ network: 'ripple' }), {
         fetchPolicy: 'no-cache',
       })
     : { result: ref(null) }

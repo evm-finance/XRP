@@ -1,0 +1,200 @@
+import { ConnectorInterface, Web3ErrorInterface } from '~/plugins/web3/connector'
+
+export class XamanConnector implements ConnectorInterface {
+  public id = 'xaman'
+  public provider: any = null
+  public chainId: number = 144 // XRP Ledger
+  public active: boolean = false
+  public account: string = ''
+  private error: Web3ErrorInterface = { status: false, message: null }
+
+  async connect(): Promise<{ account: string | null; error: Web3ErrorInterface }> {
+    try {
+      // Check if Xaman is available
+      if (!this.isXamanAvailable()) {
+        return { 
+          account: null, 
+          error: { status: true, message: 'Xaman (XUMM) is not available' } 
+        }
+      }
+
+      // Connect to Xaman
+      const result = await this.connectToXaman()
+      if (result.success) {
+        this.account = result.account
+        this.active = true
+        this.provider = window.xumm
+        return { account: result.account, error: { status: false, message: null } }
+      } else {
+        return { account: null, error: { status: true, message: result.error } }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      return { account: null, error: { status: true, message: errorMessage } }
+    }
+  }
+
+  async disconnect(): Promise<void> {
+    this.account = ''
+    this.active = false
+    this.provider = null
+    this.error = { status: false, message: null }
+  }
+
+  async switchChain(chainId: number): Promise<{ success: boolean; error?: string }> {
+    // Xaman doesn't support chain switching
+    return { success: true }
+  }
+
+  async signMessage(message: string): Promise<{ signature: string | null; error?: string }> {
+    try {
+      if (!this.active || !this.account) {
+        return { signature: null, error: 'Wallet not connected' }
+      }
+
+      // Use Xaman to sign message
+      const result = await this.signMessageWithXaman(message)
+      return result
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      return { signature: null, error: errorMessage }
+    }
+  }
+
+  async sendTransaction(transaction: any): Promise<{ hash: string | null; error?: string }> {
+    try {
+      if (!this.active || !this.account) {
+        return { hash: null, error: 'Wallet not connected' }
+      }
+
+      // Use Xaman to send transaction
+      const result = await this.sendTransactionWithXaman(transaction)
+      return result
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      return { hash: null, error: errorMessage }
+    }
+  }
+
+  private isXamanAvailable(): boolean {
+    return typeof window !== 'undefined' && 
+           (window as any).xumm !== undefined &&
+           typeof (window as any).xumm.request === 'function'
+  }
+
+  private async connectToXaman(): Promise<{ success: boolean; account?: string; error?: string }> {
+    try {
+      const result = await (window as any).xumm.request({
+        method: 'connect'
+      })
+      
+      if (result && result.address) {
+        return { success: true, account: result.address }
+      } else {
+        return { success: false, error: 'Failed to get account from Xaman' }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to connect to Xaman'
+      return { success: false, error: errorMessage }
+    }
+  }
+
+  private async signMessageWithXaman(message: string): Promise<{ signature: string | null; error?: string }> {
+    try {
+      const result = await (window as any).xumm.request({
+        method: 'signMessage',
+        params: { message }
+      })
+      
+      if (result && result.signature) {
+        return { signature: result.signature }
+      } else {
+        return { signature: null, error: 'Failed to sign message' }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to sign message'
+      return { signature: null, error: errorMessage }
+    }
+  }
+
+  private async sendTransactionWithXaman(transaction: any): Promise<{ hash: string | null; error?: string }> {
+    try {
+      const result = await (window as any).xumm.request({
+        method: 'sendTransaction',
+        params: { transaction }
+      })
+      
+      if (result && result.hash) {
+        return { hash: result.hash }
+      } else {
+        return { hash: null, error: 'Failed to send transaction' }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to send transaction'
+      return { hash: null, error: errorMessage }
+    }
+  }
+
+  async signTransaction(transaction: any): Promise<{ success: boolean; signedTx?: any; error?: string }> {
+    try {
+      const xumm = (window as any).xumm
+      
+      // Submit transaction for signing
+      const result = await xumm.xapp.signAndSubmit(transaction)
+      
+      if (result && result.result && result.result.txid) {
+        return {
+          success: true,
+          signedTx: result.result
+        }
+      } else {
+        return {
+          success: false,
+          error: 'Transaction signing failed'
+        }
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Failed to sign transaction'
+      }
+    }
+  }
+
+  async getAccountInfo(): Promise<{ success: boolean; accountInfo?: any; error?: string }> {
+    try {
+      const xumm = (window as any).xumm
+      
+      const accountInfo = await xumm.xapp.accountInfo()
+      
+      if (accountInfo) {
+        return {
+          success: true,
+          accountInfo
+        }
+      } else {
+        return {
+          success: false,
+          error: 'Failed to get account info'
+        }
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Failed to get account info'
+      }
+    }
+  }
+
+  resetErrors(): void {
+    this.error = { status: false, message: null }
+  }
+
+  getAccount(): string {
+    return this.account
+  }
+
+  getError(): Web3ErrorInterface {
+    return this.error
+  }
+} 

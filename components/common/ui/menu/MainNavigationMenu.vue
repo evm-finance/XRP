@@ -165,7 +165,7 @@ export default defineComponent({
     const navigationDrawer = ref(true)
     
     // XRP Menu Items
-    const xrpMenu = ref([
+    const xrpMenu = ref<Array<{ icon: string; title: string; to?: string; href?: string }>>([
       {
         icon: 'mdi-view-list',
         title: 'XRP Screener',
@@ -182,9 +182,9 @@ export default defineComponent({
         to: '/xrp-explorer',
       },
       {
-        icon: 'mdi-fire',
-        title: 'XRP Heatmap',
-        to: '/xrp-heatmap',
+        icon: 'mdi-water',
+        title: 'XRP AMM Heatmap',
+        to: '/xrp-amm-heatmap',
       },
       {
         icon: 'mdi-wallet',
@@ -198,7 +198,7 @@ export default defineComponent({
       },
     ])
 
-    const navigationMenu = ref([
+    const navigationMenu = ref<Array<{ icon: string; title: string; to?: string; href?: string }>>([
       {
         icon: 'mdi-tablet-dashboard',
         title: 'Terminal',
@@ -208,11 +208,6 @@ export default defineComponent({
         icon: 'mdi-view-dashboard-variant',
         title: 'Heatmap',
         to: '/heatmap',
-      },
-      {
-        icon: 'mdi-chart-line-stacked',
-        title: 'Trading 101',
-        to: '/trading-101',
       },
       {
         icon: 'mdi-account-group',

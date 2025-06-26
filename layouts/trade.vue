@@ -35,7 +35,7 @@
 <script lang="ts">
 import { computed, defineComponent } from '@nuxtjs/composition-api'
 import WalletConnector from '~/components/common/WalletConnector.vue'
-import useInitTheme from '~/composables/useInitTheme'
+import { useInitTheme } from '~/composables/useInitTheme'
 import WalletSelectDialog from '~/components/common/WalletSelectDialog.vue'
 
 export default defineComponent({

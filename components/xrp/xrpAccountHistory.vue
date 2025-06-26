@@ -110,7 +110,7 @@
 import { computed, defineComponent, ref, useContext, inject, onMounted } from '@nuxtjs/composition-api'
 import { plainToClass } from 'class-transformer'
 import { useQuery } from '@vue/apollo-composable/dist'
-import { XRPAccountBalancesGQL } from '~/apollo/queries'
+import { XRPAccountTransactionsGQL } from '~/apollo/queries'
 import { XRP_PLUGIN_KEY, XrpClient } from '~/plugins/web3/xrp.client'
 
 interface XRPTransactionElem {
@@ -136,8 +136,8 @@ export default defineComponent({
         const accountAddress = computed(() => address.value || 'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj')
         
         const { onResult } = useQuery(
-            XRPAccountBalancesGQL, 
-            () => ({ account: accountAddress.value }), 
+            XRPAccountTransactionsGQL, 
+            () => ({ address: accountAddress.value }), 
             { fetchPolicy: 'no-cache' }
         )
 
@@ -262,38 +262,41 @@ export default defineComponent({
 
         // Handle query results
         onResult((queryResult: any) => {
-            if (queryResult.data?.xrpAccountBalances) {
-                const data = queryResult.data.xrpAccountBalances
-                // For now, we'll use mock data since the query might not include transactions
-                // In a real implementation, you'd have a separate transactions query
-                transactionRawData.value = generateMockTransactions(accountAddress.value)
+            if (queryResult.data?.xrpTransactions) {
+                const transactions = queryResult.data.xrpTransactions
+                
+                // Transform GraphQL data to component format
+                const transformedTransactions: XRPTransactionElem[] = transactions.map((tx: any) => ({
+                    hash: tx.hash || '',
+                    from: tx.account || '',
+                    to: tx.destination || '',
+                    action: tx.transactionType || 'Unknown',
+                    amount: typeof tx.amount === 'string' ? parseFloat(tx.amount) : (tx.amount || 0),
+                    fee: typeof tx.fee === 'string' ? parseFloat(tx.fee) : (tx.fee || 0),
+                    timestamp: tx.date ? new Date(tx.date).toISOString() : new Date().toISOString(),
+                    ledgerIndex: tx.ledgerIndex || 0
+                }))
+                
+                transactionRawData.value = transformedTransactions
+            } else {
+                // No transactions found
+                transactionRawData.value = []
             }
             loading.value = false
         })
 
-        // Generate mock transaction data for demonstration
-        const generateMockTransactions = (account: string): XRPTransactionElem[] => {
-            const actions = ['Payment', 'OfferCreate', 'OfferCancel', 'TrustSet', 'AccountSet']
-            const transactions: XRPTransactionElem[] = []
-            
-            for (let i = 0; i < 10; i++) {
-                const isIncoming = Math.random() > 0.5
-                transactions.push({
-                    hash: `txn_${Math.random().toString(36).substr(2, 9)}_${i}`,
-                    from: isIncoming ? `r${Math.random().toString(36).substr(2, 25)}` : account,
-                    to: isIncoming ? account : `r${Math.random().toString(36).substr(2, 25)}`,
-                    action: actions[Math.floor(Math.random() * actions.length)],
-                    amount: Math.random() * 1000,
-                    fee: Math.floor(Math.random() * 20) + 10,
-                    timestamp: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-                    ledgerIndex: Math.floor(Math.random() * 1000000) + 80000000
-                })
-            }
-            
-            return transactions.sort((a, b) => 
-                new Date(b.timestamp || '').getTime() - new Date(a.timestamp || '').getTime()
-            )
-        }
+        // Add error handling
+        const { onError } = useQuery(
+            XRPAccountTransactionsGQL, 
+            () => ({ address: accountAddress.value }), 
+            { fetchPolicy: 'no-cache' }
+        )
+
+        onError((error: any) => {
+            console.error('GraphQL Error in xrpAccountHistory:', error)
+            loading.value = false
+            // You could add error state handling here
+        })
 
         // Watch for wallet address changes
         onMounted(() => {

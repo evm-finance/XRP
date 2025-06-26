@@ -1,7 +1,8 @@
 import { computed, useStore } from '@nuxtjs/composition-api'
+import { State } from '~/types/state'
 
 export type XrpTimeFrame = '1h' | '4h' | '1d' | '1w' | '1m' | '3m' | '1y'
-export type XrpBlockSize = 'marketcap' | 'volume' | 'price' | 'liquidity' | 'tvl'
+export type XrpBlockSize = 'marketcap' | 'volume' | 'price' | 'liquidity' | 'tvl' | 'totalLiquidityUsd' | 'asset1ValueUsd' | 'asset2ValueUsd'
 export type XrpDisplayMode = 'usd' | 'xrp'
 export type XrpTheme = 'light' | 'dark' | 'auto'
 
@@ -63,6 +64,9 @@ const blockSizeOptions: { text: string; value: XrpBlockSize }[] = [
   { text: 'Price', value: 'price' },
   { text: 'Liquidity', value: 'liquidity' },
   { text: 'TVL', value: 'tvl' },
+  { text: 'Total Liquidity USD', value: 'totalLiquidityUsd' },
+  { text: 'Asset 1 Value USD', value: 'asset1ValueUsd' },
+  { text: 'Asset 2 Value USD', value: 'asset2ValueUsd' },
 ]
 
 const numOfTokensOptions: number[] = [10, 25, 50, 100, 200, 500, 1000]
@@ -76,109 +80,109 @@ const refreshIntervalOptions: { text: string; value: number }[] = [
 ]
 
 export function useXrpConfigs() {
-  const { state, dispatch } = useStore()
+  const { state, dispatch } = useStore<State>()
 
   // Heatmap Configuration
-  const timeFrame = computed<XrpTimeFrame>({
-    get: () => state.xrp?.heatmap?.timeFrame || '1d',
+  const timeFrame = computed({
+    get: () => (state.xrp?.heatmap?.timeFrame ?? '1d') as XrpTimeFrame,
     set: (value: XrpTimeFrame) => dispatch('xrp/setHeatmapTimeFrame', value),
   })
 
-  const blockSize = computed<XrpBlockSize>({
-    get: () => state.xrp?.heatmap?.blockSize || 'marketcap',
+  const blockSize = computed({
+    get: () => (state.xrp?.heatmap?.blockSize ?? 'marketcap') as XrpBlockSize,
     set: (value: XrpBlockSize) => dispatch('xrp/setHeatmapBlockSize', value),
   })
 
-  const displayFavorites = computed<boolean>({
-    get: () => state.xrp?.heatmap?.displayFavorites || false,
+  const displayFavorites = computed({
+    get: () => state.xrp?.heatmap?.displayFavorites ?? false,
     set: (value: boolean) => dispatch('xrp/setHeatmapDisplayFavorites', value),
   })
 
-  const numOfTokens = computed<number>({
-    get: () => state.xrp?.heatmap?.numOfTokens || 100,
+  const numOfTokens = computed({
+    get: () => state.xrp?.heatmap?.numOfTokens ?? 100,
     set: (value: number) => dispatch('xrp/setHeatmapNumOfTokens', value),
   })
 
-  const displayGainersAndLosers = computed<boolean>({
-    get: () => state.xrp?.heatmap?.displayGainersAndLosers || false,
+  const displayGainersAndLosers = computed({
+    get: () => state.xrp?.heatmap?.displayGainersAndLosers ?? false,
     set: (value: boolean) => dispatch('xrp/setHeatmapDisplayGainersAndLosers', value),
   })
 
-  const blueTile = computed<boolean>({
-    get: () => state.xrp?.heatmap?.blueTile || false,
+  const blueTile = computed({
+    get: () => state.xrp?.heatmap?.blueTile ?? false,
     set: (value: boolean) => dispatch('xrp/setHeatmapBlueTile', value),
   })
 
   // Display Configuration
-  const displayMode = computed<XrpDisplayMode>({
-    get: () => state.xrp?.display?.mode || 'usd',
+  const displayMode = computed({
+    get: () => (state.xrp?.display?.mode ?? 'usd') as XrpDisplayMode,
     set: (value: XrpDisplayMode) => dispatch('xrp/setDisplayMode', value),
   })
 
-  const theme = computed<XrpTheme>({
-    get: () => state.xrp?.display?.theme || 'auto',
+  const theme = computed({
+    get: () => (state.xrp?.display?.theme ?? 'auto') as XrpTheme,
     set: (value: XrpTheme) => dispatch('xrp/setTheme', value),
   })
 
-  const compactMode = computed<boolean>({
-    get: () => state.xrp?.display?.compactMode || false,
+  const compactMode = computed({
+    get: () => state.xrp?.display?.compactMode ?? false,
     set: (value: boolean) => dispatch('xrp/setCompactMode', value),
   })
 
-  const showTooltips = computed<boolean>({
-    get: () => state.xrp?.display?.showTooltips || true,
+  const showTooltips = computed({
+    get: () => state.xrp?.display?.showTooltips ?? true,
     set: (value: boolean) => dispatch('xrp/setShowTooltips', value),
   })
 
-  const autoRefresh = computed<boolean>({
-    get: () => state.xrp?.display?.autoRefresh || false,
+  const autoRefresh = computed({
+    get: () => state.xrp?.display?.autoRefresh ?? false,
     set: (value: boolean) => dispatch('xrp/setAutoRefresh', value),
   })
 
-  const refreshInterval = computed<number>({
-    get: () => state.xrp?.display?.refreshInterval || 30000,
+  const refreshInterval = computed({
+    get: () => state.xrp?.display?.refreshInterval ?? 30000,
     set: (value: number) => dispatch('xrp/setRefreshInterval', value),
   })
 
   // Wallet Configuration
-  const autoConnect = computed<boolean>({
-    get: () => state.xrp?.wallet?.autoConnect || false,
+  const autoConnect = computed({
+    get: () => state.xrp?.wallet?.autoConnect ?? false,
     set: (value: boolean) => dispatch('xrp/setWalletAutoConnect', value),
   })
 
-  const preferredWallet = computed<string>({
-    get: () => state.xrp?.wallet?.preferredWallet || '',
+  const preferredWallet = computed({
+    get: () => state.xrp?.wallet?.preferredWallet ?? '',
     set: (value: string) => dispatch('xrp/setPreferredWallet', value),
   })
 
-  const showBalances = computed<boolean>({
-    get: () => state.xrp?.wallet?.showBalances || true,
+  const showBalances = computed({
+    get: () => state.xrp?.wallet?.showBalances ?? true,
     set: (value: boolean) => dispatch('xrp/setShowBalances', value),
   })
 
-  const showTransactions = computed<boolean>({
-    get: () => state.xrp?.wallet?.showTransactions || true,
+  const showTransactions = computed({
+    get: () => state.xrp?.wallet?.showTransactions ?? true,
     set: (value: boolean) => dispatch('xrp/setShowTransactions', value),
   })
 
-  const notifications = computed<boolean>({
-    get: () => state.xrp?.wallet?.notifications || true,
+  const notifications = computed({
+    get: () => state.xrp?.wallet?.notifications ?? true,
     set: (value: boolean) => dispatch('xrp/setNotifications', value),
   })
 
   // Screener Configuration
-  const screenerSortBy = computed<string>({
-    get: () => state.xrp?.screener?.sortBy || 'marketcap',
+  const screenerSortBy = computed({
+    get: () => state.xrp?.screener?.sortBy ?? 'marketcap',
     set: (value: string) => dispatch('xrp/setScreenerSortBy', value),
   })
 
-  const screenerSortOrder = computed<'asc' | 'desc'>({
-    get: () => state.xrp?.screener?.sortOrder || 'desc',
+  const screenerSortOrder = computed({
+    get: () => (state.xrp?.screener?.sortOrder ?? 'desc') as 'asc' | 'desc',
     set: (value: 'asc' | 'desc') => dispatch('xrp/setScreenerSortOrder', value),
   })
 
   const screenerFilters = computed({
-    get: () => state.xrp?.screener?.filters || {
+    get: () => state.xrp?.screener?.filters ?? {
       minMarketCap: 0,
       maxMarketCap: Infinity,
       minVolume: 0,
@@ -186,16 +190,16 @@ export function useXrpConfigs() {
       hasAmmPool: false,
       hasTrustLine: false,
     },
-    set: (value) => dispatch('xrp/setScreenerFilters', value),
+    set: (value: any) => dispatch('xrp/setScreenerFilters', value),
   })
 
-  const screenerColumns = computed<string[]>({
-    get: () => state.xrp?.screener?.columns || ['name', 'price', 'marketcap', 'volume'],
+  const screenerColumns = computed({
+    get: () => state.xrp?.screener?.columns ?? ['name', 'price', 'marketcap', 'volume'],
     set: (value: string[]) => dispatch('xrp/setScreenerColumns', value),
   })
 
-  const screenerPageSize = computed<number>({
-    get: () => state.xrp?.screener?.pageSize || 25,
+  const screenerPageSize = computed({
+    get: () => state.xrp?.screener?.pageSize ?? 25,
     set: (value: number) => dispatch('xrp/setScreenerPageSize', value),
   })
 

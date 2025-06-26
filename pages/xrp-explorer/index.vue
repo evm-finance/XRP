@@ -40,10 +40,9 @@
 import { computed, defineComponent } from '@nuxtjs/composition-api'
 import XRPLibeLedgersChart from '~/components/XRPLibeLedgersChart.vue'
 import useXrpScrerener from '~/composables/useXrpScrerener'
-import AaveCompositionChart from '~/components/pools/AaveCompositionChart.vue'
 
 export default defineComponent({
-  components: { AaveCompositionChart, XRPLibeLedgersChart },
+  components: { XRPLibeLedgersChart },
   setup() {
     const { blocks, loading, currentTime } = useXrpScrerener()
 

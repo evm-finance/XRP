@@ -12,28 +12,15 @@
         </v-col>
 
         <v-col cols="12">
-          <client-only>
-            <vue-typer
-              class="v-heading text-h4 font-weight-light"
-              :text="animatedFeatures"
-              :repeat="Infinity"
-              :shuffle="false"
-              initial-action="typing"
-              :pre-type-delay="70"
-              :type-delay="100"
-              :pre-erase-delay="2000"
-              :erase-delay="250"
-              erase-style="clear"
-              :erase-on-complete="false"
-              caret-animation="smooth"
-            ></vue-typer>
-          </client-only>
+          <p class="text-h4 font-weight-light">
+            Token Pages • Aave Professional Interface • Multi Chain Balances • Advanced Analytics
+          </p>
         </v-col>
       </v-row>
     </v-col>
 
     <v-col cols="12" style="z-index: 1">
-      <defi-node-tree />
+      <!--      <defi-node-tree />-->
     </v-col>
 
     <v-col cols="11" xl="7" lg="10" class="text-center mt-16 pt-16" style="z-index: 1">
@@ -44,14 +31,14 @@
         <v-col cols="12" class="justify-center">
           <v-row justify="center">
             <v-col v-for="item in items" :key="item.header" cols="12" sm="6" md="4">
-              <outline-glow>
+              <v-card class="pa-4">
                 <v-avatar size="40" class="mt-5">
                   <v-icon size="30" color="primary">{{ item.icon }}</v-icon>
                 </v-avatar>
 
                 <p class="text-h5 pt-5 px-5" v-text="item.header" />
                 <p class="pt-5 px-5 grey--text" v-text="item.desc" />
-              </outline-glow>
+              </v-card>
             </v-col>
           </v-row>
         </v-col>
@@ -65,11 +52,11 @@ import { computed, defineComponent, ref, useStore } from '@nuxtjs/composition-ap
 
 import { State } from '~/types/state'
 import { useMetaTags } from '~/composables/useMetaTags'
-import OutlineGlow from '~/components/common/ui/custom/OutlineGlow.vue'
-import DefiNodeTree from '~/components/common/DefiNodeTree.vue'
+// import OutlineGlow from '~/components/common/ui/custom/OutlineGlow.vue'
+// import DefiNodeTree from '~/components/common/DefiNodeTree.vue'
 
 export default defineComponent({
-  components: { DefiNodeTree, OutlineGlow },
+  // components: { DefiNodeTree, OutlineGlow },
   setup() {
     // STATE
     const items = ref([
@@ -111,16 +98,6 @@ export default defineComponent({
         desc: 'Check this site for future updates',
       },
     ])
-    const animatedFeatures = ref([
-      'Token Pages',
-      'Aave Professional Interface',
-      'Multi Chain Balances Advanced Analytics',
-      'Transaction History',
-      'Easier Aave Transaction',
-      'Self-Custody',
-      'Portfolio Management',
-      'Strategic Investments',
-    ])
 
     // COMPOSABLE
     const store = useStore<State>()
@@ -129,12 +106,11 @@ export default defineComponent({
     const ui = computed(() => store.state.ui)
     const theme = computed(() => store.state.ui.theme)
 
-    // META TAGS
-    useMetaTags('homepage')
-
-    return { items, animatedFeatures, ui, theme }
+    return { items, ui, theme }
   },
-  head: {},
+  head() {
+    return useMetaTags('homepage')
+  },
 })
 </script>
 

@@ -17,8 +17,8 @@ import {
   toRefs,
   watch,
 } from '@nuxtjs/composition-api'
-import { HeatmapData, HeatmapUpdateData } from '~/types/heatmap'
-import type { HeatmapTileSize } from '~/types/state'
+import { XrpAmmHeatmapData } from '~/composables/useXrpHeatmap'
+import type { XrpBlockSize } from '~/composables/useXrpConfigs'
 
 let am4core: any = null
 let am4charts: any = null
@@ -31,10 +31,8 @@ type Props = {
   tileBody: string
   tileTooltip: string
   chartHeight: string
-  data: HeatmapData[]
-  updateData: HeatmapUpdateData
-  blockSize: HeatmapTileSize
-  heatmapType: 'token' | 'amm' // Add type to determine routing
+  data: XrpAmmHeatmapData[]
+  blockSize: XrpBlockSize
 }
 
 export default defineComponent<Props>({
@@ -42,10 +40,8 @@ export default defineComponent<Props>({
     tileBody: { type: String, default: '' },
     tileTooltip: { type: String, default: '' },
     chartHeight: { type: [String, Number] as PropType<string | number>, default: '600' },
-    data: { type: Array as PropType<HeatmapData[]>, default: () => [] },
-    updateData: { type: Object as PropType<HeatmapUpdateData>, default: () => ({}) },
-    blockSize: { type: String as PropType<HeatmapTileSize>, default: () => 'marketcap_index' },
-    heatmapType: { type: String as PropType<'token' | 'amm'>, default: 'token' },
+    data: { type: Array as PropType<XrpAmmHeatmapData[]>, default: () => [] },
+    blockSize: { type: String as PropType<XrpBlockSize>, default: () => 'totalLiquidityUsd' },
   },
   setup(props) {
     const chartDiv = ref(null)
@@ -58,26 +54,18 @@ export default defineComponent<Props>({
     const tileTemplate = toRefs(props).tileBody
     const toolTipTemplate = computed(() => props.tileTooltip)
     const tileSize = computed(() => props.blockSize)
-    const heatmapType = computed(() => props.heatmapType)
 
     const tileRenderer = (_: any, target: any, tileTemplate: string) => {
       try {
-        const key = target.dataItem.dataContext.dataContext.qc_key
+        const poolId = target.dataItem.dataContext.poolId
         
-        // Set URL based on heatmap type
-        if (heatmapType.value === 'token') {
-          // For token heatmap, route to token page
-          const [currency, issuer] = key.split('_')
-          target.url = `/xrp-token/${currency}?issuer=${issuer}`
-        } else if (heatmapType.value === 'amm') {
-          // For AMM heatmap, route to pool page
-          target.url = `/xrp-amm-pools/${key}`
-        }
+        // Set URL for AMM pool page
+        target.url = `/xrp-amm-pools/${poolId}`
 
         let fontSize: any =
-          (target.availableWidth / (target.dataItem.dataContext.dataContext.qc_key.length * 0.9)) * 0.75
+          (target.availableWidth / (poolId.length * 0.9)) * 0.75
         let fontSizeLev2: any =
-          (target.availableWidth / (target.dataItem.dataContext.dataContext.price_usd?.toString().length * 0.9 || 10)) * 0.5
+          (target.availableWidth / (target.dataItem.dataContext.totalLiquidityUsd?.toString().length * 0.9 || 10)) * 0.5
 
         if (target.availableHeight < fontSize * 2) {
           fontSize = target.availableHeight / 2.5
@@ -88,7 +76,21 @@ export default defineComponent<Props>({
           fontSizeLev2 = 18
         }
 
-        return tileTemplate.replace('{fontSize}', fontSize).replace('{fontSizeLev2}', fontSizeLev2)
+        // Get the value based on block size
+        let displayValue = target.dataItem.dataContext.totalLiquidityUsd || 0
+        if (tileSize.value === 'asset1ValueUsd') {
+          displayValue = target.dataItem.dataContext.asset1ValueUsd || 0
+        } else if (tileSize.value === 'asset2ValueUsd') {
+          displayValue = target.dataItem.dataContext.asset2ValueUsd || 0
+        }
+
+        return tileTemplate
+          .replace('{fontSize}', fontSize)
+          .replace('{fontSizeLev2}', fontSizeLev2)
+          .replace('{poolId}', poolId)
+          .replace('{totalLiquidityUsd}', displayValue.toFixed(2))
+          .replace('{asset1ValueUsd}', target.dataItem.dataContext.asset1ValueUsd?.toFixed(2) || '0')
+          .replace('{asset2ValueUsd}', target.dataItem.dataContext.asset2ValueUsd?.toFixed(2) || '0')
       } catch {}
     }
 
@@ -103,9 +105,8 @@ export default defineComponent<Props>({
 
       /* Define data fields */
       chart.value.dataFields.value = tileSize.value
-      chart.value.dataFields.name = 'symbol_name'
+      chart.value.dataFields.name = 'poolId'
       chart.value.dataFields.color = 'color'
-      chart.value.dataFields.children = 'children'
 
       // level 0 series template
       const level0SeriesTemplate = chart.value.seriesTemplates.create('0')
@@ -147,59 +148,11 @@ export default defineComponent<Props>({
       chart.value.invalidateData()
     })
 
-    const update = () => {}
-
     watch(toolTipTemplate, (toolTipNewData) => (level0Column.value.tooltipText = toolTipNewData))
 
-    watch(
-      () => props.updateData,
-      (newData: HeatmapUpdateData) => {
-        const chartData: HeatmapData[] = chart.value.data
-        for (const child of chartData) {
-          for (const element of child.children) {
-            if (Object.hasOwnProperty.call(newData, element.qc_key)) {
-              element.price_usd = newData[element.qc_key].price_usd
-
-              element.price1h = newData[element.qc_key].price1h
-              element.price4h = newData[element.qc_key].price4h
-              element.price24h = newData[element.qc_key].price24h
-              element.price24hAbs = newData[element.qc_key].price24hAbs
-              element.price1week = newData[element.qc_key].price1week
-              element.price30day = newData[element.qc_key].price30day
-              element.price1year = newData[element.qc_key].price1year
-              element.price_year_to_date = newData[element.qc_key].price_year_to_date
-
-              element.qma_score = newData[element.qc_key].qma_score
-              element.rsi2h = newData[element.qc_key].rsi2h
-              element.marketcap = newData[element.qc_key].marketcap
-              element.marketcapVal = newData[element.qc_key].marketcapVal
-              element.marketcap_index = newData[element.qc_key].marketcap_index
-              element.price24hAbs = newData[element.qc_key].price24hAbs
-              element.volume24h = newData[element.qc_key].volume24h
-
-              element.color = newData[element.qc_key].color
-            }
-          }
-        }
-        chart.value.invalidateRawData()
-        try {
-          for (let i = 0; i < chart.value.dataItems.length; i++) {
-            const dataItem = chart.value.dataItems.getIndex(i)
-            for (let c = 0; c < dataItem.children.length; c++) {
-              const child = dataItem.children.getIndex(c)
-              const qcKey = child.seriesDataItem.dataContext.dataContext.qc_key
-              if (Object.hasOwnProperty.call(newData, qcKey)) {
-                const color = newData[qcKey].color
-                child.seriesDataItem.column.fill = am4core.color(color)
-              }
-            }
-          }
-        } catch {}
-      }
-    )
     onBeforeUnmount(() => chart.value.dispose())
 
-    return { chartDiv, update }
+    return { chartDiv }
   },
 })
 </script> 

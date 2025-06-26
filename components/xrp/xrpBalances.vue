@@ -203,11 +203,13 @@ export default defineComponent({
         onResult((queryResult: any) => {
             if (queryResult.data?.xrpAccountBalances) {
                 const data = queryResult.data.xrpAccountBalances
-                balancesRawData.value = data.xrpBalances || []
+                
+                // Transform GraphQL data to component format
+                const transformedData: XRPBalanceElem[] = []
                 
                 // Add XRP balance if available
-                if (data.xrpBalance > 0) {
-                    balancesRawData.value.unshift({
+                if (data.xrpBalance && data.xrpBalance > 0) {
+                    transformedData.push({
                         issuer: '',
                         currency: 'XRP',
                         name: 'XRP',
@@ -216,8 +218,40 @@ export default defineComponent({
                         value: data.xrpBalance * (data.xrpPrice || 0)
                     })
                 }
+                
+                // Add token balances
+                if (data.xrpTokens && Array.isArray(data.xrpTokens)) {
+                    data.xrpTokens.forEach((token: any) => {
+                        transformedData.push({
+                            issuer: token.issuer || '',
+                            currency: token.symbol || '',
+                            name: token.name || token.symbol || '',
+                            balance: token.balance || 0,
+                            price: token.price || 0,
+                            value: token.value || 0
+                        })
+                    })
+                }
+                
+                balancesRawData.value = transformedData
+            } else {
+                // No data found
+                balancesRawData.value = []
             }
             loading.value = false
+        })
+
+        // Add error handling
+        const { onError } = useQuery(
+            XRPAccountBalancesGQL, 
+            () => ({ account: accountAddress.value }), 
+            { fetchPolicy: 'no-cache' }
+        )
+
+        onError((error: any) => {
+            console.error('GraphQL Error in xrpBalances:', error)
+            loading.value = false
+            // You could add error state handling here
         })
 
         // Watch for wallet address changes

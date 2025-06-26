@@ -4,8 +4,8 @@
 
 <script lang="ts">
 import { computed, defineComponent, onBeforeUnmount, onMounted, ref, useContext } from '@nuxtjs/composition-api'
-import { useQuery } from '@vue/apollo-composable/dist'
-import { RecentPricesGQL } from '~/apollo/main/config.query.graphql'
+// import { useQuery } from '@vue/apollo-composable/dist'
+// import { RecentPricesGQL } from '~/apollo/main/config.query.graphql'
 
 let am4core: any = null
 let forceDirected: any = null
@@ -21,9 +21,51 @@ export default defineComponent({
     const chart: any = ref(null)
 
     // COMPOSABLES
-    const { result } = useQuery(RecentPricesGQL)
-    const recentPrices = computed(() => result.value?.recentPrices ?? {})
+    // const { result } = useQuery(RecentPricesGQL)
+    // const recentPrices = computed(() => result.value?.recentPrices ?? {})
     const { env } = useContext()
+
+    // Fallback data since RecentPricesGQL query is not available
+    const recentPrices = ref({
+      ETH: 2000,
+      WBTC: 30000,
+      DAI: 1,
+      USDT: 1,
+      BUSD: 1,
+      FEI: 1,
+      FRAX: 1,
+      LINK: 15,
+      AVAX: 20,
+      MATIC: 1,
+      FTM: 0.5,
+      BAL: 10,
+      CRV: 1,
+      AMPL: 1,
+      ENJ: 0.5,
+      MANA: 1,
+      REN: 0.1,
+      SNX: 5,
+      AAVE: 100,
+      UNI: 10,
+      ENS: 20,
+      RAI: 1,
+      WETH: 2000,
+      SHIB: 0.00001,
+      ACH: 0.1,
+      AGLD: 1,
+      ALICE: 5,
+      AMP: 0.01,
+      ANKR: 0.1,
+      APE: 5,
+      API3: 2,
+      AUDIO: 1,
+      AXS: 10,
+      BADGER: 10,
+      GNO: 200,
+      BAT: 0.5,
+      BOND: 10,
+      MKR: 1000
+    })
 
     // COMPUTED
     const dataFormatted = computed(() => {
