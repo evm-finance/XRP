@@ -60,6 +60,38 @@
               <v-list-item-title>{{ item.name }}</v-list-item-title>
             </v-list-item>
           </v-list-group>
+
+          <!-- XRP Tab with Dropdown -->
+          <v-list-group :value="false" no-action color="primary">
+            <template #prependIcon>
+              <v-list-item-icon class="mt-0">
+                <v-icon>mdi-currency-xrp</v-icon>
+              </v-list-item-icon>
+            </template>
+            <template #appendIcon>
+              <v-list-item-icon class="mt-0 mr-0">
+                <v-icon>mdi-chevron-down</v-icon>
+              </v-list-item-icon>
+            </template>
+            <template #activator>
+              <v-list-item-title>XRP</v-list-item-title>
+            </template>
+
+            <v-list-item
+              v-for="item in xrpMenu"
+              :key="item.title"
+              exact
+              class="ml-n6"
+              :to="item.to"
+              :href="item.href"
+            >
+              <v-list-item-icon>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>{{ item.title }}</v-list-item-title>
+            </v-list-item>
+          </v-list-group>
+
           <v-list-item exact disabled>
             <v-list-item-icon>
               <v-icon>mdi-bridge</v-icon>
@@ -131,6 +163,41 @@ export default defineComponent({
   setup() {
     // STATE
     const navigationDrawer = ref(true)
+    
+    // XRP Menu Items
+    const xrpMenu = ref([
+      {
+        icon: 'mdi-view-list',
+        title: 'XRP Screener',
+        to: '/xrp-screener',
+      },
+      {
+        icon: 'mdi-tablet-dashboard',
+        title: 'XRP Terminal',
+        to: '/xrp-terminal',
+      },
+      {
+        icon: 'mdi-magnify',
+        title: 'XRP Explorer',
+        to: '/xrp-explorer',
+      },
+      {
+        icon: 'mdi-fire',
+        title: 'XRP Heatmap',
+        to: '/xrp-heatmap',
+      },
+      {
+        icon: 'mdi-wallet',
+        title: 'XRP Balances',
+        to: '/xrp-balances',
+      },
+      {
+        icon: 'mdi-transcribe',
+        title: 'XRP Transactions',
+        to: '/xrp-transactions',
+      },
+    ])
+
     const navigationMenu = ref([
       {
         icon: 'mdi-tablet-dashboard',
@@ -141,16 +208,6 @@ export default defineComponent({
         icon: 'mdi-view-dashboard-variant',
         title: 'Heatmap',
         to: '/heatmap',
-      },
-      {
-        icon: 'mdi-fire',
-        title: 'XRP Token Heatmap',
-        to: '/xrp-heatmap',
-      },
-      {
-        icon: 'mdi-water',
-        title: 'XRP AMM Heatmap',
-        to: '/xrp-amm-heatmap',
       },
       {
         icon: 'mdi-chart-line-stacked',
@@ -212,6 +269,7 @@ export default defineComponent({
       ui,
       protocols,
       navigationMenu,
+      xrpMenu,
 
       // METHOD
       changeTheme,
