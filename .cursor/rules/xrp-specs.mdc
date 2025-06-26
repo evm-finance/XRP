@@ -5,6 +5,19 @@ alwaysApply: false
 ---
 # Cursor Rules for XRP Project
 
+
+[xrp-specs] 
+## Read these files, and put these rules into context
+xrp-amm-specs.mdc
+xrpl-finance-spec.mdc
+xrp-amm-specs.mdc
+
+[xrp-tasks] 
+## Read these files and track task list and progress
+task-list.mdc tasks from the spec rules should be read and written into here to create a master spec list.
+task-progress.mdc a copy of the task list should be written here, and progress on the tasks should be marked as completed, and referenced for future work to do
+
+
 [xrp-structure]
 # XRP-related files and folders in the project
 app/plugins/web3/xrp.client.ts

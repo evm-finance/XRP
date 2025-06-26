@@ -27,8 +27,8 @@ alwaysApply: false
 ### 5. Implement wallet integration (GEM wallet)
 - [x] Integrate GEM wallet for authentication and transactions
 - [x] Display XRP balances and transactions in the UI
-- [ ] Support wallet connection only when needed (not on page load)
-- [ ] Support multiple wallet addresses (EVM and XRP)
+- [x] Support wallet connection only when needed (not on page load)
+- [x] Support multiple wallet addresses (EVM and XRP)
 
 ### 6. Implement AMM interface and swap functionality
 - [x] Set up xrpl.js in the frontend
@@ -63,8 +63,41 @@ alwaysApply: false
 - [x] Show liquidity and analytics for new tokens
 - [x] Add DEX/liquidity pool displays
 
-### 11. Add Smokeyinthebox meme coin interface
-- [ ] Design and implement meme coin interface
+### 11. Build XRP heatmaps
+- [x] Create useXrpTokenHeatmap composable for XRP token heatmap functionality
+- [x] Create XrpTokenHeatmap component with interactive heatmap display
+- [x] Create dedicated XRP token heatmap page with full functionality
+- [x] Create useXrpAmmHeatmap composable for XRP AMM heatmap functionality
+- [x] Create XrpAmmHeatmap component for AMM liquidity visualization
+- [x] Create dedicated XRP AMM heatmap page with liquidity data
+- [x] Add both heatmaps to navigation menu
+- [x] Update terminal dashboard to include both heatmaps
+- [x] Integrate with existing heatmap configuration system
+- [x] Add mock data for development and testing
+- [x] Support for gainers/losers grouping and time frame selection
+- [x] Support for liquidity tiers grouping in AMM heatmap
+- [x] Add token table with market data and issuer information
+- [x] Add AMM pools table with liquidity, volume, APR, and fee data
+- [x] Implement copy-to-clipboard functionality for addresses
+- [x] Ensure one token in each AMM pair is always XRP or rLUSD
+- [x] Use liquidity as primary data field for AMM heatmap
+
+### 12. Enhanced Wallet Integration
+- [x] Create Xaman (XUMM) wallet connector with full functionality
+- [x] Create MetaMask XRP Snap connector with auto-installation
+- [x] Create unified enhanced XRP client supporting multiple wallet types
+- [x] Create enhanced wallet selection dialog with all wallet options
+- [x] Create enhanced wallet connector component with wallet-specific actions
+- [x] Create useEnhancedXrpWallet composable for easy wallet operations
+- [x] Add transaction signing support for Xaman and MetaMask XRP Snap
+- [x] Add account info and balance retrieval capabilities
+- [x] Implement comprehensive error handling and user feedback
+- [x] Add wallet detection and auto-installation for MetaMask XRP Snap
+- [x] Create wallet-specific transaction helpers (payments, trust lines, AMM)
+- [x] Update main layout to use enhanced wallet components
+- [x] Register enhanced XRP plugin in Nuxt configuration
+- [x] Create comprehensive documentation for enhanced wallet integration
+- [x] Add wallet icons and visual indicators for different wallet types
 
 ### 15. Ongoing: Mark tasks as completed in tasks-progress.mdc after each step
 - [x] Update progress tracker after each completed task

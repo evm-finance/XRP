@@ -1,5 +1,20 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+Top Row  <Icon> <Name> <Price> <24 Hour Volume> <Market Cap> <Circ Supply>
+Upper Left				Upper Right  
+Issuer Name 				AMM Chart Data (24 bars, tabs for 1H, 1D, 1W)
+Issuer Address				 
+Website, 	<so AMM transactions> or “No AMM Transactions for connected wallet”
+Source Code, 
+Community Links.
+ 
+ 
+Steps
+1)	Start with the current token pages in use for EVM.Finance
+2)	Remove the interfaces to Uniswap and Aave
+3)	In the location of the Aave/Uniswap display, add the XRP screener fields, create 2 lines in this section.  The top line will have Issuer Name and Issuer Address, this will be the full address no …   Also add a copy icon so the Issuer Address can be copied.   The second row will have the same fields as XRP screener line minus the issuer name and address
+4)	At the bottom, show the transactions for the connected wallet, also include a link for the hash address to link to transaction summary, for example https://evm.finance/xrp-explorer/tx/E0C1D4B24D76B4180D2C96450438A0BE14304E69EDFBE91DF6211C923B344401
+5)	Need the ability to show prices in USD, in addition to XRP price.

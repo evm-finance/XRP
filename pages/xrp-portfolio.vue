@@ -16,6 +16,13 @@ import xrpBalances from '~/components/xrp/xrpBalances.vue'
 
 export default defineComponent({
   components: { xrpBalances,  xrpAccountHistory},
+
+  setup()
+  {
+
+    return {
+    }
+  }
 })
 
 </script>

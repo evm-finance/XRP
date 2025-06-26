@@ -143,6 +143,16 @@ export default defineComponent({
         to: '/heatmap',
       },
       {
+        icon: 'mdi-fire',
+        title: 'XRP Token Heatmap',
+        to: '/xrp-heatmap',
+      },
+      {
+        icon: 'mdi-water',
+        title: 'XRP AMM Heatmap',
+        to: '/xrp-amm-heatmap',
+      },
+      {
         icon: 'mdi-chart-line-stacked',
         title: 'Trading 101',
         to: '/trading-101',

@@ -1,0 +1,378 @@
+# XRP Account Queries
+query XRPAccountBalances($address: String!) {
+  xrpAccountBalances(address: $address) {
+    account
+    xrpBalance
+    xrpPrice
+    xrpTokens {
+      symbol
+      issuer
+      name
+      balance
+      price
+      value
+    }
+  }
+}
+
+query XRPAccountTransactions($address: String!) {
+  xrpAccountTransactions(address: $address) {
+    account
+    amount
+    destination
+    fee
+    flags
+    lastLedgerSequence
+    offerSequence
+    sequence
+    signingPubKey
+    takerGets
+    takerPays
+    transactionType
+    txnSignature
+    date
+    hash
+    inLedger
+    ledgerIndex
+    meta
+    metadata
+    validated
+    warnings
+    memos
+  }
+}
+
+query XRPAccountData($address: String!) {
+  xrpAccountData(address: $address) {
+    account
+    balances {
+      account
+      xrpBalance
+      xrpPrice
+      xrpTokens {
+        symbol
+        issuer
+        name
+        balance
+        price
+        value
+      }
+    }
+    transactions {
+      account
+      amount
+      destination
+      fee
+      flags
+      lastLedgerSequence
+      offerSequence
+      sequence
+      signingPubKey
+      takerGets
+      takerPays
+      transactionType
+      txnSignature
+      date
+      hash
+      inLedger
+      ledgerIndex
+      meta
+      metadata
+      validated
+      warnings
+      memos
+    }
+  }
+}
+
+# XRP AMM Queries
+query XRPAMMPools {
+  xrpAMMPools {
+    poolId
+    asset1 {
+      currency
+      issuer
+    }
+    asset2 {
+      currency
+      issuer
+    }
+    asset1Balance
+    asset2Balance
+    lpBalance
+    fee
+    tradingVolume24H
+    tradingVolume7D
+    createdAt
+    lastUpdated
+  }
+}
+
+query XRPAMMPool($asset1: XRPAssetInput!, $asset2: XRPAssetInput!) {
+  xrpAMMPool(asset1: $asset1, asset2: $asset2) {
+    poolId
+    asset1 {
+      currency
+      issuer
+    }
+    asset2 {
+      currency
+      issuer
+    }
+    asset1Balance
+    asset2Balance
+    lpBalance
+    fee
+    tradingVolume24H
+    tradingVolume7D
+    createdAt
+    lastUpdated
+  }
+}
+
+query XRPAMMSwapQuote($inputAsset: XRPAssetInput!, $outputAsset: XRPAssetInput!, $amount: Float!) {
+  xrpAMMSwapQuote(inputAsset: $inputAsset, outputAsset: $outputAsset, amount: $amount) {
+    inputAmount
+    outputAmount
+    priceImpact
+    fee
+    minimumReceived
+  }
+}
+
+query XRPAMMLiquidityValue($poolId: String!) {
+  xrpAMMLiquidityValue(poolId: $poolId) {
+    poolId
+    asset1ValueUsd
+    asset2ValueUsd
+    totalLiquidityUsd
+    asset1Percentage
+    asset2Percentage
+    priceImpact
+  }
+}
+
+query XRPAMMTransactions($poolId: String, $transactionType: String, $limit: Int) {
+  xrpAMMTransactions(poolId: $poolId, transactionType: $transactionType, limit: $limit) {
+    transactionHash
+    transactionType
+    poolId
+    asset1 {
+      currency
+      issuer
+    }
+    asset2 {
+      currency
+      issuer
+    }
+    amount1
+    amount2
+    lpAmount
+    fee
+    account
+    ledgerIndex
+    timestamp
+    metadata
+  }
+}
+
+# AMM Heatmap Queries
+query AMMHeatmap($timeRange: TimeRange, $minLiquidity: Float, $maxLiquidity: Float, $sortBy: SortField, $sortOrder: SortOrder, $limit: Int, $offset: Int) {
+  ammHeatmap(timeRange: $timeRange, minLiquidity: $minLiquidity, maxLiquidity: $maxLiquidity, sortBy: $sortBy, sortOrder: $sortOrder, limit: $limit, offset: $offset) {
+    token {
+      issuer
+      currency
+      name
+      icon
+      description
+      marketcap
+      price
+      volume24h
+      volume7d
+    }
+    pools {
+      account
+      amount
+      amount2Currency
+      amount2Issuer
+      amount2Value
+      asset2Frozen
+      lpTokenCurrency
+      lpTokenIssuer
+      lpTokenValue
+      tradingFee
+      liquidityUSD
+      volume24h
+    }
+    totalLiquidity
+    volume24h
+    volume7d
+    marketCap
+    priceChange24h
+  }
+}
+
+query TopAMMPools($limit: Int) {
+  topAMMPools(limit: $limit) {
+    token {
+      issuer
+      currency
+      name
+      icon
+      description
+      marketcap
+      price
+      volume24h
+      volume7d
+    }
+    pools {
+      account
+      amount
+      amount2Currency
+      amount2Issuer
+      amount2Value
+      asset2Frozen
+      lpTokenCurrency
+      lpTokenIssuer
+      lpTokenValue
+      tradingFee
+      liquidityUSD
+      volume24h
+    }
+    totalLiquidity
+    volume24h
+    volume7d
+    marketCap
+    priceChange24h
+  }
+}
+
+query AMMPoolDetails($poolAccount: String!) {
+  ammPoolDetails(poolAccount: $poolAccount) {
+    account
+    amount
+    amount2Currency
+    amount2Issuer
+    amount2Value
+    asset2Frozen
+    lpTokenCurrency
+    lpTokenIssuer
+    lpTokenValue
+    tradingFee
+    liquidityUSD
+    volume24h
+  }
+}
+
+# XRP Token Queries
+query XRPTokens($limit: Int, $offset: Int, $sortBy: TokenSortField, $sortOrder: SortOrder) {
+  xrpTokens(limit: $limit, offset: $offset, sortBy: $sortBy, sortOrder: $sortOrder) {
+    issuer
+    currency
+    name
+    icon
+    description
+    marketcap
+    price
+    volume24h
+    volume7d
+  }
+}
+
+query XRPToken($currency: String!, $issuer: String!) {
+  xrpToken(currency: $currency, issuer: $issuer) {
+    issuer
+    currency
+    name
+    icon
+    description
+    marketcap
+    price
+    volume24h
+    volume7d
+  }
+}
+
+query AMMPools($currency: String, $issuer: String, $limit: Int, $offset: Int) {
+  ammPools(currency: $currency, issuer: $issuer, limit: $limit, offset: $offset) {
+    account
+    amount
+    amount2Currency
+    amount2Issuer
+    amount2Value
+    asset2Frozen
+    lpTokenCurrency
+    lpTokenIssuer
+    lpTokenValue
+    tradingFee
+    liquidityUSD
+    volume24h
+  }
+}
+
+# Subscriptions
+subscription AMMPoolUpdates($poolAccount: String!) {
+  ammPoolUpdates(poolAccount: $poolAccount) {
+    account
+    amount
+    amount2Currency
+    amount2Issuer
+    amount2Value
+    asset2Frozen
+    lpTokenCurrency
+    lpTokenIssuer
+    lpTokenValue
+    tradingFee
+    liquidityUSD
+    volume24h
+  }
+}
+
+subscription TokenPriceUpdates($currency: String!, $issuer: String!) {
+  tokenPriceUpdates(currency: $currency, issuer: $issuer) {
+    issuer
+    currency
+    name
+    icon
+    description
+    marketcap
+    price
+    volume24h
+    volume7d
+  }
+}
+
+subscription HeatmapUpdates($timeRange: TimeRange) {
+  heatmapUpdates(timeRange: $timeRange) {
+    token {
+      issuer
+      currency
+      name
+      icon
+      description
+      marketcap
+      price
+      volume24h
+      volume7d
+    }
+    pools {
+      account
+      amount
+      amount2Currency
+      amount2Issuer
+      amount2Value
+      asset2Frozen
+      lpTokenCurrency
+      lpTokenIssuer
+      lpTokenValue
+      tradingFee
+      liquidityUSD
+      volume24h
+    }
+    totalLiquidity
+    volume24h
+    volume7d
+    marketCap
+    priceChange24h
+  }
+} 

@@ -1,5 +1,7 @@
 import colors from 'vuetify/es5/util/colors'
 
+console.log('BASE_GRAPHQL_SERVER_URL:', process.env.BASE_GRAPHQL_SERVER_URL)
+
 export default {
   // Global page headers (https://go.nuxtjs.dev/config-head)
   head: {
@@ -24,6 +26,7 @@ export default {
 
     '~/plugins/web3/web3.ts',
     '~/plugins/web3/xrp.client.ts',
+    '~/plugins/web3/enhanced-xrp.client.ts',
     '~/plugins/typer.client.ts',
   ],
 
@@ -133,6 +136,9 @@ export default {
       '@vue/apollo-composable',
       'ts-invariant',
       // '@vue/apollo-option',
+      '@noble/curves',
+      '@noble/hashes',
+      'xrpl',
     ],
   },
 

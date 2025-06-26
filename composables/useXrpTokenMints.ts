@@ -116,14 +116,42 @@ export interface LiquidityPoolFilters {
   sortOrder: 'asc' | 'desc'
 }
 
+interface TokenMint {
+  id: string
+  name: string
+  symbol: string
+  issuer: string
+  currency: string
+  marketcap: number
+  volume24H: number
+  price: number
+  change24H: number
+  createdAt: string
+}
+
+interface LiquidityPool {
+  id: string
+  name: string
+  token1: string
+  token2: string
+  tvl: number
+  volume24H: number
+  apr: number
+  fees: number
+  priceChange24H: number
+  trades24H: number
+  uniqueTraders: number
+}
+
 export default function useXrpTokenMints() {
   // State
   const loading = ref(false)
-  const tokenMints = ref<XRPTokenMint[]>([])
-  const liquidityPools = ref<XRPLiquidityPool[]>([])
+  const tokenMints = ref<TokenMint[]>([])
+  const liquidityPools = ref<LiquidityPool[]>([])
   const selectedTimeRange = ref<'24h' | '7d' | '30d' | 'all'>('7d')
   const selectedSortBy = ref<'tvl' | 'volume' | 'apr' | 'fees'>('tvl')
   const selectedSortOrder = ref<'asc' | 'desc'>('desc')
+  const error = ref<string | null>(null)
   
   // Filters
   const tokenMintFilters = ref<TokenMintFilters>({
@@ -166,7 +194,7 @@ export default function useXrpTokenMints() {
       }
       const cutoff = now.getTime() - timeRanges[tokenMintFilters.value.timeRange]
       
-      filtered = filtered.filter(mint => new Date(mint.mintDate).getTime() > cutoff)
+      filtered = filtered.filter(mint => new Date(mint.createdAt).getTime() > cutoff)
     }
 
     // Filter by minimum market cap
@@ -181,7 +209,7 @@ export default function useXrpTokenMints() {
 
     // Filter by liquidity
     if (tokenMintFilters.value.hasLiquidity) {
-      filtered = filtered.filter(mint => mint.liquidityPools.length > 0)
+      filtered = filtered.filter(mint => liquidityPools.value.some(pool => pool.token1 === mint.currency || pool.token2 === mint.currency))
     }
 
     return filtered
@@ -222,7 +250,7 @@ export default function useXrpTokenMints() {
           comparison = a.apr - b.apr
           break
         case 'fees':
-          comparison = a.fees24H - b.fees24H
+          comparison = a.fees - b.fees
           break
       }
       return sortOrder === 'asc' ? comparison : -comparison
@@ -233,28 +261,26 @@ export default function useXrpTokenMints() {
 
   // Table headers
   const tokenMintHeaders = computed(() => [
-    { text: 'Token', value: 'token', width: '200' },
+    { text: 'Token', value: 'name', width: '200' },
     { text: 'Issuer', value: 'issuer', width: '200' },
-    { text: 'Mint Date', value: 'mintDate', width: '120' },
+    { text: 'Mint Date', value: 'createdAt', width: '120' },
     { text: 'Initial Supply', value: 'initialSupply', width: '120' },
     { text: 'Current Supply', value: 'currentSupply', width: '120' },
     { text: 'Price', value: 'price', width: '100' },
     { text: 'Market Cap', value: 'marketcap', width: '120' },
     { text: '24H Volume', value: 'volume24H', width: '120' },
-    { text: 'Holders', value: 'holders', width: '100' },
     { text: 'Liquidity Pools', value: 'liquidityPools', width: '120' },
   ])
 
   const liquidityPoolHeaders = computed(() => [
-    { text: 'Pool', value: 'pool', width: '250' },
+    { text: 'Pool', value: 'name', width: '250' },
     { text: 'TVL', value: 'tvl', width: '120' },
     { text: '24H Volume', value: 'volume24H', width: '120' },
-    { text: '24H Fees', value: 'fees24H', width: '120' },
     { text: 'APR', value: 'apr', width: '100' },
     { text: '24H Change', value: 'priceChange24H', width: '120' },
     { text: '7D Change', value: 'priceChange7D', width: '120' },
-    { text: '24H Trades', value: 'transactions24H', width: '120' },
-    { text: 'Unique Traders', value: 'uniqueTraders24H', width: '120' },
+    { text: '24H Trades', value: 'trades24H', width: '120' },
+    { text: 'Unique Traders', value: 'uniqueTraders', width: '120' },
   ])
 
   // Methods
@@ -303,59 +329,109 @@ export default function useXrpTokenMints() {
 
   // Mock data generation for development
   const generateMockData = () => {
-    // Mock token mints
-    tokenMints.value = Array.from({ length: 20 }, (_, i) => ({
-      currency: `TOKEN${i + 1}`,
-      issuerAddress: `r${Math.random().toString(36).substring(2, 34).toUpperCase()}`,
-      tokenName: `Token ${i + 1}`,
-      issuerName: `Issuer ${i + 1}`,
-      mintDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-      initialSupply: Math.random() * 1000000,
-      currentSupply: Math.random() * 1000000,
-      price: Math.random() * 0.01,
-      marketcap: Math.random() * 1000000,
-      volume24H: Math.random() * 50000,
-      holders: Math.floor(Math.random() * 1000),
-      liquidityPools: Array.from({ length: Math.floor(Math.random() * 3) }, (_, j) => ({
-        poolId: `pool_${i}_${j}`,
-        asset1: { currency: 'XRP', symbol: 'XRP', name: 'XRP' },
-        asset2: { currency: `TOKEN${i + 1}`, issuer: `r${Math.random().toString(36).substring(2, 34).toUpperCase()}`, symbol: `TOKEN${i + 1}`, name: `Token ${i + 1}` },
-        liquidity: Math.random() * 100000,
-        volume24H: Math.random() * 10000,
-        volume7D: Math.random() * 50000,
-        fees24H: Math.random() * 100,
-        fees7D: Math.random() * 500,
-        apr: Math.random() * 50,
-        tvl: Math.random() * 500000,
-        priceChange24H: (Math.random() - 0.5) * 20,
-        priceChange7D: (Math.random() - 0.5) * 50,
-        transactions24H: Math.floor(Math.random() * 1000),
-        uniqueTraders24H: Math.floor(Math.random() * 100)
-      }))
-    }))
-
-    // Mock liquidity pools
-    liquidityPools.value = Array.from({ length: 30 }, (_, i) => ({
-      poolId: `pool_${i}`,
-      asset1: { currency: 'XRP', symbol: 'XRP', name: 'XRP' },
-      asset2: { 
-        currency: `TOKEN${i + 1}`, 
-        issuer: `r${Math.random().toString(36).substring(2, 34).toUpperCase()}`, 
-        symbol: `TOKEN${i + 1}`, 
-        name: `Token ${i + 1}` 
+    const mockTokenMints: TokenMint[] = [
+      {
+        id: '1',
+        name: 'Mock Token 1',
+        symbol: 'MT1',
+        issuer: 'rMockIssuer1Address123456789',
+        currency: 'MT1',
+        marketcap: 1000000,
+        volume24H: 50000,
+        price: 0.1,
+        change24H: 5.2,
+        createdAt: new Date().toISOString()
       },
-      liquidity: Math.random() * 1000000,
-      volume24H: Math.random() * 100000,
-      volume7D: Math.random() * 500000,
-      fees24H: Math.random() * 1000,
-      fees7D: Math.random() * 5000,
-      apr: Math.random() * 100,
-      tvl: Math.random() * 5000000,
-      priceChange24H: (Math.random() - 0.5) * 20,
-      priceChange7D: (Math.random() - 0.5) * 50,
-      transactions24H: Math.floor(Math.random() * 1000),
-      uniqueTraders24H: Math.floor(Math.random() * 100)
-    }))
+      {
+        id: '2',
+        name: 'Mock Token 2',
+        symbol: 'MT2',
+        issuer: 'rMockIssuer2Address123456789',
+        currency: 'MT2',
+        marketcap: 2500000,
+        volume24H: 75000,
+        price: 0.25,
+        change24H: -2.1,
+        createdAt: new Date().toISOString()
+      }
+    ]
+
+    const mockLiquidityPools: LiquidityPool[] = [
+      {
+        id: '1',
+        name: 'MT1/XRP Pool',
+        token1: 'MT1',
+        token2: 'XRP',
+        tvl: 500000,
+        volume24H: 25000,
+        apr: 12.5,
+        fees: 0.3,
+        priceChange24H: 1.2,
+        trades24H: 150,
+        uniqueTraders: 45
+      },
+      {
+        id: '2',
+        name: 'MT2/XRP Pool',
+        token1: 'MT2',
+        token2: 'XRP',
+        tvl: 750000,
+        volume24H: 35000,
+        apr: 15.2,
+        fees: 0.3,
+        priceChange24H: -0.8,
+        trades24H: 200,
+        uniqueTraders: 60
+      }
+    ]
+
+    return { mockTokenMints, mockLiquidityPools }
+  }
+
+  const fetchTokenMints = async () => {
+    loading.value = true
+    error.value = null
+    
+    try {
+      // TODO: Replace with actual GraphQL query
+      // const { data } = await $apollo.query({
+      //   query: require('~/apollo/main/token-mints.query.graphql')
+      // })
+      
+      // For now, use mock data
+      const { mockTokenMints } = generateMockData()
+      tokenMints.value = mockTokenMints
+    } catch (err) {
+      error.value = 'Failed to fetch token mints'
+      console.error('Error fetching token mints:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const fetchLiquidityPools = async () => {
+    loading.value = true
+    error.value = null
+    
+    try {
+      // TODO: Replace with actual GraphQL query
+      // const { data } = await $apollo.query({
+      //   query: require('~/apollo/main/liquidity-pools.query.graphql')
+      // })
+      
+      // For now, use mock data
+      const { mockLiquidityPools } = generateMockData()
+      liquidityPools.value = mockLiquidityPools
+    } catch (err) {
+      error.value = 'Failed to fetch liquidity pools'
+      console.error('Error fetching liquidity pools:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const fetchData = async () => {
+    await Promise.all([fetchTokenMints(), fetchLiquidityPools()])
   }
 
   // Event handlers
@@ -384,6 +460,7 @@ export default function useXrpTokenMints() {
     selectedSortOrder,
     tokenMintFilters,
     liquidityPoolFilters,
+    error,
     
     // Computed
     filteredTokenMints,
@@ -397,6 +474,9 @@ export default function useXrpTokenMints() {
     formatCurrency,
     formatPercentage,
     formatDate,
-    copyToClipboard
+    copyToClipboard,
+    fetchData,
+    fetchTokenMints,
+    fetchLiquidityPools
   }
 } 

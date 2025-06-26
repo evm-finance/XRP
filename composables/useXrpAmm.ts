@@ -1,5 +1,5 @@
 import { ref, computed, Ref } from '@nuxtjs/composition-api'
-import { Client, Wallet, xrpl } from 'xrpl'
+import { Client, Wallet } from 'xrpl'
 import { inject } from '@nuxtjs/composition-api'
 import { XRP_PLUGIN_KEY, XrpClient } from '~/plugins/web3/xrp.client'
 
@@ -68,14 +68,24 @@ export default function useXrpAmm(
         ledger_index: 'validated'
       })
 
-      // Parse balances
-      if (accountInfo.result.account_data.Balances) {
-        const balances = accountInfo.result.account_data.Balances
-        balances.forEach((balance: any) => {
-          if (balance.currency === 'XRP') {
-            fromTokenBalance.value = parseFloat(balance.value) / 1000000 // Convert drops to XRP
-          } else if (balance.currency === fromToken.value.currency && balance.issuer === fromToken.value.issuer) {
-            fromTokenBalance.value = parseFloat(balance.value)
+      // Parse balances - account_data doesn't have Balances property directly
+      // We need to use account_lines for trust lines
+      const accountLines = await client.value.request({
+        command: 'account_lines',
+        account: address.value,
+        ledger_index: 'validated'
+      })
+
+      // Parse XRP balance from account_data
+      if (accountInfo.result.account_data.Balance) {
+        fromTokenBalance.value = parseFloat(accountInfo.result.account_data.Balance) / 1000000 // Convert drops to XRP
+      }
+
+      // Parse token balances from account_lines
+      if (accountLines.result.lines) {
+        accountLines.result.lines.forEach((line: any) => {
+          if (line.currency === fromToken.value.currency && line.account === fromToken.value.issuer) {
+            fromTokenBalance.value = parseFloat(line.balance)
           }
         })
       }
@@ -95,6 +105,13 @@ export default function useXrpAmm(
       loading.value = true
       
       // For AMM trading, we need to get the AMM info
+      // Make sure both assets have issuers defined
+      if (!fromToken.value.issuer || !toToken.value.issuer) {
+        console.error('Both tokens must have issuers defined for AMM trading')
+        expectedConvertQuote.value = 0
+        return
+      }
+
       const ammInfo = await client.value.request({
         command: 'amm_info',
         asset: {
@@ -108,17 +125,22 @@ export default function useXrpAmm(
       })
 
       // Calculate expected output based on AMM pool
-      // This is a simplified calculation - in practice you'd use the AMM formula
-      const poolAsset1 = parseFloat(ammInfo.result.amm.asset.value)
-      const poolAsset2 = parseFloat(ammInfo.result.amm.asset2.value)
-      
-      // Simple constant product formula
-      const k = poolAsset1 * poolAsset2
-      const newPoolAsset1 = poolAsset1 + amount.value
-      const newPoolAsset2 = k / newPoolAsset1
-      const amountOut = poolAsset2 - newPoolAsset2
-      
-      expectedConvertQuote.value = amountOut * (1 - slippage.value / 100)
+      // Check if the response has the expected structure
+      if (ammInfo.result && ammInfo.result.amm) {
+        const poolAsset1 = parseFloat(ammInfo.result.amm.amount.toString())
+        const poolAsset2 = parseFloat(ammInfo.result.amm.amount2.toString())
+        
+        // Simple constant product formula
+        const k = poolAsset1 * poolAsset2
+        const newPoolAsset1 = poolAsset1 + amount.value
+        const newPoolAsset2 = k / newPoolAsset1
+        const amountOut = poolAsset2 - newPoolAsset2
+        
+        expectedConvertQuote.value = amountOut * (1 - slippage.value / 100)
+      } else {
+        console.error('Unexpected AMM info response structure:', ammInfo)
+        expectedConvertQuote.value = 0
+      }
     } catch (error) {
       console.error('Error calculating swap quote:', error)
       expectedConvertQuote.value = 0

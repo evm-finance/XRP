@@ -61,8 +61,8 @@ export default {
   apollo: {
     clientConfigs: {
       default: {
-        httpEndpoint: process.env.BASE_GRAPHQL_SERVER_URL,
-        wsEndpoint: process.env.BASE_GRAPHQL_WEBSOCKET_URL,
+        httpEndpoint: process.env.BASE_GRAPHQL_SERVER_URL || 'https://example.com/graphql',
+        wsEndpoint: process.env.BASE_GRAPHQL_WEBSOCKET_URL || 'wss://example.com/graphql',
         websocketsOnly: false,
       },
     },

@@ -1264,3 +1264,623 @@ export type XRPDefiData = {
   balances:     XRPAccountBalances
   transactions: Array<XrpTransaction>
 }
+
+// New XRP Types based on backend schema
+export type XRPAsset = {
+  __typename?: 'XRPAsset';
+  currency: Scalars['String'];
+  issuer?: Maybe<Scalars['String']>;
+};
+
+export type XRPAssetInput = {
+  currency: Scalars['String'];
+  issuer?: Maybe<Scalars['String']>;
+};
+
+export type XRPAMMPool = {
+  __typename?: 'XRPAMMPool';
+  poolId: Scalars['String'];
+  asset1: XRPAsset;
+  asset2: XRPAsset;
+  asset1Balance: Scalars['Float'];
+  asset2Balance: Scalars['Float'];
+  lpBalance: Scalars['Float'];
+  fee: Scalars['Float'];
+  tradingVolume24H?: Maybe<Scalars['Float']>;
+  tradingVolume7D?: Maybe<Scalars['Float']>;
+  createdAt: Scalars['Int'];
+  lastUpdated: Scalars['Int'];
+};
+
+export type XRPAMMLiquidityCalculation = {
+  __typename?: 'XRPAMMLiquidityCalculation';
+  poolId: Scalars['String'];
+  asset1ValueUsd: Scalars['Float'];
+  asset2ValueUsd: Scalars['Float'];
+  totalLiquidityUsd: Scalars['Float'];
+  asset1Percentage: Scalars['Float'];
+  asset2Percentage: Scalars['Float'];
+  priceImpact: Scalars['Float'];
+};
+
+export type XRPAMMSwapQuote = {
+  __typename?: 'XRPAMMSwapQuote';
+  inputAmount: Scalars['Float'];
+  outputAmount: Scalars['Float'];
+  priceImpact: Scalars['Float'];
+  fee: Scalars['Float'];
+  minimumReceived: Scalars['Float'];
+};
+
+export type AMMTransaction = {
+  __typename?: 'AMMTransaction';
+  transactionHash: Scalars['String'];
+  transactionType: Scalars['String'];
+  poolId?: Maybe<Scalars['String']>;
+  asset1?: Maybe<XRPAsset>;
+  asset2?: Maybe<XRPAsset>;
+  amount1?: Maybe<Scalars['Float']>;
+  amount2?: Maybe<Scalars['Float']>;
+  lpAmount?: Maybe<Scalars['Float']>;
+  fee?: Maybe<Scalars['Float']>;
+  account: Scalars['String'];
+  ledgerIndex: Scalars['Int'];
+  timestamp: Scalars['Int'];
+  metadata?: Maybe<Scalars['Map']>;
+};
+
+export type XRPToken = {
+  __typename?: 'XRPToken';
+  issuer: Scalars['String'];
+  currency: Scalars['String'];
+  name: Scalars['String'];
+  icon?: Maybe<Scalars['String']>;
+  description?: Maybe<Scalars['String']>;
+  marketcap?: Maybe<Scalars['Float']>;
+  price?: Maybe<Scalars['Float']>;
+  volume24h?: Maybe<Scalars['Float']>;
+  volume7d?: Maybe<Scalars['Float']>;
+};
+
+export type AMMPool = {
+  __typename?: 'AMMPool';
+  account: Scalars['String'];
+  amount: Scalars['String'];
+  amount2Currency: Scalars['String'];
+  amount2Issuer: Scalars['String'];
+  amount2Value: Scalars['String'];
+  asset2Frozen: Scalars['Boolean'];
+  lpTokenCurrency: Scalars['String'];
+  lpTokenIssuer: Scalars['String'];
+  lpTokenValue: Scalars['String'];
+  tradingFee: Scalars['Int'];
+  liquidityUSD: Scalars['Float'];
+  volume24h: Scalars['Float'];
+};
+
+export type AMMHeatmapData = {
+  __typename?: 'AMMHeatmapData';
+  token: XRPToken;
+  pools: Array<AMMPool>;
+  totalLiquidity: Scalars['Float'];
+  volume24h: Scalars['Float'];
+  volume7d: Scalars['Float'];
+  marketCap: Scalars['Float'];
+  priceChange24h: Scalars['Float'];
+};
+
+// Enums
+export enum TimeRange {
+  Hour_1 = 'HOUR_1',
+  Day_1 = 'DAY_1',
+  Day_7 = 'DAY_7',
+  Day_30 = 'DAY_30'
+}
+
+export enum SortField {
+  Liquidity = 'LIQUIDITY',
+  Volume_24H = 'VOLUME_24H',
+  Volume_7D = 'VOLUME_7D',
+  Market_Cap = 'MARKET_CAP',
+  Price_Change_24H = 'PRICE_CHANGE_24H'
+}
+
+export enum TokenSortField {
+  Marketcap = 'MARKETCAP',
+  Volume_24H = 'VOLUME_24H',
+  Volume_7D = 'VOLUME_7D',
+  Price = 'PRICE',
+  Name = 'NAME'
+}
+
+export enum SortOrder {
+  Asc = 'ASC',
+  Desc = 'DESC'
+}
+
+// Query Variables and Response Types
+export type XRPAccountBalancesQueryVariables = Exact<{
+  address: Scalars['String'];
+}>;
+
+export type XRPAccountBalancesQuery = {
+  __typename?: 'Query';
+  xrpAccountBalances: {
+    __typename?: 'XRPAccountBalances';
+    account: string;
+    xrpBalance: number;
+    xrpPrice: number;
+    xrpTokens: Array<{
+      __typename?: 'XRPBalanceElem';
+      symbol: string;
+      issuer: string;
+      name: string;
+      balance: number;
+      price: number;
+      value: number;
+    }>;
+  };
+};
+
+export type XRPAccountTransactionsQueryVariables = Exact<{
+  address: Scalars['String'];
+}>;
+
+export type XRPAccountTransactionsQuery = {
+  __typename?: 'Query';
+  xrpAccountTransactions: Array<{
+    __typename?: 'XRPTransaction';
+    account: string;
+    amount?: any | null;
+    destination: string;
+    fee: string;
+    flags: number;
+    lastLedgerSequence: number;
+    offerSequence: number;
+    sequence: number;
+    signingPubKey: string;
+    takerGets?: any | null;
+    takerPays?: any | null;
+    transactionType: string;
+    txnSignature: string;
+    date: number;
+    hash: string;
+    inLedger: number;
+    ledgerIndex: number;
+    meta?: any | null;
+    metadata?: any | null;
+    validated?: boolean | null;
+    warnings: Array<any | null>;
+    memos: Array<any | null>;
+  }>;
+};
+
+export type XRPAccountDataQueryVariables = Exact<{
+  address: Scalars['String'];
+}>;
+
+export type XRPAccountDataQuery = {
+  __typename?: 'Query';
+  xrpAccountData: {
+    __typename?: 'XRPAccountData';
+    account: string;
+    balances: {
+      __typename?: 'XRPAccountBalances';
+      account: string;
+      xrpBalance: number;
+      xrpPrice: number;
+      xrpTokens: Array<{
+        __typename?: 'XRPBalanceElem';
+        symbol: string;
+        issuer: string;
+        name: string;
+        balance: number;
+        price: number;
+        value: number;
+      }>;
+    };
+    transactions: Array<{
+      __typename?: 'XRPTransaction';
+      account: string;
+      amount?: any | null;
+      destination: string;
+      fee: string;
+      flags: number;
+      lastLedgerSequence: number;
+      offerSequence: number;
+      sequence: number;
+      signingPubKey: string;
+      takerGets?: any | null;
+      takerPays?: any | null;
+      transactionType: string;
+      txnSignature: string;
+      date: number;
+      hash: string;
+      inLedger: number;
+      ledgerIndex: number;
+      meta?: any | null;
+      metadata?: any | null;
+      validated?: boolean | null;
+      warnings: Array<any | null>;
+      memos: Array<any | null>;
+    }>;
+  };
+};
+
+export type XRPAMMPoolsQueryVariables = Exact<{ [key: string]: never; }>;
+
+export type XRPAMMPoolsQuery = {
+  __typename?: 'Query';
+  xrpAMMPools: Array<{
+    __typename?: 'XRPAMMPool';
+    poolId: string;
+    asset1: { __typename?: 'XRPAsset'; currency: string; issuer?: string | null };
+    asset2: { __typename?: 'XRPAsset'; currency: string; issuer?: string | null };
+    asset1Balance: number;
+    asset2Balance: number;
+    lpBalance: number;
+    fee: number;
+    tradingVolume24H?: number | null;
+    tradingVolume7D?: number | null;
+    createdAt: number;
+    lastUpdated: number;
+  }>;
+};
+
+export type XRPAMMPoolQueryVariables = Exact<{
+  asset1: XRPAssetInput;
+  asset2: XRPAssetInput;
+}>;
+
+export type XRPAMMPoolQuery = {
+  __typename?: 'Query';
+  xrpAMMPool?: {
+    __typename?: 'XRPAMMPool';
+    poolId: string;
+    asset1: { __typename?: 'XRPAsset'; currency: string; issuer?: string | null };
+    asset2: { __typename?: 'XRPAsset'; currency: string; issuer?: string | null };
+    asset1Balance: number;
+    asset2Balance: number;
+    lpBalance: number;
+    fee: number;
+    tradingVolume24H?: number | null;
+    tradingVolume7D?: number | null;
+    createdAt: number;
+    lastUpdated: number;
+  } | null;
+};
+
+export type XRPAMMSwapQuoteQueryVariables = Exact<{
+  inputAsset: XRPAssetInput;
+  outputAsset: XRPAssetInput;
+  amount: Scalars['Float'];
+}>;
+
+export type XRPAMMSwapQuoteQuery = {
+  __typename?: 'Query';
+  xrpAMMSwapQuote: {
+    __typename?: 'XRPAMMSwapQuote';
+    inputAmount: number;
+    outputAmount: number;
+    priceImpact: number;
+    fee: number;
+    minimumReceived: number;
+  };
+};
+
+export type XRPAMMLiquidityValueQueryVariables = Exact<{
+  poolId: Scalars['String'];
+}>;
+
+export type XRPAMMLiquidityValueQuery = {
+  __typename?: 'Query';
+  xrpAMMLiquidityValue?: {
+    __typename?: 'XRPAMMLiquidityCalculation';
+    poolId: string;
+    asset1ValueUsd: number;
+    asset2ValueUsd: number;
+    totalLiquidityUsd: number;
+    asset1Percentage: number;
+    asset2Percentage: number;
+    priceImpact: number;
+  } | null;
+};
+
+export type XRPAMMTransactionsQueryVariables = Exact<{
+  poolId?: Maybe<Scalars['String']>;
+  transactionType?: Maybe<Scalars['String']>;
+  limit?: Maybe<Scalars['Int']>;
+}>;
+
+export type XRPAMMTransactionsQuery = {
+  __typename?: 'Query';
+  xrpAMMTransactions: Array<{
+    __typename?: 'AMMTransaction';
+    transactionHash: string;
+    transactionType: string;
+    poolId?: string | null;
+    asset1?: { __typename?: 'XRPAsset'; currency: string; issuer?: string | null } | null;
+    asset2?: { __typename?: 'XRPAsset'; currency: string; issuer?: string | null } | null;
+    amount1?: number | null;
+    amount2?: number | null;
+    lpAmount?: number | null;
+    fee?: number | null;
+    account: string;
+    ledgerIndex: number;
+    timestamp: number;
+    metadata?: any | null;
+  }>;
+};
+
+export type AMMHeatmapQueryVariables = Exact<{
+  timeRange?: Maybe<TimeRange>;
+  minLiquidity?: Maybe<Scalars['Float']>;
+  maxLiquidity?: Maybe<Scalars['Float']>;
+  sortBy?: Maybe<SortField>;
+  sortOrder?: Maybe<SortOrder>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+}>;
+
+export type AMMHeatmapQuery = {
+  __typename?: 'Query';
+  ammHeatmap: Array<{
+    __typename?: 'AMMHeatmapData';
+    token: {
+      __typename?: 'XRPToken';
+      issuer: string;
+      currency: string;
+      name: string;
+      icon?: string | null;
+      description?: string | null;
+      marketcap?: number | null;
+      price?: number | null;
+      volume24h?: number | null;
+      volume7d?: number | null;
+    };
+    pools: Array<{
+      __typename?: 'AMMPool';
+      account: string;
+      amount: string;
+      amount2Currency: string;
+      amount2Issuer: string;
+      amount2Value: string;
+      asset2Frozen: boolean;
+      lpTokenCurrency: string;
+      lpTokenIssuer: string;
+      lpTokenValue: string;
+      tradingFee: number;
+      liquidityUSD: number;
+      volume24h: number;
+    }>;
+    totalLiquidity: number;
+    volume24h: number;
+    volume7d: number;
+    marketCap: number;
+    priceChange24h: number;
+  }>;
+};
+
+export type TopAMMPoolsQueryVariables = Exact<{
+  limit?: Maybe<Scalars['Int']>;
+}>;
+
+export type TopAMMPoolsQuery = {
+  __typename?: 'Query';
+  topAMMPools: Array<{
+    __typename?: 'AMMHeatmapData';
+    token: {
+      __typename?: 'XRPToken';
+      issuer: string;
+      currency: string;
+      name: string;
+      icon?: string | null;
+      description?: string | null;
+      marketcap?: number | null;
+      price?: number | null;
+      volume24h?: number | null;
+      volume7d?: number | null;
+    };
+    pools: Array<{
+      __typename?: 'AMMPool';
+      account: string;
+      amount: string;
+      amount2Currency: string;
+      amount2Issuer: string;
+      amount2Value: string;
+      asset2Frozen: boolean;
+      lpTokenCurrency: string;
+      lpTokenIssuer: string;
+      lpTokenValue: string;
+      tradingFee: number;
+      liquidityUSD: number;
+      volume24h: number;
+    }>;
+    totalLiquidity: number;
+    volume24h: number;
+    volume7d: number;
+    marketCap: number;
+    priceChange24h: number;
+  }>;
+};
+
+export type AMMPoolDetailsQueryVariables = Exact<{
+  poolAccount: Scalars['String'];
+}>;
+
+export type AMMPoolDetailsQuery = {
+  __typename?: 'Query';
+  ammPoolDetails?: {
+    __typename?: 'AMMPool';
+    account: string;
+    amount: string;
+    amount2Currency: string;
+    amount2Issuer: string;
+    amount2Value: string;
+    asset2Frozen: boolean;
+    lpTokenCurrency: string;
+    lpTokenIssuer: string;
+    lpTokenValue: string;
+    tradingFee: number;
+    liquidityUSD: number;
+    volume24h: number;
+  } | null;
+};
+
+export type XRPTokensQueryVariables = Exact<{
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  sortBy?: Maybe<TokenSortField>;
+  sortOrder?: Maybe<SortOrder>;
+}>;
+
+export type XRPTokensQuery = {
+  __typename?: 'Query';
+  xrpTokens: Array<{
+    __typename?: 'XRPToken';
+    issuer: string;
+    currency: string;
+    name: string;
+    icon?: string | null;
+    description?: string | null;
+    marketcap?: number | null;
+    price?: number | null;
+    volume24h?: number | null;
+    volume7d?: number | null;
+  }>;
+};
+
+export type XRPTokenQueryVariables = Exact<{
+  currency: Scalars['String'];
+  issuer: Scalars['String'];
+}>;
+
+export type XRPTokenQuery = {
+  __typename?: 'Query';
+  xrpToken?: {
+    __typename?: 'XRPToken';
+    issuer: string;
+    currency: string;
+    name: string;
+    icon?: string | null;
+    description?: string | null;
+    marketcap?: number | null;
+    price?: number | null;
+    volume24h?: number | null;
+    volume7d?: number | null;
+  } | null;
+};
+
+export type AMMPoolsQueryVariables = Exact<{
+  currency?: Maybe<Scalars['String']>;
+  issuer?: Maybe<Scalars['String']>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+}>;
+
+export type AMMPoolsQuery = {
+  __typename?: 'Query';
+  ammPools: Array<{
+    __typename?: 'AMMPool';
+    account: string;
+    amount: string;
+    amount2Currency: string;
+    amount2Issuer: string;
+    amount2Value: string;
+    asset2Frozen: boolean;
+    lpTokenCurrency: string;
+    lpTokenIssuer: string;
+    lpTokenValue: string;
+    tradingFee: number;
+    liquidityUSD: number;
+    volume24h: number;
+  }>;
+};
+
+// Subscription Types
+export type AMMPoolUpdatesSubscriptionVariables = Exact<{
+  poolAccount: Scalars['String'];
+}>;
+
+export type AMMPoolUpdatesSubscription = {
+  __typename?: 'Subscription';
+  ammPoolUpdates: {
+    __typename?: 'AMMPool';
+    account: string;
+    amount: string;
+    amount2Currency: string;
+    amount2Issuer: string;
+    amount2Value: string;
+    asset2Frozen: boolean;
+    lpTokenCurrency: string;
+    lpTokenIssuer: string;
+    lpTokenValue: string;
+    tradingFee: number;
+    liquidityUSD: number;
+    volume24h: number;
+  };
+};
+
+export type TokenPriceUpdatesSubscriptionVariables = Exact<{
+  currency: Scalars['String'];
+  issuer: Scalars['String'];
+}>;
+
+export type TokenPriceUpdatesSubscription = {
+  __typename?: 'Subscription';
+  tokenPriceUpdates: {
+    __typename?: 'XRPToken';
+    issuer: string;
+    currency: string;
+    name: string;
+    icon?: string | null;
+    description?: string | null;
+    marketcap?: number | null;
+    price?: number | null;
+    volume24h?: number | null;
+    volume7d?: number | null;
+  };
+};
+
+export type HeatmapUpdatesSubscriptionVariables = Exact<{
+  timeRange?: Maybe<TimeRange>;
+}>;
+
+export type HeatmapUpdatesSubscription = {
+  __typename?: 'Subscription';
+  heatmapUpdates: Array<{
+    __typename?: 'AMMHeatmapData';
+    token: {
+      __typename?: 'XRPToken';
+      issuer: string;
+      currency: string;
+      name: string;
+      icon?: string | null;
+      description?: string | null;
+      marketcap?: number | null;
+      price?: number | null;
+      volume24h?: number | null;
+      volume7d?: number | null;
+    };
+    pools: Array<{
+      __typename?: 'AMMPool';
+      account: string;
+      amount: string;
+      amount2Currency: string;
+      amount2Issuer: string;
+      amount2Value: string;
+      asset2Frozen: boolean;
+      lpTokenCurrency: string;
+      lpTokenIssuer: string;
+      lpTokenValue: string;
+      tradingFee: number;
+      liquidityUSD: number;
+      volume24h: number;
+    }>;
+    totalLiquidity: number;
+    volume24h: number;
+    volume7d: number;
+    marketCap: number;
+    priceChange24h: number;
+  }>;
+};

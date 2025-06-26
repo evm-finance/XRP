@@ -1,5 +1,118 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+Create the XRPL.FINANCE platform
+Short term goal – Create a site similar to https://xmagnetic.org/?network=mainnet  add asset management and better analytics.  Also include Swap and AMM interface so we can collect fees.
+1)	Take components of EVM.FINANCE
+2)	Remove all non XRPL references
+3)	Make the EVM.FINANCE XRP-Screener the homepage
+4)	Keep XRP-Explorer
+5)	Complete GEM wallet interface
+6)	Add XRP Heatmap based on liquidity
+7)	Add XRP balances and transactions to EVM.Finance Balances and Transactions pages
+8)	Create XRPL Token Pages
+a.	Need SWAP Interface
+b.	Need AMM Interface
+c.	Need AMM Analytics
+d.	Need USD prices (in addition to XRP prices)
+9)	Create New token mints page – Detail amount of liquidity with new tokens
+10)	Track flow of Deposits and Withdrawals for each token
+11)	Add XRP Page from Quantify Crypto
+12)	New DEX and Liquidity Pool Displays
+13)	Add Smokeyinthebox meme coin interface
+
+Action Item / Programming steps
+Phase 1 – Using existing components, creating a framework without significant code changes
+1)	Create existing EVM.Finance platform on PCs, document how to do this.  This is for development and testing.
+2)	Create new Bitbucket repositories for XRP
+3)	Remove all references and interfaces to non XRP blockchains
+4)	Add a heatmap for XRPL liquidity pairings
+5)	Modify to have the heatmap as the homepage
+6)	Modify the top bar, remove Aave and Screener tabs
+7)	Remove “Events Composition” and “Activity Chart” from top of  XRP-Explorer page
+8)	Baseline this version – Save to Bitbucket
+Phase 2 – Gem Wallet interface and components
+1)	Basic interface – replace Metamask with Gem wallet
+2)	Add balances to balances page
+3)	Add transactions to transactions page
+4)	Add balances to XRP Screener
+5)	Add Trust line interface
+6)	Baseline this version – Save to Bitbucket
+
+Phase 3 – MVP Code Changes (requirements for XRP grant)
+1)	Add slider to have USD prices or XRP prices on multiple pages
+2)	Add XRPL token pages
+3)	Add Dex, Tradingview widget and AMM interfaces
+4)	Add Analytics
+
+Phase 4 – Token page improvements
+1)	Add balances and transactions
+Phase 5 – New XRPL Mint page
+1)	When a new minting occurs 
+2)	Use First Ledger Wallet for Mints
+
+Pool creation for nonXRP pairings
+ 
+
+Token Pages for XRP Steps 
+1) Start with the current token pages in use for EVM.Finance
+2) Remove the interfaces to Uniswap and Aave 
+3) In the location of the Aave/Uniswap display, add the XRP screener fields, create 2 lines in this section. The top line will have Issuer Name and Issuer Address, this will be the full address no … Also add a copy icon so the Issuer Address can be copied. The second row will have the same fields as XRP screener line minus the issuer name and address 
+4) At the bottom, show the transactions for the connected wallet, also include a link for the hash address to link to transaction summary, for example https://evm.finance/xrp-explorer/tx/E0C1D4B24D76B4180D2C96450438A0BE14304E69EDFBE91DF6211C923B344401
+5) Need the ability to show prices in USD, in addition to XRP price.
+Wallet Integration Improvement
+1)    Do not require the user to “Connect to Wallet” at the beginning. Only when they initiate Connect to Wallet or press an action button
+2)    Ability to support different wallet addresses for multiple blockchains (EVM and XRP)
+XRP Block Reader
+1)    Need to add block summary records.  Summary buckets will be for 5 minutes, 15 minutes, 1 hour, 4 hour, 12 hour and 24 hours.
+2)    Each bucket will only be for that specific time period.  For example, the active 5 minute record will be for a duration of 1 to 300 seconds before it becomes a historical record on the even 5 minute interval. 
+3)    An important item in each bucket is the 5 most traded cryptos during that time. Maybe with Start price and end price on each line with the volume for that time period.
+4)    Dedicated page for Summary Records, with a link from the Block Reader
+5)    Modify the block reader page to display the active 5 minute record, replacing the “events Composition last 5 minutes”
+
+XRP Balances and Transactions
+1)    GEM Wallet integration
+2)    XRP balances and transactions on current balances and transaction pages
+3)    XRP Balances on Screener page
+4)    User can select which blockchains that want displayed. OR we order them automatically from highest to lowest
+
+The summary records provide a quick overview of the blockchain activity for a given time period. Generally, traders want to know which tokens have the highest activity and volume during that time frame. 
+1.	Block records will provide a summary of the leading cryptocurrencies that traded during that interval. Block records will exist for 5 minute, 15 minute, 30 minute, 1 hour, 4 hour and 24 hours.
+2.	There will be a separate page for all 6 block summary records.
+3.	The live block summary will be updates as blocks are read, and will be updated every minute.
+4.	Each block summary will display the 5 most actively trading cryptos, with volume and order count.
+5.	The main XRP-Explorer page will have the live 5 minute summary record displayed
+6.	Past summary records older than 10 time intervals will not be saved.
+7.	All saved records will be on even time intervals, for example 5-minute records will be from 0:00 to 4:59.
+
+
+
+Step 1 – XRP Ledger Block Reader
+a.	Basic Reader (Complete)
+b.	Single Block Details (Complete)
+c.	Block Record summaries: (DeFi – 135)
+1)	Block records will provide a summary of the leading cryptocurrencies that traded during that interval.  Block records will exist for 5 minute, 15 minute, 30 minute, 1 hour, 4 hour and 24 hours.
+2)	There will be a separate page for all 6 block summary records.
+3)	Each block summary will display the 5 most actively trading cryptos, with volume and order count.
+4)	The main XRP-Explorer page will have the 5 minute summary record displayed
+5)	Past summary records older than 10 time intervals will not be saved.
+6)	All records will be on even time intervals, for example 5-minute records will be from 0:00 to 4:59.
+Step 2 – XRP Balances and Transactions (DeFi 124)
+a.	Wallet Intregration – GEM wallet
+b.	Detailed Wallet Token Balances – Add to existing balances page
+c.	Complete Transaction History – Add to existing balances page
+d.	Add balances to XRP screener
+e.	Option for user to see the blockchains they want
+f.	Support for multiple wallets
+g.	Design a widget for XRP balance display 
+Step 3 – Token Pages (DEFI 136)
+a.	Price Chart
+b.	Wallet Balances for specific coin
+c.	Trading interface
+d.	Transaction History
+e.	Important Metrics
+Step 4 – Screener (DEFI)
+a.	Modify prices to default to USD price, add a toggle if users want to display in XRP price.
+b.	Add multi currency support ? Use same interface as Quantify Crypto ?

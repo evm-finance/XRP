@@ -14,7 +14,8 @@
     "generate-erc20-abi": "abi-types-generator './constracts/abi/erc20Abi.json' --output='./types/abi' --name=erc20-contract --provider=ethers_v5",
     "generate-aave-lending-pool-abi": "abi-types-generator './constracts/abi/aave/lendingPoolAbi.json' --output='./types/abi' --name=aave-lending-pool-contract --provider=ethers_v5",
     "generate-aave-weth-pool-abi": "abi-types-generator './constracts/abi/aave/wethGatewayAbi.json' --output='./types/abi' --name=aave-weth-pool-contract --provider=ethers_v5",
-    "generate-uniswap-router-v2": "abi-types-generator './constracts/abi/uniswapRouterV2Abi.json' --output='./types/abi' --name=uniswap-router-v2-contract --provider=ethers_v5"
+    "generate-uniswap-router-v2": "abi-types-generator './constracts/abi/uniswapRouterV2Abi.json' --output='./types/abi' --name=uniswap-router-v2-contract --provider=ethers_v5",
+    "dev:env": "node start-with-env.js"
   },
   "dependencies": {
     "@amcharts/amcharts4": "^4.10.25",
@@ -61,6 +62,7 @@
     "babel-core": "7.0.0-bridge.0",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^27.5.1",
+    "dotenv-cli": "^8.0.0",
     "eslint": "^8.24.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-loader": "^4.0.2",

@@ -38,7 +38,7 @@
         <gas-info class="hidden-xs-and-down" />
         <network-selection />
         <wallet-connector class="hidden-sm-and-down" />
-        <gem-wallet-connector class="hidden-sm-and-down" />
+        <enhanced-xrp-wallet-connector class="hidden-sm-and-down" />
       </client-only>
     </v-app-bar>
 
@@ -59,7 +59,7 @@
     </v-navigation-drawer>
 
     <client-only>
-      <wallet-select-dialog />
+      <enhanced-wallet-select-dialog />
       <main-footer />
     </client-only>
   </v-app>
@@ -70,20 +70,20 @@ import { computed, defineComponent, ref, useStore } from '@nuxtjs/composition-ap
 import GasInfo from '~/components/common/GasInfo.vue'
 import WalletConnector from '~/components/common/WalletConnector.vue'
 import useInitTheme from '~/composables/useInitTheme'
-import WalletSelectDialog from '~/components/common/WalletSelectDialog.vue'
+import EnhancedWalletSelectDialog from '~/components/common/EnhancedWalletSelectDialog.vue'
 import { State } from '~/types/state'
 import MainFooter from '~/components/common/ui/footers/MainFooter.vue'
 import NetworkSelection from '~/components/common/NetworkSelection.vue'
 import GlobalSearch from '~/components/common/GlobalSearch.vue'
-import GemWalletConnector from '~/components/common/GemWalletConnector.vue'
+import EnhancedXrpWalletConnector from '~/components/common/EnhancedXrpWalletConnector.vue'
 
 export default defineComponent({
   components: {
-    GemWalletConnector,
+    EnhancedXrpWalletConnector,
     GlobalSearch,
     NetworkSelection,
     MainFooter,
-    WalletSelectDialog,
+    EnhancedWalletSelectDialog,
     WalletConnector,
     GasInfo,
   },
