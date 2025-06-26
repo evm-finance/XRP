@@ -101,6 +101,8 @@ export default defineComponent({
       { name: 'Screener', to: '/screener' },
       { name: 'XRP-Explorer', to: '/xrp-explorer' },
       { name: 'XRP-Screener', to: '/xrp-screener' },
+      { name: 'XRP-Balances', to: '/xrp-balances' },
+      { name: 'XRP-Transactions', to: '/xrp-transactions' },
     ])
 
     // COMPOSABLE

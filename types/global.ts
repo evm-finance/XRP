@@ -33,6 +33,8 @@ export type SearchResult = {
   isContract: boolean
   isTransaction?: boolean
   isXRPLedger?: boolean
+  isXRPAccount?: boolean
+  isXRPTransaction?: boolean
   searchString: string
   network: Network | null
   desc: string

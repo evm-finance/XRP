@@ -9,7 +9,7 @@
         dense
         hide-details
         single-line
-        placeholder="Search by Token address / Wallet / Txn Hash / XRP Ledger "
+        placeholder="Search by Token address / Wallet / Txn Hash / XRP Address"
         v-bind="attrs"
         prepend-inner-icon="mdi-magnify"
         v-on="on"
@@ -20,23 +20,25 @@
       <v-list-item v-for="(item, i) in searchResult" :key="i" exact :to="item.to">
         <v-list-item-avatar size="24">
           <v-img
-            :src="$imageUrlBySymbol(item.network?.symbol ?? '')"
-            :lazy-src="$imageUrlBySymbol(item.network?.symbol ?? '')"
+            :src="getNetworkIcon(item)"
+            :lazy-src="getNetworkIcon(item)"
           />
         </v-list-item-avatar>
         <v-list-item-content>
-          <v-list-item-title>{{ item.network?.name }}</v-list-item-title>
+          <v-list-item-title>{{ item.network?.name || 'XRP Ledger' }}</v-list-item-title>
           <v-list-item-subtitle>{{ item.desc }}</v-list-item-subtitle>
         </v-list-item-content>
 
         <v-list-item-action>
           <span>
-            <v-chip v-if="item.isWallet" x-small color="green  darken-2">Wallet</v-chip>
+            <v-chip v-if="item.isWallet" x-small color="green darken-2">Wallet</v-chip>
             <v-chip v-if="item.isContract" x-small color="deep-purple darken-2">Contract</v-chip>
-            <v-chip v-if="item.isTransaction" x-small color="deep-purple darken-2">Transaction</v-chip>
-            <v-chip v-if="item.isXRPLedger" x-small color="deep-purple darken-2">XRP Ledger</v-chip>
+            <v-chip v-if="item.isTransaction" x-small color="blue darken-2">Transaction</v-chip>
+            <v-chip v-if="item.isXRPLedger" x-small color="orange darken-2">XRP Ledger</v-chip>
+            <v-chip v-if="item.isXRPAccount" x-small color="green darken-2">XRP Account</v-chip>
+            <v-chip v-if="item.isXRPTransaction" x-small color="blue darken-2">XRP Transaction</v-chip>
             <v-icon
-              v-if="!item.isWallet && !item.isContract && !item.isTransaction && !item.isXRPLedger"
+              v-if="!item.isWallet && !item.isContract && !item.isTransaction && !item.isXRPLedger && !item.isXRPAccount && !item.isXRPTransaction"
               size="18"
               color="red"
             >
@@ -68,10 +70,127 @@ export default defineComponent({
     const search = ref<string | null>('')
     const loading = ref(false)
 
+    // XRP address validation
+    const isValidXRPAddress = (address: string): boolean => {
+      // XRP addresses are typically 25-35 characters long and start with 'r'
+      return /^r[a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(address)
+    }
+
+    // XRP transaction hash validation
+    const isValidXRPTransactionHash = (hash: string): boolean => {
+      // XRP transaction hashes are 64 characters long hex strings
+      return /^[A-Fa-f0-9]{64}$/.test(hash)
+    }
+
+    // XRP ledger index validation
+    const isValidXRPLedgerIndex = (ledger: string): boolean => {
+      // XRP ledger indices are numeric
+      return /^\d+$/.test(ledger)
+    }
+
+    // Get network icon
+    const getNetworkIcon = (item: SearchResult): string => {
+      if (item.isXRPLedger || item.isXRPAccount || item.isXRPTransaction) {
+        return '/img/xrp-icon.svg'
+      }
+      return this.$imageUrlBySymbol(item.network?.symbol ?? '')
+    }
+
+    const checkXRPAddress = async (address: string): Promise<SearchResult[]> => {
+      const resp: SearchResult[] = []
+
+      try {
+        // Check if it's a valid XRP address
+        if (isValidXRPAddress(address)) {
+          resp.push({
+            desc: 'XRP Account - View Balances & Transactions',
+            network: null,
+            isWallet: false,
+            isContract: false,
+            isXRPLedger: false,
+            isXRPAccount: true,
+            searchString: address,
+            to: `/xrp-balances?address=${address}`,
+          })
+
+          resp.push({
+            desc: 'XRP Account - View Transaction History',
+            network: null,
+            isWallet: false,
+            isContract: false,
+            isXRPLedger: false,
+            isXRPAccount: true,
+            isXRPTransaction: true,
+            searchString: address,
+            to: `/xrp-transactions?address=${address}`,
+          })
+
+          return resp
+        }
+
+        // Check if it's a valid XRP transaction hash
+        if (isValidXRPTransactionHash(address)) {
+          resp.push({
+            desc: 'XRP Transaction - View Details',
+            network: null,
+            isWallet: false,
+            isContract: false,
+            isXRPLedger: false,
+            isXRPTransaction: true,
+            searchString: address,
+            to: `/xrp-explorer/tx/${address}`,
+          })
+
+          return resp
+        }
+
+        // Check if it's a valid XRP ledger index
+        if (isValidXRPLedgerIndex(address)) {
+          resp.push({
+            desc: 'XRP Ledger - View Details',
+            network: null,
+            isWallet: false,
+            isContract: false,
+            isXRPLedger: true,
+            searchString: address,
+            to: `/xrp-explorer/ledger/${address}`,
+          })
+
+          return resp
+        }
+
+        // If none of the above, return invalid
+        resp.push({
+          desc: 'Invalid XRP address, transaction hash, or ledger index',
+          network: null,
+          isWallet: false,
+          isContract: false,
+          isXRPLedger: false,
+          searchString: address,
+          to: '#',
+        })
+
+        return resp
+      } catch (error) {
+        return [
+          {
+            desc: 'Error checking XRP address',
+            network: null,
+            isWallet: false,
+            isContract: false,
+            isXRPLedger: false,
+            searchString: address,
+            to: '#',
+          },
+        ]
+      }
+    }
+
     const checkAddressType = async (address: string, network: Network, provider: any): Promise<SearchResult[]> => {
       try {
         const resp: SearchResult[] = []
 
+        // Legacy XRP ledger check (8 characters)
         if (address.length === 8) {
           resp.push({
             desc: 'Valid XRP ledger',
@@ -188,6 +307,13 @@ export default defineComponent({
         return []
       }
 
+      // First check if it's an XRP address/transaction/ledger
+      const xrpResults = await checkXRPAddress(search)
+      if (xrpResults.length > 0 && !xrpResults[0].desc.includes('Invalid')) {
+        return xrpResults
+      }
+
+      // If not XRP, check EVM networks
       const multCalls: Promise<SearchResult[]>[] = []
       allNetworks.value.forEach((elem) => {
         const provider = getCustomProviderByNetworkId(elem.id)
@@ -197,9 +323,11 @@ export default defineComponent({
       result = await Promise.all(multCalls)
       const res = result.reduce((r, c) => r.concat(c), [])
 
-      if (res.length && res[0].isXRPLedger) {
-        return [res[0]]
+      // If we found XRP results but they were invalid, still return them
+      if (xrpResults.length > 0 && xrpResults[0].desc.includes('Invalid')) {
+        return xrpResults
       }
+
       return res
     }
 
@@ -230,6 +358,7 @@ export default defineComponent({
       searchMenuToggle,
       onSearch,
       openDialog,
+      getNetworkIcon,
     }
   },
 })
