@@ -333,6 +333,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref, useContext, useRoute } from '@nuxtjs/composition-api'
+import { useXrpAmmLiveData } from '~/composables/useXrpAmmLiveData'
 import XrpAmmActionDialog from '~/components/xrp/XrpAmmActionDialog.vue'
 import XrpAmmSwapDialog from '~/components/xrp/XrpAmmSwapDialog.vue'
 
@@ -347,6 +348,25 @@ interface PoolData {
   priceChange24h: number
   token1Balance: number
   token2Balance: number
+  totalSupply: number
+  createdAt: string
+  lastUpdated: string
+  transactions: {
+    hash: string
+    type: string
+    amount: number
+    token: string
+    timestamp: string
+    user: string
+  }[]
+  userPositions: {
+    user: string
+    poolTokens: number
+    token1Balance: number
+    token2Balance: number
+    share: number
+    value: number
+  }[]
 }
 
 interface Transaction {
@@ -366,6 +386,7 @@ export default defineComponent({
   setup() {
     const { $f } = useContext()
     const route = useRoute()
+    const { getPoolDetails, getUserTokenBalances } = useXrpAmmLiveData()
     
     // State
     const loading = ref(true)
@@ -390,26 +411,56 @@ export default defineComponent({
     const withdrawing = ref(false)
     const swapping = ref(false)
     
-    // Mock pool data
-    const poolData = ref<PoolData>({
-      id: route.value.params.id,
-      token1: { symbol: 'XRP', name: 'XRP', icon: '⚡' },
-      token2: { symbol: 'USDC', name: 'USD Coin', icon: '🪙', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
-      liquidity: 2500000,
-      volume24h: 1800000,
-      fee: 0.003,
-      apr: 12.5,
-      priceChange24h: 2.3,
-      token1Balance: 1000000,
-      token2Balance: 1000000,
+    // Get pool details from GraphQL
+    const { poolDetails, loading: poolLoading, error: poolError, refetch: refetchPool } = getPoolDetails(route.value.params.id)
+    
+    // Get user token balances
+    const { tokenBalances, loading: balancesLoading } = getUserTokenBalances()
+    
+    // Computed pool data
+    const poolData = computed<PoolData>(() => {
+      if (!poolDetails.value) {
+        return {
+          id: route.value.params.id,
+          token1: { symbol: 'XRP', name: 'Ripple', icon: '🪙' },
+          token2: { symbol: 'USDC', name: 'USD Coin', icon: '💎', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
+          liquidity: 0,
+          volume24h: 0,
+          fee: 0.003,
+          apr: 0,
+          priceChange24h: 0,
+          token1Balance: 0,
+          token2Balance: 0,
+          totalSupply: 0,
+          createdAt: '',
+          lastUpdated: '',
+          transactions: [],
+          userPositions: []
+        }
+      }
+      
+      return poolDetails.value
     })
     
-    // User data
-    const userPoolTokens = ref(0)
-    const userPoolTokensValue = ref(0)
-    const userPoolShare = ref(0)
+    // User position in this pool
+    const userPosition = computed(() => {
+      if (!poolDetails.value?.userPositions) return null
+      return poolDetails.value.userPositions.find(pos => pos.user === 'current-user') || null
+    })
     
-    // Chart data
+    // User pool tokens
+    const userPoolTokens = computed(() => userPosition.value?.poolTokens || 0)
+    
+    // User pool tokens value
+    const userPoolTokensValue = computed(() => userPosition.value?.value || 0)
+    
+    // User pool share percentage
+    const userPoolShare = computed(() => {
+      if (!poolData.value.totalSupply || !userPoolTokens.value) return 0
+      return (userPoolTokens.value / poolData.value.totalSupply) * 100
+    })
+    
+    // Chart data (mock for now)
     const chartData = ref([])
     
     // Transaction data
@@ -472,7 +523,7 @@ export default defineComponent({
     }
     
     const formatPercentage = (value: number): string => {
-      return value.toFixed(1)
+      return value.toFixed(2)
     }
     
     const formatFee = (value: number): string => {
@@ -514,35 +565,47 @@ export default defineComponent({
     
     const deposit = async () => {
       depositing.value = true
-      // Implement deposit logic here
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      depositing.value = false
-      showDepositDialog.value = false
-      // Refresh data
+      try {
+        // Deposit logic would be handled by the action dialog
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        await refetchPool()
+      } catch (error) {
+        console.error('Deposit failed:', error)
+      } finally {
+        depositing.value = false
+      }
     }
     
     const withdraw = async () => {
       withdrawing.value = true
-      // Implement withdraw logic here
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      withdrawing.value = false
-      showWithdrawDialog.value = false
-      // Refresh data
+      try {
+        // Withdraw logic would be handled by the action dialog
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        await refetchPool()
+      } catch (error) {
+        console.error('Withdraw failed:', error)
+      } finally {
+        withdrawing.value = false
+      }
     }
     
     const swap = async () => {
       swapping.value = true
-      // Implement swap logic here
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      swapping.value = false
-      showSwapDialog.value = false
-      // Refresh data
+      try {
+        // Swap logic would be handled by the swap dialog
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        await refetchPool()
+      } catch (error) {
+        console.error('Swap failed:', error)
+      } finally {
+        swapping.value = false
+      }
     }
     
     // Initialize data
     const initializeData = () => {
-      loading.value = false
-      // In real implementation, fetch pool data based on route.params.id
+      // Pool data will be loaded automatically via GraphQL
+      // Chart data would be loaded here in real implementation
     }
     
     initializeData()

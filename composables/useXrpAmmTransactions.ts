@@ -1,10 +1,12 @@
 import { computed, ref, useContext } from '@nuxtjs/composition-api'
-import { useXrpWallet } from '~/composables/useXrpWallet'
+import { useEnhancedXrpWallet } from '~/composables/useEnhancedXrpWallet'
+import { useXrpAmmLiveData } from '~/composables/useXrpAmmLiveData'
+import { useXrplTransaction } from '~/composables/useXrplTransaction'
 
 interface XrpAmmPool {
   id: string
-  token1: { symbol: string; name: string; icon: string }
-  token2: { symbol: string; name: string; icon: string; issuer?: string }
+  token1: XrpToken
+  token2: XrpToken
   liquidity: number
   volume24h: number
   fee: number
@@ -14,66 +16,103 @@ interface XrpAmmPool {
   token2Balance: number
 }
 
+interface XrpToken {
+  symbol: string
+  name: string
+  icon: string
+  issuer?: string
+}
+
 export default function useXrpAmmTransactions(pool: XrpAmmPool, amount: any) {
   const { $f } = useContext()
-  const { wallet, isConnected, signAndSubmitTransaction } = useXrpWallet()
+  const { 
+    wallet, 
+    isWalletReady, 
+    signAMMDepositTransaction,
+    signAMMWithdrawTransaction,
+    signAMMTradeTransaction,
+    canSignTransactions,
+    address
+  } = useEnhancedXrpWallet()
+  
+  const { refreshAll } = useXrpAmmLiveData()
+  const { submitAndConfirm, submitting, confirming, error: txError, clearTransactionState } = useXrplTransaction()
   
   // Transaction state
   const txLoading = ref(false)
   const receipt = ref<any>(null)
   const isTxMined = ref(false)
   const error = ref<string | null>(null)
+  const txHash = ref<string | null>(null)
   
-  // Mock transaction hash for development
-  const mockTxHash = () => {
-    return '0x' + Math.random().toString(16).substr(2, 64)
+  // Transaction status tracking
+  const txStatus = ref<'idle' | 'pending' | 'success' | 'error'>('idle')
+  
+  // Validate transaction parameters
+  const validateTransaction = (action: string, amount: number) => {
+    if (!isWalletReady.value) {
+      throw new Error('Wallet not connected')
+    }
+    
+    if (!canSignTransactions.value) {
+      throw new Error('Wallet does not support transaction signing')
+    }
+    
+    if (!amount || amount <= 0) {
+      throw new Error('Invalid amount')
+    }
+    
+    if (!address.value) {
+      throw new Error('No wallet address available')
+    }
   }
   
   // Deposit to AMM pool
   const deposit = async () => {
-    if (!isConnected.value) {
-      error.value = 'Wallet not connected'
-      return
-    }
-    
-    if (amount.value <= 0) {
-      error.value = 'Invalid amount'
-      return
-    }
+    validateTransaction('deposit', amount.value)
     
     txLoading.value = true
+    txStatus.value = 'pending'
     error.value = null
+    receipt.value = null
+    txHash.value = null
     
     try {
-      // Mock deposit transaction
-      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate network delay
+      // Create AMM deposit transaction
+      const depositParams = {
+        amount: amount.value.toString(),
+        amount2Currency: pool.token2.symbol,
+        amount2Issuer: pool.token2.issuer,
+        amount2Value: (amount.value * 0.95).toString() // Estimate based on pool ratio
+      }
       
-      // In real implementation, this would:
-      // 1. Create AMM deposit transaction
-      // 2. Sign with wallet
-      // 3. Submit to XRPL
-      // 4. Wait for confirmation
+      console.log('Creating AMM deposit transaction:', depositParams)
       
-      const txHash = mockTxHash()
+      // Sign transaction with wallet
+      const signedTx = await signAMMDepositTransaction(depositParams)
       
+      // Submit and confirm transaction
+      const txReceipt = await submitAndConfirm(signedTx)
+      
+      // Update state
+      txHash.value = txReceipt.hash
       receipt.value = {
-        hash: txHash,
-        from: wallet.value?.address,
+        ...txReceipt,
         to: pool.id,
-        value: amount.value,
-        gasUsed: '0.000012',
-        gasPrice: '0.00001',
-        status: 1,
-        blockNumber: Math.floor(Math.random() * 1000000),
-        timestamp: Date.now(),
+        poolId: pool.id
       }
       
       isTxMined.value = true
+      txStatus.value = 'success'
       
-      console.log(`Deposited ${amount.value} ${pool.token1.symbol} to pool ${pool.id}`)
+      // Refresh data
+      await refreshAll()
+      
+      console.log(`Successfully deposited ${amount.value} ${pool.token1.symbol} to pool ${pool.id}`)
       
     } catch (err: any) {
-      error.value = err.message || 'Transaction failed'
+      error.value = err.message || 'Deposit failed'
+      txStatus.value = 'error'
       console.error('Deposit error:', err)
     } finally {
       txLoading.value = false
@@ -82,49 +121,50 @@ export default function useXrpAmmTransactions(pool: XrpAmmPool, amount: any) {
   
   // Withdraw from AMM pool
   const withdraw = async () => {
-    if (!isConnected.value) {
-      error.value = 'Wallet not connected'
-      return
-    }
-    
-    if (amount.value <= 0) {
-      error.value = 'Invalid amount'
-      return
-    }
+    validateTransaction('withdraw', amount.value)
     
     txLoading.value = true
+    txStatus.value = 'pending'
     error.value = null
+    receipt.value = null
+    txHash.value = null
     
     try {
-      // Mock withdraw transaction
-      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate network delay
+      // Create AMM withdraw transaction
+      const withdrawParams = {
+        amount: amount.value.toString(),
+        amount2Currency: pool.token1.symbol,
+        amount2Issuer: pool.token1.issuer,
+        amount2Value: (amount.value * 0.95).toString() // Estimate based on pool ratio
+      }
       
-      // In real implementation, this would:
-      // 1. Create AMM withdraw transaction
-      // 2. Sign with wallet
-      // 3. Submit to XRPL
-      // 4. Wait for confirmation
+      console.log('Creating AMM withdraw transaction:', withdrawParams)
       
-      const txHash = mockTxHash()
+      // Sign transaction with wallet
+      const signedTx = await signAMMWithdrawTransaction(withdrawParams)
       
+      // Submit and confirm transaction
+      const txReceipt = await submitAndConfirm(signedTx)
+      
+      // Update state
+      txHash.value = txReceipt.hash
       receipt.value = {
-        hash: txHash,
-        from: wallet.value?.address,
+        ...txReceipt,
         to: pool.id,
-        value: amount.value,
-        gasUsed: '0.000012',
-        gasPrice: '0.00001',
-        status: 1,
-        blockNumber: Math.floor(Math.random() * 1000000),
-        timestamp: Date.now(),
+        poolId: pool.id
       }
       
       isTxMined.value = true
+      txStatus.value = 'success'
       
-      console.log(`Withdrew ${amount.value} LP tokens from pool ${pool.id}`)
+      // Refresh data
+      await refreshAll()
+      
+      console.log(`Successfully withdrew ${amount.value} LP tokens from pool ${pool.id}`)
       
     } catch (err: any) {
-      error.value = err.message || 'Transaction failed'
+      error.value = err.message || 'Withdraw failed'
+      txStatus.value = 'error'
       console.error('Withdraw error:', err)
     } finally {
       txLoading.value = false
@@ -134,26 +174,51 @@ export default function useXrpAmmTransactions(pool: XrpAmmPool, amount: any) {
   // Reset transaction state
   const resetToDefault = () => {
     txLoading.value = false
+    txStatus.value = 'idle'
     receipt.value = null
     isTxMined.value = false
     error.value = null
+    txHash.value = null
+    clearTransactionState()
   }
   
   // Transaction status
-  const txStatus = computed(() => {
-    if (txLoading.value) return 'pending'
-    if (receipt.value && isTxMined.value) return 'success'
-    if (error.value) return 'error'
-    return 'idle'
+  const txStatusComputed = computed(() => txStatus.value)
+  
+  // Can perform transaction
+  const canPerformTransaction = computed(() => {
+    return isWalletReady.value && 
+           canSignTransactions.value && 
+           amount.value > 0 && 
+           txStatus.value === 'idle' &&
+           !submitting.value &&
+           !confirming.value
   })
+  
+  // Combined loading state
+  const isLoading = computed(() => 
+    txLoading.value || 
+    submitting.value || 
+    confirming.value
+  )
+  
+  // Combined error state
+  const hasError = computed(() => 
+    !!error.value || 
+    !!txError.value
+  )
   
   return {
     // State
-    txLoading,
+    txLoading: isLoading,
     receipt,
     isTxMined,
-    error,
-    txStatus,
+    error: computed(() => error.value || txError.value),
+    txHash,
+    txStatus: txStatusComputed,
+    
+    // Computed
+    canPerformTransaction,
     
     // Methods
     deposit,

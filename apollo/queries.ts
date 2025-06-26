@@ -176,6 +176,173 @@ export const XRPScreenerGQL = gql`
     }
   }
 `
+
+export const XRPAmmPoolsGQL = gql`
+  query XRPAmmPoolsGQL {
+    xrpAmmPools {
+      id
+      token1 {
+        symbol
+        name
+        icon
+        issuer
+      }
+      token2 {
+        symbol
+        name
+        icon
+        issuer
+      }
+      liquidity
+      volume24h
+      fee
+      apr
+      priceChange24h
+      token1Balance
+      token2Balance
+      totalSupply
+      createdAt
+      lastUpdated
+    }
+  }
+`
+
+export const XRPAmmPoolDetailsGQL = gql`
+  query XRPAmmPoolDetailsGQL($poolId: String!) {
+    xrpAmmPoolDetails(poolId: $poolId) {
+      id
+      token1 {
+        symbol
+        name
+        icon
+        issuer
+        price
+        priceChange24h
+      }
+      token2 {
+        symbol
+        name
+        icon
+        issuer
+        price
+        priceChange24h
+      }
+      liquidity
+      volume24h
+      fee
+      apr
+      priceChange24h
+      token1Balance
+      token2Balance
+      totalSupply
+      createdAt
+      lastUpdated
+      transactions {
+        hash
+        type
+        amount
+        token
+        timestamp
+        user
+      }
+      userPositions {
+        user
+        poolTokens
+        token1Balance
+        token2Balance
+        share
+        value
+      }
+    }
+  }
+`
+
+export const XRPAmmUserPositionsGQL = gql`
+  query XRPAmmUserPositionsGQL($address: String!) {
+    xrpAmmUserPositions(address: $address) {
+      poolId
+      pool {
+        id
+        token1 {
+          symbol
+          name
+          icon
+        }
+        token2 {
+          symbol
+          name
+          icon
+        }
+        liquidity
+        fee
+        apr
+      }
+      poolTokens
+      token1Balance
+      token2Balance
+      share
+      value
+      lastUpdated
+    }
+  }
+`
+
+export const XRPAmmQuoteGQL = gql`
+  query XRPAmmQuoteGQL($poolId: String!, $amount: String!, $fromToken: String!) {
+    xrpAmmQuote(poolId: $poolId, amount: $amount, fromToken: $fromToken) {
+      inputAmount
+      outputAmount
+      priceImpact
+      fee
+      minimumReceived
+      price
+    }
+  }
+`
+
+export const XRPAmmTransactionsGQL = gql`
+  query XRPAmmTransactionsGQL($poolId: String!, $limit: Int) {
+    xrpAmmTransactions(poolId: $poolId, limit: $limit) {
+      hash
+      type
+      amount
+      token
+      timestamp
+      user
+      poolId
+      fee
+      priceImpact
+    }
+  }
+`
+
+export const XRPTokenPriceGQL = gql`
+  query XRPTokenPriceGQL($currency: String!, $issuer: String) {
+    xrpTokenPrice(currency: $currency, issuer: $issuer) {
+      currency
+      issuer
+      price
+      priceChange24h
+      volume24h
+      marketcap
+      lastUpdated
+    }
+  }
+`
+
+export const XRPTokenBalancesGQL = gql`
+  query XRPTokenBalancesGQL($address: String!) {
+    xrpTokenBalances(address: $address) {
+      currency
+      issuer
+      balance
+      price
+      value
+      lastUpdated
+    }
+  }
+`
+
 export const AaveMarketsQGL = gql`
   query AaveMarketsQGL($chainId: Int!, $version: String!) {
     aavePools(chainId: $chainId, version: $version) {

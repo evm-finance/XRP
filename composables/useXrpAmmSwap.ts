@@ -1,10 +1,12 @@
 import { computed, ref, useContext, watch } from '@nuxtjs/composition-api'
-import { useXrpWallet } from '~/composables/useXrpWallet'
+import { useEnhancedXrpWallet } from '~/composables/useEnhancedXrpWallet'
+import { useXrpAmmLiveData } from '~/composables/useXrpAmmLiveData'
+import { useXrplTransaction } from '~/composables/useXrplTransaction'
 
 interface XrpAmmPool {
   id: string
-  token1: { symbol: string; name: string; icon: string }
-  token2: { symbol: string; name: string; icon: string; issuer?: string }
+  token1: XrpToken
+  token2: XrpToken
   liquidity: number
   volume24h: number
   fee: number
@@ -14,6 +16,13 @@ interface XrpAmmPool {
   token2Balance: number
 }
 
+interface XrpToken {
+  symbol: string
+  name: string
+  icon: string
+  issuer?: string
+}
+
 export default function useXrpAmmSwap(
   fromToken: any,
   toToken: any,
@@ -21,7 +30,16 @@ export default function useXrpAmmSwap(
   pool: XrpAmmPool
 ) {
   const { $f } = useContext()
-  const { wallet, isConnected, signAndSubmitTransaction } = useXrpWallet()
+  const { 
+    wallet, 
+    isWalletReady, 
+    signAMMTradeTransaction,
+    canSignTransactions,
+    address
+  } = useEnhancedXrpWallet()
+  
+  const { getQuote, getUserTokenBalances, refreshAll } = useXrpAmmLiveData()
+  const { submitAndConfirm, submitting, confirming, error: txError, clearTransactionState } = useXrplTransaction()
   
   // State
   const loading = ref(false)
@@ -31,54 +49,93 @@ export default function useXrpAmmSwap(
   const txLoading = ref(false)
   const receipt = ref<any>(null)
   const isTxMined = ref(false)
+  const txHash = ref<string | null>(null)
   
-  // Mock balances for development
-  const fromTokenBalance = ref(1000)
-  const toTokenBalance = ref(500)
+  // Transaction status tracking
+  const txStatus = ref<'idle' | 'pending' | 'success' | 'error'>('idle')
   
-  // Mock transaction hash for development
-  const mockTxHash = () => {
-    return '0x' + Math.random().toString(16).substr(2, 64)
-  }
+  // Get user token balances
+  const { tokenBalances, loading: balancesLoading } = getUserTokenBalances()
   
-  // Calculate swap quote
-  const calculateQuote = async () => {
-    if (!fromAmount.value || fromAmount.value <= 0) {
+  // Get live quote when amount changes
+  const { quote: liveQuote, loading: quoteLoading, error: quoteError } = getQuote(
+    pool.id,
+    computed(() => fromAmount.value?.toString() || '0'),
+    computed(() => fromToken.value?.symbol || '')
+  )
+  
+  // Computed balances
+  const fromTokenBalance = computed(() => {
+    if (!fromToken.value) return 0
+    const balance = tokenBalances.value.find(b => 
+      b.currency === fromToken.value.symbol && 
+      b.issuer === fromToken.value.issuer
+    )
+    return balance?.balance || 0
+  })
+  
+  const toTokenBalance = computed(() => {
+    if (!toToken.value) return 0
+    const balance = tokenBalances.value.find(b => 
+      b.currency === toToken.value.symbol && 
+      b.issuer === toToken.value.issuer
+    )
+    return balance?.balance || 0
+  })
+  
+  // Update quote from live data
+  watch(liveQuote, (newQuote) => {
+    if (newQuote && fromAmount.value > 0) {
+      quote.value = `1 ${fromToken.value?.symbol} = ${newQuote.price.toFixed(6)} ${toToken.value?.symbol}`
+    } else {
       quote.value = ''
-      return
+    }
+  })
+  
+  // Watch for quote errors
+  watch(quoteError, (err) => {
+    if (err) {
+      errorMessage.value = 'Failed to get quote'
+    } else {
+      errorMessage.value = ''
+    }
+  })
+  
+  // Validate transaction parameters
+  const validateTransaction = (amount: number) => {
+    if (!isWalletReady.value) {
+      throw new Error('Wallet not connected')
     }
     
-    loading.value = true
-    errorMessage.value = ''
+    if (!canSignTransactions.value) {
+      throw new Error('Wallet does not support transaction signing')
+    }
     
-    try {
-      // Mock quote calculation
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Simple AMM math simulation
-      const inputAmount = fromAmount.value
-      const poolToken1Balance = pool.token1Balance
-      const poolToken2Balance = pool.token2Balance
-      const fee = pool.fee
-      
-      // Constant product formula with fees
-      const outputAmount = (inputAmount * poolToken2Balance * (1 - fee)) / 
-                          (poolToken1Balance + inputAmount * (1 - fee))
-      
-      quote.value = `1 ${fromToken.value.symbol} = ${(outputAmount / inputAmount).toFixed(6)} ${toToken.value.symbol}`
-      
-    } catch (err: any) {
-      errorMessage.value = 'Failed to get quote'
-      console.error('Quote error:', err)
-    } finally {
-      loading.value = false
+    if (!amount || amount <= 0) {
+      throw new Error('Invalid amount')
+    }
+    
+    if (amount > fromTokenBalance.value) {
+      throw new Error('Insufficient balance')
+    }
+    
+    if (!address.value) {
+      throw new Error('No wallet address available')
+    }
+    
+    if (!liveQuote.value) {
+      throw new Error('No quote available')
     }
   }
   
   // Action button state
   const actionButton = computed(() => {
-    if (!isConnected.value) {
+    if (!isWalletReady.value) {
       return { status: false, message: 'Connect Wallet' }
+    }
+    
+    if (!canSignTransactions.value) {
+      return { status: false, message: 'Wallet not supported' }
     }
     
     if (!fromAmount.value || fromAmount.value <= 0) {
@@ -89,7 +146,7 @@ export default function useXrpAmmSwap(
       return { status: false, message: 'Insufficient balance' }
     }
     
-    if (loading.value) {
+    if (quoteLoading.value) {
       return { status: false, message: 'Getting quote...' }
     }
     
@@ -97,8 +154,12 @@ export default function useXrpAmmSwap(
       return { status: false, message: 'Quote error' }
     }
     
-    if (txLoading.value) {
+    if (txLoading.value || submitting.value || confirming.value) {
       return { status: false, message: 'Swapping...' }
+    }
+    
+    if (!liveQuote.value) {
+      return { status: false, message: 'No quote available' }
     }
     
     return { status: true, message: 'Swap' }
@@ -106,54 +167,53 @@ export default function useXrpAmmSwap(
   
   // Execute swap
   const swap = async () => {
-    if (!isConnected.value) {
-      errorMessage.value = 'Wallet not connected'
-      return
-    }
-    
-    if (!fromAmount.value || fromAmount.value <= 0) {
-      errorMessage.value = 'Invalid amount'
-      return
-    }
-    
-    if (fromAmount.value > fromTokenBalance.value) {
-      errorMessage.value = 'Insufficient balance'
-      return
-    }
+    validateTransaction(fromAmount.value)
     
     txLoading.value = true
+    txStatus.value = 'pending'
     errorMessage.value = ''
+    receipt.value = null
+    txHash.value = null
     
     try {
-      // Mock swap transaction
-      await new Promise(resolve => setTimeout(resolve, 3000)) // Simulate network delay
+      // Create AMM trade transaction
+      const tradeParams = {
+        amount: fromAmount.value.toString(),
+        amount2Currency: toToken.value.symbol,
+        amount2Issuer: toToken.value.issuer,
+        amount2Value: liveQuote.value.outputAmount
+      }
       
-      // In real implementation, this would:
-      // 1. Create AMM swap transaction
-      // 2. Sign with wallet
-      // 3. Submit to XRPL
-      // 4. Wait for confirmation
+      console.log('Creating AMM trade transaction:', tradeParams)
       
-      const txHash = mockTxHash()
+      // Sign transaction with wallet
+      const signedTx = await signAMMTradeTransaction(tradeParams)
       
+      // Submit and confirm transaction
+      const txReceipt = await submitAndConfirm(signedTx)
+      
+      // Update state
+      txHash.value = txReceipt.hash
       receipt.value = {
-        hash: txHash,
-        from: wallet.value?.address,
+        ...txReceipt,
         to: pool.id,
-        value: fromAmount.value,
-        gasUsed: '0.000012',
-        gasPrice: '0.00001',
-        status: 1,
-        blockNumber: Math.floor(Math.random() * 1000000),
-        timestamp: Date.now(),
+        poolId: pool.id,
+        inputAmount: fromAmount.value,
+        outputAmount: liveQuote.value.outputAmount,
+        priceImpact: liveQuote.value.priceImpact
       }
       
       isTxMined.value = true
+      txStatus.value = 'success'
       
-      console.log(`Swapped ${fromAmount.value} ${fromToken.value.symbol} for ${toToken.value.symbol}`)
+      // Refresh data
+      await refreshAll()
+      
+      console.log(`Successfully swapped ${fromAmount.value} ${fromToken.value.symbol} for ${liveQuote.value.outputAmount} ${toToken.value.symbol}`)
       
     } catch (err: any) {
       errorMessage.value = err.message || 'Swap failed'
+      txStatus.value = 'error'
       console.error('Swap error:', err)
     } finally {
       txLoading.value = false
@@ -168,11 +228,18 @@ export default function useXrpAmmSwap(
     txLoading.value = false
     receipt.value = null
     isTxMined.value = false
+    txHash.value = null
+    txStatus.value = 'idle'
+    clearTransactionState()
   }
   
   // Watch for amount changes to recalculate quote
   watch(fromAmount, () => {
-    calculateQuote()
+    if (fromAmount.value > 0) {
+      // Quote will be updated automatically via the GraphQL query
+    } else {
+      quote.value = ''
+    }
   })
   
   // Watch for token changes to clear state
@@ -180,20 +247,41 @@ export default function useXrpAmmSwap(
     clearTrade()
   })
   
+  // Combined loading state
+  const isLoading = computed(() => 
+    quoteLoading.value || 
+    balancesLoading.value || 
+    loading.value || 
+    txLoading.value || 
+    submitting.value || 
+    confirming.value
+  )
+  
+  // Combined error state
+  const hasError = computed(() => 
+    !!errorMessage.value || 
+    !!txError.value
+  )
+  
   return {
     // State
-    loading,
+    loading: isLoading,
     quote,
     gasFeeUSD,
-    errorMessage,
+    errorMessage: computed(() => errorMessage.value || txError.value),
     txLoading,
     receipt,
     isTxMined,
+    txHash,
+    txStatus: computed(() => txStatus.value),
     fromTokenBalance,
     toTokenBalance,
     
     // Computed
     actionButton,
+    
+    // Live data
+    liveQuote,
     
     // Methods
     swap,

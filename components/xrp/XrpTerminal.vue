@@ -558,6 +558,7 @@ import { useXrpHeatmap } from '~/composables/useXrpHeatmap'
 import { useXrpConfigs } from '~/composables/useXrpConfigs'
 import { useXrpFormatters } from '~/composables/useXrpFormatters'
 import { useXrpGridRenderers } from '~/composables/useXrpGridRenderers'
+import { useXrpAmmLiveData } from '~/composables/useXrpAmmLiveData'
 import XrpHeatmapChart from '~/components/xrp/XrpHeatmapChart.vue'
 import XrpHeatmapConfigMenu from '~/components/xrp/XrpHeatmapConfigMenu.vue'
 
@@ -569,7 +570,7 @@ export default defineComponent({
   },
   setup() {
     // Composables
-    const { heatmapData, updateData, loading, tileText, tileTooltip, fetchHeatmapData } = useXrpHeatmap()
+    const { heatmapData, updateData, loading: heatmapLoading, tileText, tileTooltip, fetchHeatmapData } = useXrpHeatmap()
     const {
       displayMode,
       autoRefresh,
@@ -582,6 +583,14 @@ export default defineComponent({
       screenerPageSize,
     } = useXrpConfigs()
     const { formatXrpPrice, formatMarketCap, formatVolume, formatIssuerAddress, formatPercentageChange, formatTimestamp } = useXrpFormatters()
+    const { 
+      ammPools, 
+      userPositions, 
+      totalUserValue, 
+      loading: ammLoading, 
+      error: ammError,
+      refreshAll: refreshAmmData 
+    } = useXrpAmmLiveData()
 
     // Local state
     const showSettings = ref(false)
@@ -602,58 +611,6 @@ export default defineComponent({
       minApr: 0,
       feeTier: 'all',
     })
-
-    // AMM pools data (mock data)
-    const ammPoolsData = ref([
-      {
-        id: 'XRP_USDC_pool',
-        token1: { symbol: 'XRP', name: 'Ripple', icon: '🪙' },
-        token2: { symbol: 'USDC', name: 'USD Coin', icon: '💎', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
-        liquidity: 2500000,
-        volume24h: 125000,
-        fee: 0.003,
-        apr: 12.5,
-        priceChange24h: 2.3,
-        token1Balance: 500000,
-        token2Balance: 2000000,
-      },
-      {
-        id: 'XRP_USDT_pool',
-        token1: { symbol: 'XRP', name: 'Ripple', icon: '🪙' },
-        token2: { symbol: 'USDT', name: 'Tether', icon: '💎', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
-        liquidity: 1800000,
-        volume24h: 95000,
-        fee: 0.003,
-        apr: 10.8,
-        priceChange24h: -1.2,
-        token1Balance: 400000,
-        token2Balance: 1400000,
-      },
-      {
-        id: 'XRP_BTC_pool',
-        token1: { symbol: 'XRP', name: 'Ripple', icon: '🪙' },
-        token2: { symbol: 'BTC', name: 'Bitcoin', icon: '₿', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
-        liquidity: 1200000,
-        volume24h: 75000,
-        fee: 0.003,
-        apr: 8.9,
-        priceChange24h: 3.7,
-        token1Balance: 300000,
-        token2Balance: 900000,
-      },
-      {
-        id: 'XRP_ETH_pool',
-        token1: { symbol: 'XRP', name: 'Ripple', icon: '🪙' },
-        token2: { symbol: 'ETH', name: 'Ethereum', icon: 'Ξ', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
-        liquidity: 900000,
-        volume24h: 60000,
-        fee: 0.003,
-        apr: 7.2,
-        priceChange24h: 1.8,
-        token1Balance: 200000,
-        token2Balance: 700000,
-      },
-    ])
 
     // AMM configuration
     const ammPageSize = ref(10)
@@ -678,7 +635,7 @@ export default defineComponent({
 
     // Filtered AMM pools
     const filteredAmmPools = computed(() => {
-      let pools = ammPoolsData.value
+      let pools = ammPools.value
 
       // Apply search filter
       if (ammSearchQuery.value) {
@@ -723,7 +680,7 @@ export default defineComponent({
       heatmapData.value.reduce((sum, token) => sum + token.volume_24h, 0)
     )
     const activeTokens = computed(() => heatmapData.value.length)
-    const ammPools = computed(() => ammPoolsData.value.length)
+    const ammPoolsCount = computed(() => ammPools.value.length)
 
     // Display options
     const displayModeOptions = [
@@ -805,9 +762,15 @@ export default defineComponent({
       },
     ])
 
+    // Combined loading state
+    const loading = computed(() => heatmapLoading.value || ammLoading.value)
+
     // Methods
     const refreshAll = async () => {
-      await fetchHeatmapData()
+      await Promise.all([
+        fetchHeatmapData(),
+        refreshAmmData()
+      ])
     }
 
     const toggleFullscreen = () => {
@@ -864,6 +827,7 @@ export default defineComponent({
     // Lifecycle
     onMounted(() => {
       fetchHeatmapData()
+      refreshAmmData()
     })
 
     return {
@@ -881,14 +845,16 @@ export default defineComponent({
       ammSearchQuery,
       filters,
       ammFilters,
-      ammPoolsData,
+      ammPools,
+      userPositions,
+      totalUserValue,
       recentActivity,
 
       // Computed
       totalMarketCap,
       totalVolume,
       activeTokens,
-      ammPools,
+      ammPools: ammPoolsCount,
       filteredAmmPools,
       displayModeOptions,
       refreshIntervalOptions,
