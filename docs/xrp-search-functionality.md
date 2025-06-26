@@ -99,9 +99,20 @@ The new pages are accessible via:
 ## Testing
 
 To test the functionality:
-1. Use mock addresses: `rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh`
+1. Use default addresses: 
+   - `rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo`
+   - `rDodqfAoF8pVh2SoUwhQRfvkqrs4wwxUrz`
 2. Use mock transaction hashes: `A1B2C3D4E5F6789012345678901234567890ABCDEF1234567890ABCDEF123456`
 3. Use mock ledger indices: `12345678`
+
+## Default Addresses
+
+The following XRP addresses are provided as default examples on both the balances and transactions pages:
+
+- **rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo** - Primary example address
+- **rDodqfAoF8pVh2SoUwhQRfvkqrs4wwxUrz** - Secondary example address
+
+These addresses are displayed as clickable chips that users can click to instantly load the account data.
 
 ## Future Enhancements
 

@@ -48,10 +48,11 @@ export const useXrpMockData = () => {
 
   // Mock XRP addresses for testing
   const mockAddresses = [
+    'rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo',
+    'rDodqfAoF8pVh2SoUwhQRfvkqrs4wwxUrz',
     'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh',
     'rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe',
-    'rUCzEr6jrEyMpjhs4wSdQdz4g8Y382txf7',
-    'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh'
+    'rUCzEr6jrEyMpjhs4wSdQdz4g8Y382txf7'
   ]
 
   // Mock transaction hashes for testing

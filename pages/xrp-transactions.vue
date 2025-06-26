@@ -29,7 +29,7 @@
               <v-text-field
                 v-model="addressInput"
                 label="Enter XRP Address"
-                placeholder="rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh"
+                placeholder="rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo"
                 outlined
                 dense
                 :rules="[addressRule]"
@@ -46,6 +46,26 @@
                   </v-btn>
                 </template>
               </v-text-field>
+              
+              <!-- Default Address Examples -->
+              <v-row class="mt-3">
+                <v-col cols="12">
+                  <v-subheader class="px-0">Example Addresses:</v-subheader>
+                  <v-chip-group>
+                    <v-chip
+                      v-for="exampleAddress in exampleAddresses"
+                      :key="exampleAddress"
+                      small
+                      outlined
+                      clickable
+                      @click="loadExampleAddress(exampleAddress)"
+                      class="font-family-mono"
+                    >
+                      {{ formatExampleAddress(exampleAddress) }}
+                    </v-chip>
+                  </v-chip-group>
+                </v-col>
+              </v-row>
             </v-card-text>
           </v-card>
         </v-col>
@@ -267,6 +287,12 @@ export default defineComponent({
     const searchQuery = ref('')
     const transactionType = ref('all')
 
+    // Example addresses
+    const exampleAddresses = [
+      'rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo',
+      'rDodqfAoF8pVh2SoUwhQRfvkqrs4wwxUrz'
+    ]
+
     // Get address from query params
     onMounted(() => {
       if (query.address) {
@@ -340,6 +366,12 @@ export default defineComponent({
         address.value = addressInput.value
         loadAddressData()
       }
+    }
+
+    const loadExampleAddress = (exampleAddress: string) => {
+      addressInput.value = exampleAddress
+      address.value = exampleAddress
+      loadAddressData()
     }
 
     const loadAddressData = async () => {
@@ -441,6 +473,11 @@ export default defineComponent({
       return 'red--text'
     }
 
+    const formatExampleAddress = (address: string) => {
+      if (!address) return ''
+      return address.length > 20 ? `${address.substring(0, 10)}...${address.substring(address.length - 10)}` : address
+    }
+
     return {
       // State
       address,
@@ -460,6 +497,7 @@ export default defineComponent({
       // Methods
       addressRule,
       loadAddress,
+      loadExampleAddress,
       refreshData,
       copyToClipboard,
       viewTransaction,
@@ -472,6 +510,10 @@ export default defineComponent({
       formatHash,
       getTransactionTypeColor,
       getAmountClass,
+      formatExampleAddress,
+      
+      // Example addresses
+      exampleAddresses,
     }
   },
 })
