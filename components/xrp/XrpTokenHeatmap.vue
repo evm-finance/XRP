@@ -15,7 +15,7 @@
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
     </v-card-text>
 
-    <heatmap-chart
+    <xrp-heatmap-chart
       v-else
       data-nosnippet
       :block-size="blockSize"
@@ -24,6 +24,7 @@
       :tile-body="tileText"
       :tile-tooltip="tileTooltip"
       :update-data="updateData"
+      heatmap-type="token"
     />
   </v-card>
 </template>
@@ -31,7 +32,7 @@
 <script lang="ts">
 import { computed, defineComponent } from '@nuxtjs/composition-api'
 import { mdiStar, mdiCog } from '@mdi/js'
-import HeatmapChart from '~/components/HeatmapChart.vue'
+import XrpHeatmapChart from '~/components/xrp/XrpHeatmapChart.vue'
 import useXrpTokenHeatmap from '~/composables/useXrpTokenHeatmap'
 import HeatmapConfigMenu from '~/components/HeatmapConfigMenu.vue'
 import useHeatmapConfigs from '~/composables/useHeatmapConfigs'
@@ -39,7 +40,7 @@ import useHeatmapConfigs from '~/composables/useHeatmapConfigs'
 export default defineComponent({
   components: {
     HeatmapConfigMenu,
-    HeatmapChart,
+    XrpHeatmapChart,
   },
   props: {
     height: { type: [String, Number], default: 548 },

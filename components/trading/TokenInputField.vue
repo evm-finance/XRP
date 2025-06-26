@@ -1,135 +1,119 @@
 <template>
-  <v-row>
-    <v-col>
-      <v-form ref="form">
-        <v-text-field
-          v-model="amount"
-          hide-details
-          outlined
-          color="pink"
-          dense
-          class="rounded-0 px-0"
-          :disabled="loading"
-          @input="onInput"
-        >
-          <template #append>
-            <v-divider class="mx-3 mb-2" vertical />
-            <img
-              width="24"
-              height="24"
-              style="margin-top: 2px"
-              :src="$imageUrlBySymbol(token.symbol)"
-              alt=""
-              @error="$setAltImageUrl"
-            />
-            <v-btn text class="mb-2 py-0" tile small :disabled="loading" @click="$emit(menuOpenEvent)">
-              <span class="text-subtitle-2" v-text="token.symbol" />
-              <v-icon right dark> mdi-chevron-down</v-icon>
-            </v-btn>
-          </template>
-        </v-text-field>
-
-        <v-row class="mt-2 grey--text text--lighten-1 caption" no-gutters>
-          <v-col cols="7">
-            <v-skeleton-loader v-if="loading" type="heading" tile height="20" width="250" />
-            <span v-else class="mr-0" v-text="`${fiatPrice ? $f(fiatPrice, { pre: '$ ', maxDigits: 2 }) : ''}`" />
-          </v-col>
-          <v-col class="text-right text-truncate" style="max-width: 100%">
-            <v-skeleton-loader v-if="loading" type="heading" tile height="20" class="ml-8" width="300" />
-            <span v-else>
-              <span class="mr-0" v-text="`Balance: ${$f(balance, { maxDigits: 6 })}`" />
-              <v-btn
-                v-if="isMaximumButtonVisible"
-                tile
-                color="primary"
-                class="pa-0 mb-1"
-                x-small
-                text
-                depressed
-                @click="setMax"
-                >MAX</v-btn
-              >
-            </span>
-          </v-col>
-        </v-row>
-      </v-form>
-    </v-col>
-  </v-row>
+  <v-card tile outlined class="pa-3">
+    <div class="d-flex justify-space-between align-center mb-2">
+      <span class="text-caption grey--text">{{ label || 'Amount' }}</span>
+      <span class="text-caption grey--text">
+        Balance: {{ formatBalance(balance) }}
+      </span>
+    </div>
+    
+    <div class="d-flex align-center">
+      <v-text-field
+        v-model="inputValue"
+        :placeholder="placeholder"
+        type="number"
+        outlined
+        dense
+        hide-details
+        :readonly="readonly"
+        @input="onInputChange"
+      />
+      
+      <v-btn
+        text
+        small
+        color="primary"
+        class="ml-2"
+        @click="setMaxAmount"
+      >
+        MAX
+      </v-btn>
+    </div>
+    
+    <div class="d-flex justify-space-between align-center mt-2">
+      <div class="d-flex align-center">
+        <v-avatar size="24" class="mr-2">
+          <v-img :src="tokenIcon" />
+        </v-avatar>
+        <span class="text-body-2 font-weight-medium">{{ token.symbol }}</span>
+      </div>
+      
+      <div v-if="amountUSD" class="text-caption grey--text">
+        ${{ formatUSD(amountUSD) }}
+      </div>
+    </div>
+  </v-card>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, PropType, ref, toRefs, watch } from '@nuxtjs/composition-api'
-import { TradeType } from '@uniswap/sdk'
-import { UniswapToken } from '~/types/apollo/main/types'
-import { EmitEvents } from '~/types/events'
+import { computed, defineComponent, ref, watch } from '@nuxtjs/composition-api'
 
-type Props = {
-  token: UniswapToken
-  formTradeDirection: keyof typeof TradeType
-  tradeDirection: keyof typeof TradeType
-  balance: string
-  expectedConvertQuote: number
-  loading: boolean
-  fiatPrice: number | null
+interface Token {
+  symbol: string
+  name: string
+  icon: string
+  issuer?: string
 }
 
-export default defineComponent<Props>({
+export default defineComponent({
   props: {
-    token: { type: Object as PropType<UniswapToken | null>, required: true },
-    formTradeDirection: { type: String as PropType<keyof typeof TradeType>, required: true },
-    tradeDirection: { type: String as PropType<keyof typeof TradeType>, required: true },
+    token: { type: Object as () => Token, required: true },
     balance: { type: Number, default: 0 },
-    expectedConvertQuote: { type: Number, required: true },
-    fiatPrice: { type: Number as PropType<null | number>, default: null },
+    amount: { type: Number, default: 0 },
     loading: { type: Boolean, default: false },
+    readonly: { type: Boolean, default: false },
+    label: { type: String, default: '' },
+    placeholder: { type: String, default: '0.0' },
   },
-
   setup(props, { emit }) {
-    // STATE
-    const amountVal = ref<number>(0)
-    const menuOpenEvent = EmitEvents.onUniswapTokenMenuOpen
-    const isActive = computed(() => props.formTradeDirection === props.tradeDirection)
-
-    const amount = computed({
-      get() {
-        return new Intl.NumberFormat('en', { minimumFractionDigits: 0, maximumFractionDigits: 20 }).format(
-          amountVal.value
-        )
-      },
-      set(value: string) {
-        if (value && value.length > 0) {
-          const num = parseFloat(value.replace(/,/g, ''))
-          if (!isNaN(num)) {
-            amountVal.value = parseFloat(value.replace(/,/g, ''))
-          } else amountVal.value = 0
-        } else amountVal.value = 0
-      },
+    const inputValue = ref('')
+    
+    const tokenIcon = computed(() => {
+      // In real implementation, this would use proper token icons
+      return props.token.icon || '🪙'
     })
-
-    const isMaximumButtonVisible = computed(
-      () => Number(props.balance) > 0 && Number(props.balance) !== amountVal.value
-    )
-    function onMenuOpen() {
-      emit(menuOpenEvent)
+    
+    const amountUSD = computed(() => {
+      // Mock USD value - in real implementation this would use price feeds
+      if (!props.amount) return 0
+      const mockPrice = props.token.symbol === 'XRP' ? 0.5 : 1.0
+      return props.amount * mockPrice
+    })
+    
+    const formatBalance = (value: number): string => {
+      return value.toFixed(6)
     }
-
-    function onInput() {
-      // const searchTimeout: any = null
-      // clearTimeout(searchTimeout)
-      // setTimeout(() => {
-      emit(EmitEvents.onValueChanged, { direction: props.formTradeDirection, value: amountVal.value })
-      // }, 1500)
+    
+    const formatUSD = (value: number): string => {
+      return value.toFixed(2)
     }
-
-    function setMax() {
-      amountVal.value = Number(props.balance)
-      emit(EmitEvents.onValueChanged, { direction: props.formTradeDirection, value: amountVal.value })
+    
+    const onInputChange = () => {
+      const value = parseFloat(inputValue.value) || 0
+      emit('on-value-changed', value)
     }
-
-    // Watch  of expectedConvertQuote for both directions, if field isn't active set incoming val in the form
-    watch(toRefs(props).expectedConvertQuote, (val: number) => (!isActive.value ? (amount.value = `${val}`) : null))
-
-    return { amount, menuOpenEvent, isActive, isMaximumButtonVisible, onMenuOpen, onInput, setMax }
+    
+    const setMaxAmount = () => {
+      inputValue.value = props.balance.toString()
+      onInputChange()
+    }
+    
+    // Watch for external amount changes
+    watch(() => props.amount, (newAmount) => {
+      if (newAmount !== parseFloat(inputValue.value) || 0) {
+        inputValue.value = newAmount.toString()
+      }
+    })
+    
+    return {
+      inputValue,
+      tokenIcon,
+      amountUSD,
+      formatBalance,
+      formatUSD,
+      onInputChange,
+      setMaxAmount,
+    }
   },
 })
 </script>

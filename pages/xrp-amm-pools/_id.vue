@@ -133,27 +133,16 @@
                       block
                       color="primary"
                       class="mb-2"
-                      @click="showDepositDialog = true"
+                      @click="actionDialog.openDialog()"
                     >
                       <v-icon left>mdi-plus</v-icon>
-                      Deposit
+                      Deposit/Withdraw
                     </v-btn>
                     
                     <v-btn
                       block
                       outlined
-                      class="mb-2"
-                      @click="showWithdrawDialog = true"
-                      :disabled="userPoolTokens <= 0"
-                    >
-                      <v-icon left>mdi-minus</v-icon>
-                      Withdraw
-                    </v-btn>
-                    
-                    <v-btn
-                      block
-                      outlined
-                      @click="showSwapDialog = true"
+                      @click="swapDialog.openDialog()"
                     >
                       <v-icon left>mdi-swap-horizontal</v-icon>
                       Swap
@@ -329,118 +318,23 @@
       </v-col>
     </v-row>
 
-    <!-- Deposit Dialog -->
-    <v-dialog v-model="showDepositDialog" max-width="500">
-      <v-card>
-        <v-card-title>Deposit to Pool</v-card-title>
-        <v-card-text>
-          <v-form ref="depositForm">
-            <v-row>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="depositAmount1"
-                  :label="`${poolData.token1.symbol} Amount`"
-                  type="number"
-                  outlined
-                  dense
-                />
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="depositAmount2"
-                  :label="`${poolData.token2.symbol} Amount`"
-                  type="number"
-                  outlined
-                  dense
-                />
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn text @click="showDepositDialog = false">Cancel</v-btn>
-          <v-btn color="primary" @click="deposit" :loading="depositing">Deposit</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- Withdraw Dialog -->
-    <v-dialog v-model="showWithdrawDialog" max-width="500">
-      <v-card>
-        <v-card-title>Withdraw from Pool</v-card-title>
-        <v-card-text>
-          <v-form ref="withdrawForm">
-            <v-row>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="withdrawAmount"
-                  label="Pool Token Amount"
-                  type="number"
-                  outlined
-                  dense
-                />
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn text @click="showWithdrawDialog = false">Cancel</v-btn>
-          <v-btn color="primary" @click="withdraw" :loading="withdrawing">Withdraw</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- Swap Dialog -->
-    <v-dialog v-model="showSwapDialog" max-width="500">
-      <v-card>
-        <v-card-title>Swap Tokens</v-card-title>
-        <v-card-text>
-          <v-form ref="swapForm">
-            <v-row>
-              <v-col cols="12">
-                <v-select
-                  v-model="swapFrom"
-                  :items="[poolData.token1.symbol, poolData.token2.symbol]"
-                  label="From"
-                  outlined
-                  dense
-                />
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="swapAmount"
-                  label="Amount"
-                  type="number"
-                  outlined
-                  dense
-                />
-              </v-col>
-              <v-col cols="12">
-                <v-select
-                  v-model="swapTo"
-                  :items="[poolData.token1.symbol, poolData.token2.symbol]"
-                  label="To"
-                  outlined
-                  dense
-                />
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn text @click="showSwapDialog = false">Cancel</v-btn>
-          <v-btn color="primary" @click="swap" :loading="swapping">Swap</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <!-- Action Dialogs -->
+    <xrp-amm-action-dialog
+      ref="actionDialog"
+      :pool="poolData"
+    />
+    
+    <xrp-amm-swap-dialog
+      ref="swapDialog"
+      :pool="poolData"
+    />
   </div>
 </template>
 
 <script lang="ts">
 import { computed, defineComponent, ref, useContext, useRoute } from '@nuxtjs/composition-api'
+import XrpAmmActionDialog from '~/components/xrp/XrpAmmActionDialog.vue'
+import XrpAmmSwapDialog from '~/components/xrp/XrpAmmSwapDialog.vue'
 
 interface PoolData {
   id: string
@@ -465,6 +359,10 @@ interface Transaction {
 }
 
 export default defineComponent({
+  components: {
+    XrpAmmActionDialog,
+    XrpAmmSwapDialog,
+  },
   setup() {
     const { $f } = useContext()
     const route = useRoute()
@@ -648,7 +546,10 @@ export default defineComponent({
     }
     
     initializeData()
-    
+
+    const actionDialog = ref()
+    const swapDialog = ref()
+
     return {
       // Data
       loading,
@@ -695,6 +596,8 @@ export default defineComponent({
       deposit,
       withdraw,
       swap,
+      actionDialog,
+      swapDialog,
     }
   },
   head: {},

@@ -397,6 +397,158 @@
         </v-card>
       </v-flex>
     </v-layout>
+
+    <!-- AMM Pools Section -->
+    <v-layout>
+      <v-flex xs12>
+        <v-card tile outlined class="mt-4">
+          <v-card-title class="py-2">
+            <span class="subtitle-2">AMM Pools</span>
+            <v-spacer />
+            
+            <!-- AMM Controls -->
+            <v-text-field
+              v-model="ammSearchQuery"
+              placeholder="Search pools..."
+              dense
+              outlined
+              hide-details
+              class="mx-2"
+              style="max-width: 200px;"
+            >
+              <template #prepend-inner>
+                <v-icon>mdi-magnify</v-icon>
+              </template>
+            </v-text-field>
+            
+            <v-btn
+              icon
+              small
+              class="mx-1"
+              @click="showAmmFilters = !showAmmFilters"
+            >
+              <v-icon>mdi-filter</v-icon>
+            </v-btn>
+          </v-card-title>
+
+          <!-- AMM Filters -->
+          <v-expand-transition>
+            <v-card-text v-if="showAmmFilters" class="py-2">
+              <v-row dense>
+                <v-col cols="12" sm="6" md="3">
+                  <v-text-field
+                    v-model.number="ammFilters.minLiquidity"
+                    label="Min Liquidity"
+                    type="number"
+                    dense
+                    outlined
+                    hide-details
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" md="3">
+                  <v-text-field
+                    v-model.number="ammFilters.minVolume"
+                    label="Min Volume"
+                    type="number"
+                    dense
+                    outlined
+                    hide-details
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" md="3">
+                  <v-text-field
+                    v-model.number="ammFilters.minApr"
+                    label="Min APR"
+                    type="number"
+                    dense
+                    outlined
+                    hide-details
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" md="3">
+                  <v-select
+                    v-model="ammFilters.feeTier"
+                    :items="feeTierOptions"
+                    label="Fee Tier"
+                    dense
+                    outlined
+                    hide-details
+                  />
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-expand-transition>
+
+          <!-- AMM Pools Grid -->
+          <v-data-table
+            :headers="ammHeaders"
+            :items="filteredAmmPools"
+            :loading="loading"
+            :items-per-page="ammPageSize"
+            :sort-by="ammSortBy"
+            :sort-desc="ammSortOrder === 'desc'"
+            class="elevation-0"
+            dense
+          >
+            <template #item.pair="{ item }">
+              <div class="d-flex align-center">
+                <div class="d-flex align-center mr-2">
+                  <v-avatar size="24" class="mr-1">
+                    <v-img :src="getTokenIcon(item.token1.symbol)" />
+                  </v-avatar>
+                  <v-avatar size="24" class="mr-1">
+                    <v-img :src="getTokenIcon(item.token2.symbol)" />
+                  </v-avatar>
+                </div>
+                <div>
+                  <div class="font-weight-medium">{{ item.token1.symbol }}/{{ item.token2.symbol }}</div>
+                  <div class="text-caption">{{ item.token1.name }}/{{ item.token2.name }}</div>
+                </div>
+              </div>
+            </template>
+
+            <template #item.liquidity="{ item }">
+              {{ formatMarketCap(item.liquidity) }}
+            </template>
+
+            <template #item.volume="{ item }">
+              {{ formatVolume(item.volume24h) }}
+            </template>
+
+            <template #item.fee="{ item }">
+              {{ (item.fee * 100).toFixed(3) }}%
+            </template>
+
+            <template #item.apr="{ item }">
+              <div>
+                <div class="font-weight-medium">{{ item.apr.toFixed(2) }}%</div>
+                <div class="text-caption" :class="item.priceChange24h >= 0 ? 'success--text' : 'error--text'">
+                  {{ formatPercentageChange(item.priceChange24h) }}
+                </div>
+              </div>
+            </template>
+
+            <template #item.actions="{ item }">
+              <v-btn
+                icon
+                x-small
+                class="mr-1"
+                @click="viewPoolDetails(item)"
+              >
+                <v-icon x-small>mdi-open-in-new</v-icon>
+              </v-btn>
+              <v-btn
+                icon
+                x-small
+                @click="openPoolActions(item)"
+              >
+                <v-icon x-small>mdi-swap-horizontal</v-icon>
+              </v-btn>
+            </template>
+          </v-data-table>
+        </v-card>
+      </v-flex>
+    </v-layout>
   </div>
 </template>
 
@@ -434,13 +586,133 @@ export default defineComponent({
     // Local state
     const showSettings = ref(false)
     const showScreenerFilters = ref(false)
+    const showAmmFilters = ref(false)
     const isFullscreen = ref(false)
     const searchQuery = ref('')
+    const ammSearchQuery = ref('')
     const filters = ref({
       minMarketCap: 0,
       maxMarketCap: Infinity,
       hasAmmPool: false,
       hasTrustLine: false,
+    })
+    const ammFilters = ref({
+      minLiquidity: 0,
+      minVolume: 0,
+      minApr: 0,
+      feeTier: 'all',
+    })
+
+    // AMM pools data (mock data)
+    const ammPoolsData = ref([
+      {
+        id: 'XRP_USDC_pool',
+        token1: { symbol: 'XRP', name: 'Ripple', icon: '🪙' },
+        token2: { symbol: 'USDC', name: 'USD Coin', icon: '💎', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
+        liquidity: 2500000,
+        volume24h: 125000,
+        fee: 0.003,
+        apr: 12.5,
+        priceChange24h: 2.3,
+        token1Balance: 500000,
+        token2Balance: 2000000,
+      },
+      {
+        id: 'XRP_USDT_pool',
+        token1: { symbol: 'XRP', name: 'Ripple', icon: '🪙' },
+        token2: { symbol: 'USDT', name: 'Tether', icon: '💎', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
+        liquidity: 1800000,
+        volume24h: 95000,
+        fee: 0.003,
+        apr: 10.8,
+        priceChange24h: -1.2,
+        token1Balance: 400000,
+        token2Balance: 1400000,
+      },
+      {
+        id: 'XRP_BTC_pool',
+        token1: { symbol: 'XRP', name: 'Ripple', icon: '🪙' },
+        token2: { symbol: 'BTC', name: 'Bitcoin', icon: '₿', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
+        liquidity: 1200000,
+        volume24h: 75000,
+        fee: 0.003,
+        apr: 8.9,
+        priceChange24h: 3.7,
+        token1Balance: 300000,
+        token2Balance: 900000,
+      },
+      {
+        id: 'XRP_ETH_pool',
+        token1: { symbol: 'XRP', name: 'Ripple', icon: '🪙' },
+        token2: { symbol: 'ETH', name: 'Ethereum', icon: 'Ξ', issuer: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh' },
+        liquidity: 900000,
+        volume24h: 60000,
+        fee: 0.003,
+        apr: 7.2,
+        priceChange24h: 1.8,
+        token1Balance: 200000,
+        token2Balance: 700000,
+      },
+    ])
+
+    // AMM configuration
+    const ammPageSize = ref(10)
+    const ammSortBy = ref('liquidity')
+    const ammSortOrder = ref('desc')
+    const feeTierOptions = [
+      { text: 'All Fees', value: 'all' },
+      { text: '0.05%', value: '0.0005' },
+      { text: '0.3%', value: '0.003' },
+      { text: '1%', value: '0.01' },
+    ]
+
+    // AMM headers
+    const ammHeaders = [
+      { text: 'Pair', value: 'pair', sortable: false },
+      { text: 'Liquidity', value: 'liquidity', sortable: true },
+      { text: 'Volume 24h', value: 'volume24h', sortable: true },
+      { text: 'Fee', value: 'fee', sortable: true },
+      { text: 'APR', value: 'apr', sortable: true },
+      { text: 'Actions', value: 'actions', sortable: false },
+    ]
+
+    // Filtered AMM pools
+    const filteredAmmPools = computed(() => {
+      let pools = ammPoolsData.value
+
+      // Apply search filter
+      if (ammSearchQuery.value) {
+        const query = ammSearchQuery.value.toLowerCase()
+        pools = pools.filter(pool => 
+          pool.token1.symbol.toLowerCase().includes(query) ||
+          pool.token2.symbol.toLowerCase().includes(query) ||
+          pool.token1.name.toLowerCase().includes(query) ||
+          pool.token2.name.toLowerCase().includes(query)
+        )
+      }
+
+      // Apply liquidity filter
+      if (ammFilters.value.minLiquidity > 0) {
+        pools = pools.filter(pool => pool.liquidity >= ammFilters.value.minLiquidity)
+      }
+
+      // Apply volume filter
+      if (ammFilters.value.minVolume > 0) {
+        pools = pools.filter(pool => pool.volume24h >= ammFilters.value.minVolume)
+      }
+
+      // Apply APR filter
+      if (ammFilters.value.minApr > 0) {
+        pools = pools.filter(pool => pool.apr >= ammFilters.value.minApr)
+      }
+
+      // Apply fee tier filter
+      if (ammFilters.value.feeTier !== 'all') {
+        const fee = parseFloat(ammFilters.value.feeTier)
+        pools = pools.filter(pool => Math.abs(pool.fee - fee) < 0.0001)
+      }
+
+      return pools
     })
 
     // Market stats
@@ -451,9 +723,7 @@ export default defineComponent({
       heatmapData.value.reduce((sum, token) => sum + token.volume_24h, 0)
     )
     const activeTokens = computed(() => heatmapData.value.length)
-    const ammPools = computed(() => 
-      heatmapData.value.filter(token => token.hasAmmPool).length
-    )
+    const ammPools = computed(() => ammPoolsData.value.length)
 
     // Display options
     const displayModeOptions = [
@@ -582,6 +852,15 @@ export default defineComponent({
       window.$nuxt.$router.push(`/token/${token.currency}`)
     }
 
+    const viewPoolDetails = (pool: any) => {
+      window.$nuxt.$router.push(`/xrp-amm-pools/${pool.id}`)
+    }
+
+    const openPoolActions = (pool: any) => {
+      // This would open the pool action dialog
+      console.log('Opening pool actions for:', pool.id)
+    }
+
     // Lifecycle
     onMounted(() => {
       fetchHeatmapData()
@@ -596,9 +875,13 @@ export default defineComponent({
       tileTooltip,
       showSettings,
       showScreenerFilters,
+      showAmmFilters,
       isFullscreen,
       searchQuery,
+      ammSearchQuery,
       filters,
+      ammFilters,
+      ammPoolsData,
       recentActivity,
 
       // Computed
@@ -606,9 +889,11 @@ export default defineComponent({
       totalVolume,
       activeTokens,
       ammPools,
+      filteredAmmPools,
       displayModeOptions,
       refreshIntervalOptions,
       screenerHeaders,
+      ammHeaders,
       filteredTokens,
 
       // Configs
@@ -621,6 +906,10 @@ export default defineComponent({
       screenerSortBy,
       screenerSortOrder,
       screenerPageSize,
+      ammPageSize,
+      ammSortBy,
+      ammSortOrder,
+      feeTierOptions,
 
       // Formatters
       formatXrpPrice,
@@ -640,6 +929,8 @@ export default defineComponent({
       getTokenIcon,
       copyToClipboard,
       viewTokenDetails,
+      viewPoolDetails,
+      openPoolActions,
     }
   },
 })
