@@ -1,0 +1,16 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Tasks: XRP AMM Pools Implementation
+
+- [ ] Replace mock AMM pool data with live data from GraphQL API
+- [ ] Implement GraphQL query for all AMM pools
+- [ ] Implement GraphQL query for individual pool details
+- [ ] Display live pool stats (liquidity, volume, APR, fee, etc.)
+- [ ] Show balances for both pool assets and pool tokens
+- [ ] Show pool and user transaction history (live)
+- [ ] Ensure navigation to pool detail page works from screener and heatmap
+- [ ] Add error/loading states for all data
+- [ ] Test with real API data

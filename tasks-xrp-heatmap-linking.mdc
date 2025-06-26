@@ -1,0 +1,13 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Tasks: XRP Heatmap Linking
+
+- [ ] Review QuantifyCrypto heatmap and composable for tile click handling
+- [ ] Update XRP Token Heatmap to link to /xrp-token/[currency]?issuer=[issuer]
+- [ ] Update XRP AMM Heatmap to link to /xrp-amm-pools/[pool_id] or equivalent
+- [ ] Ensure correct routing and params for each tile
+- [ ] Add hover/cursor feedback for clickable tiles
+- [ ] Test navigation from heatmap to token/pool pages

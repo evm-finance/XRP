@@ -1,0 +1,17 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Tasks: XRP AMM Pool Actions (Deposit, Withdraw, Swap)
+
+- [ ] Reference Aave pool action components for deposit/withdraw UI/logic
+- [ ] Reference Uniswap swap UI for swap dialog
+- [ ] Design deposit dialog for XRP AMM pools (UI/validation)
+- [ ] Design withdraw dialog for XRP AMM pools (UI/validation)
+- [ ] Design swap dialog for XRP AMM pools (UI/validation)
+- [ ] Implement GraphQL mutations for deposit, withdraw, swap
+- [ ] Connect dialogs to live GraphQL mutations
+- [ ] Show transaction status, errors, and confirmations
+- [ ] Update balances and pool stats after actions
+- [ ] Test all actions with live data
