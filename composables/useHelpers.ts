@@ -1,14 +1,15 @@
 import { useStore } from '@nuxtjs/composition-api'
 import { State } from '~/types/state'
 
-export function useHelpers() {
+export const useHelpers = () => {
   const { state } = useStore<State>()
-  const isNativeToken = (chainId: number, symbol: string) => {
-    const chainIdAdjusted: number = chainId === 1337 ? 1 : chainId
-    const chain = state.configs.networks.find(
-      (elem) => parseInt(elem.id) === chainIdAdjusted && elem.symbol === symbol
-    )
-    return !!chain
+
+  const isNativeToken = (symbol: string) => {
+    return state.configs.networks[0]?.symbol === symbol
+  }
+
+  const getCurrentNetwork = () => {
+    return state.configs.networks[0]
   }
 
   function debounceAsync<T, Callback extends (...args: any[]) => Promise<T>>(
@@ -35,5 +36,9 @@ export function useHelpers() {
     }
   }
 
-  return { isNativeToken, debounceAsync }
+  return {
+    isNativeToken,
+    getCurrentNetwork,
+    debounceAsync,
+  }
 }

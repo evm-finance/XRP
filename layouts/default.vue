@@ -10,7 +10,7 @@
       <nuxt-link to="/" class="text-decoration-none mr-10" style="color: inherit">
         <v-toolbar-title class="ml-2 d-flex">
           <div>
-            <div class="subtitle-1 mb-n2">EVM</div>
+            <div class="subtitle-1 mb-n2">XRP</div>
             <div class="caption grey--text">finance</div>
           </div>
         </v-toolbar-title>
@@ -35,8 +35,6 @@
 
       <client-only>
         <!-- <global-search /> -->
-        <gas-info class="hidden-xs-and-down" />
-        <network-selection />
         <wallet-connector class="hidden-sm-and-down" />
         <!-- <enhanced-xrp-wallet-connector class="hidden-sm-and-down" /> -->
       </client-only>
@@ -67,13 +65,11 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref, useStore } from '@nuxtjs/composition-api'
-import GasInfo from '~/components/common/GasInfo.vue'
 import WalletConnector from '~/components/common/WalletConnector.vue'
 import { useInitTheme } from '~/composables/useInitTheme'
 // import EnhancedWalletSelectDialog from '~/components/common/EnhancedWalletSelectDialog.vue'
 import { State } from '~/types/state'
 import MainFooter from '~/components/common/ui/footers/MainFooter.vue'
-import NetworkSelection from '~/components/common/NetworkSelection.vue'
 // import GlobalSearch from '~/components/common/GlobalSearch.vue'
 // import EnhancedXrpWalletConnector from '~/components/common/EnhancedXrpWalletConnector.vue'
 
@@ -81,11 +77,9 @@ export default defineComponent({
   components: {
     // EnhancedXrpWalletConnector,
     // GlobalSearch,
-    NetworkSelection,
     MainFooter,
     // EnhancedWalletSelectDialog,
     WalletConnector,
-    GasInfo,
   },
   setup() {
     // STATE
@@ -94,19 +88,15 @@ export default defineComponent({
     // const globalSearchComponentRef = ref<any>(null) // Removed since GlobalSearch is disabled
     const drawer = ref(false)
     const links = ref([
-      { name: 'Aave', to: '/markets/aave' },
-      { name: 'Trade', to: '/swap' },
-      { name: 'Balances', to: '/portfolio/balances' },
-      { name: 'Transactions', to: '/portfolio/transactions' },
-      { name: 'Screener', to: '/screener' },
       { name: 'XRP-Explorer', to: '/xrp-explorer' },
       { name: 'XRP-Screener', to: '/xrp-screener' },
       { name: 'XRP-Balances', to: '/xrp-balances' },
       { name: 'XRP-Transactions', to: '/xrp-transactions' },
       { name: 'XRP-Terminal', to: '/xrp-terminal' },
       { name: 'XRP-AMM-Heatmap', to: '/xrp-amm-heatmap' },
-      { name: 'Terminal', to: '/terminal' },
-      { name: 'Heatmap', to: '/heatmap' },
+      { name: 'XRP-Portfolio', to: '/xrp-portfolio' },
+      { name: 'XRP-Trust-Lines', to: '/xrp-trust-lines' },
+      { name: 'XRP-Token-Mints', to: '/xrp-token-mints' },
     ])
 
     // COMPOSABLE

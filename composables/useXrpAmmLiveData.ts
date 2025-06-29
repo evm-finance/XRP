@@ -1,15 +1,16 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from '@nuxtjs/composition-api'
-import { useQuery, useSubscription } from '@vue/apollo-composable'
-import { 
-  XRPAmmPoolsGQL, 
-  XRPAmmPoolDetailsGQL, 
+import { useSubscription } from '@vue/apollo-composable'
+import useEnhancedXrpWallet from './useEnhancedXrpWallet'
+import useXrpGraphQLWithLogging from './useXrpGraphQLWithLogging'
+import {
+  XRPAmmPoolsGQL,
+  XRPAmmPoolDetailsGQL,
   XRPAmmUserPositionsGQL,
   XRPAmmQuoteGQL,
   XRPAmmTransactionsGQL,
   XRPTokenPriceGQL,
   XRPTokenBalancesGQL
 } from '~/apollo/queries'
-import useEnhancedXrpWallet from '~/composables/useEnhancedXrpWallet'
 
 interface XrpToken {
   symbol: string
@@ -77,16 +78,35 @@ interface XrpUserPosition {
 
 export default function useXrpAmmLiveData() {
   const { address, isWalletReady } = useEnhancedXrpWallet()
+  const { useLoggedQuery } = useXrpGraphQLWithLogging()
   
   // State
   const loading = ref(false)
   const error = ref<string | null>(null)
   const lastUpdate = ref<Date | null>(null)
-  
-  // Polling configuration
-  const pollInterval = ref(30000) // 30 seconds
   const isPolling = ref(false)
   let pollTimer: NodeJS.Timeout | null = null
+
+  // Internal error handling - prevent Apollo errors from bubbling up
+  const internalError = ref<string | null>(null)
+  
+  // Watch for Apollo errors and handle them internally
+  const handleApolloError = (apolloError: any, context: string) => {
+    if (apolloError) {
+      console.warn(`GraphQL error in useXrpAmmLiveData ${context}, using fallback data:`, apolloError)
+      internalError.value = `Network error in ${context}: using fallback data`
+    }
+  }
+
+  // Polling configuration
+  const pollInterval = ref(30000) // 30 seconds
+
+  // Log the query content BEFORE making the calls
+  console.log('🚀 [BEFORE QUERY] useXrpAmmLiveData - XRPAmmPoolsGQL:', {
+    query: XRPAmmPoolsGQL.loc?.source.body,
+    variables: null,
+    timestamp: new Date().toISOString()
+  })
 
   // AMM Pools Query
   const { 
@@ -94,10 +114,16 @@ export default function useXrpAmmLiveData() {
     loading: ammPoolsLoading, 
     error: ammPoolsError,
     refetch: refetchAmmPools 
-  } = useQuery(XRPAmmPoolsGQL, null, {
+  } = useLoggedQuery(XRPAmmPoolsGQL, null, {
     fetchPolicy: 'cache-and-network',
     pollInterval: pollInterval.value,
     errorPolicy: 'all'
+  })
+
+  console.log('🚀 [BEFORE QUERY] useXrpAmmLiveData - XRPAmmUserPositionsGQL:', {
+    query: XRPAmmUserPositionsGQL.loc?.source.body,
+    variables: { address: address.value },
+    timestamp: new Date().toISOString()
   })
 
   // User Positions Query (only when wallet is connected)
@@ -106,7 +132,7 @@ export default function useXrpAmmLiveData() {
     loading: userPositionsLoading, 
     error: userPositionsError,
     refetch: refetchUserPositions 
-  } = useQuery(XRPAmmUserPositionsGQL, 
+  } = useLoggedQuery(XRPAmmUserPositionsGQL, 
     computed(() => ({ address: address.value })),
     () => ({
       enabled: isWalletReady.value && !!address.value,
@@ -131,7 +157,7 @@ export default function useXrpAmmLiveData() {
 
   // Pool details query function
   const getPoolDetails = (poolId: string) => {
-    const { result, loading, error, refetch } = useQuery(
+    const { result, loading, error, refetch } = useLoggedQuery(
       XRPAmmPoolDetailsGQL,
       { poolId },
       {
@@ -151,7 +177,7 @@ export default function useXrpAmmLiveData() {
 
   // Quote query function
   const getQuote = (poolId: string, amount: string, fromToken: string) => {
-    const { result, loading, error, refetch } = useQuery(
+    const { result, loading, error, refetch } = useLoggedQuery(
       XRPAmmQuoteGQL,
       { poolId, amount, fromToken },
       {
@@ -170,7 +196,7 @@ export default function useXrpAmmLiveData() {
 
   // Pool transactions query function
   const getPoolTransactions = (poolId: string, limit: number = 50) => {
-    const { result, loading, error, refetch } = useQuery(
+    const { result, loading, error, refetch } = useLoggedQuery(
       XRPAmmTransactionsGQL,
       { poolId, limit },
       {
@@ -190,7 +216,7 @@ export default function useXrpAmmLiveData() {
 
   // Token price query function
   const getTokenPrice = (currency: string, issuer?: string) => {
-    const { result, loading, error, refetch } = useQuery(
+    const { result, loading, error, refetch } = useLoggedQuery(
       XRPTokenPriceGQL,
       { currency, issuer },
       {
@@ -210,7 +236,7 @@ export default function useXrpAmmLiveData() {
 
   // User token balances query function
   const getUserTokenBalances = () => {
-    const { result, loading, error, refetch } = useQuery(
+    const { result, loading, error, refetch } = useLoggedQuery(
       XRPTokenBalancesGQL,
       computed(() => ({ address: address.value })),
       () => ({
@@ -274,10 +300,16 @@ export default function useXrpAmmLiveData() {
     error.value = null
     
     try {
-      const promises: Promise<any>[] = [refetchAmmPools()]
+      const promises: Promise<any>[] = []
       
-      if (isWalletReady.value && address.value) {
-        promises.push(refetchUserPositions())
+      if (typeof refetchAmmPools === 'function') {
+        const p = refetchAmmPools()
+        if (p && typeof p.then === 'function') promises.push(p)
+      }
+      
+      if (isWalletReady.value && address.value && typeof refetchUserPositions === 'function') {
+        const p = refetchUserPositions()
+        if (p && typeof p.then === 'function') promises.push(p)
       }
       
       await Promise.all(promises)
@@ -308,7 +340,7 @@ export default function useXrpAmmLiveData() {
   return {
     // State
     loading: computed(() => ammPoolsLoading.value || userPositionsLoading.value || loading.value),
-    error,
+    hasError: computed(() => !!internalError.value),
     lastUpdate,
     isPolling,
 

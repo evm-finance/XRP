@@ -29,7 +29,7 @@
       <h2 class="text-h6 py-3 white--text">Data Disclaimer</h2>
       <p>
         By reading data on the coin ranking homepage and the individual coin pages, you agree that it is solely for
-        informational purposes and that it is not meant for investment advice or solicitation. The term coin “rankings”
+        informational purposes and that it is not meant for investment advice or solicitation. The term coin "rankings"
         refers to sorting the cryptocurrencies by market cap from greatest to least. The rankings are not an endorsement
         nor are they meant to entice you to take any sort of action. The coin ranking and coin listings are drawn
         directly from cryptocurrency exchanges, publicly available information from commercial-use APIs. EVM Finance
@@ -44,7 +44,7 @@
         It is important to understand that neither we nor any affiliated entity is a party to any transaction on the
         blockchain networks underlying the Aave and Uniswap Protocols that EVM.Finance interfaces with; we do not have
         possession, custody or control over any cryptoassets appearing on the Services; and we do not have possession,
-        custody, or control over any user’s funds. Further, we do not store, send, or receive any cryptoassets. You
+        custody, or control over any user's funds. Further, we do not store, send, or receive any cryptoassets. You
         understand that when you interact with any Protocol smart contracts, you retain control over your cryptoassets
         at all times. The private key associated with the wallet address from which you transfer cryptoassets or the
         private key associated is the only private key that can control the cryptoassets you transfer into the smart
@@ -52,7 +52,7 @@
         Due to the non-custodial and decentralized nature of the technology, we are not intermediaries, agents,
         advisors, or custodians, and we do not have a fiduciary relationship or obligation to you regarding any other
         decisions or activities that you affect when using our Services. You acknowledge that we, for the avoidance of
-        doubt, do not have any information regarding any users, users’ identities, or services beyond what is available
+        doubt, do not have any information regarding any users, users' identities, or services beyond what is available
         or obtainable publicly via the blockchain. We are not responsible for any activities you engage in when using
         Services, and you should understand the risks associated with cryptoassets, blockchain technology generally, and
         our Services.
@@ -85,7 +85,7 @@
       <p>
         Our technical indicators, coin listings, news and commentary may contain links to other sites. If you click on a
         third-party link, you will be directed to that site. These links are purely for informational purposes and do
-        not constitute any endorsement of the linked site’s operator or its content. Therefore, we strongly advise you
+        not constitute any endorsement of the linked site's operator or its content. Therefore, we strongly advise you
         to review the Privacy Policy and Terms and Conditions of those websites. We assume no responsibility for the
         content, privacy policies, or practices of any third-party sites or services.
       </p>
@@ -93,8 +93,8 @@
       <h2 class="text-h6 py-3 white--text">Use of Cookies</h2>
       <p>
         Cookies are files with a small amount of data that is commonly used as an anonymous unique identifier. These are
-        sent to your browser from the website that you visit and are stored on your computer’s hard drive. Our website
-        uses these “cookies” to ensure certain website features function properly. This data is not mined, shared, or
+        sent to your browser from the website that you visit and are stored on your computer's hard drive. Our website
+        uses these "cookies" to ensure certain website features function properly. This data is not mined, shared, or
         otherwise collected for commercial use. You are free to delete these cookies from within your web browser. We
         use cookies to: track traffic flow and patterns of travel in connection with our platform; understand the total
         number of visitors to our site on an ongoing basis and the types of internet browsers (e.g. Chrome, Safari or
@@ -110,8 +110,8 @@
         protected by international copyright laws unless otherwise cited to its original copyright owners. Warranty
         Disclaimer and Limitation of Liability EVM Finance and its associates attempt to be as accurate as possible.
         However, EVM Finance does not warrant that the content of this site is accurate, complete, reliable, current, or
-        error-free. DISCLAIMER OF WARRANTIES AND LIMITATION OF LIABILITY: THIS SITE IS PROVIDED BY EVM FINANCE ON AN “AS
-        IS” AND “AS AVAILABLE” BASIS. EVM FINANCE MAKES NO REPRESENTATIONS OR WARRANTIES OF ANY KIND, EXPRESS OR
+        error-free. DISCLAIMER OF WARRANTIES AND LIMITATION OF LIABILITY: THIS SITE IS PROVIDED BY EVM FINANCE ON AN "AS
+        IS" AND "AS AVAILABLE" BASIS. EVM FINANCE MAKES NO REPRESENTATIONS OR WARRANTIES OF ANY KIND, EXPRESS OR
         IMPLIED, AS TO THE OPERATION OF THIS SITE OR THE INFORMATION, CONTENT, MATERIALS, OR PRODUCTS INCLUDED ON THIS
         SITE. YOU EXPRESSLY AGREE THAT YOUR USE OF THIS SITE IS AT YOUR SOLE RISK. TO THE FULL EXTENT PERMISSIBLE BY
         APPLICABLE LAW, EVM FINANCE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, IMPLIED
@@ -155,7 +155,11 @@ export default defineComponent({
   name: 'TermsAndConditions',
   setup() {
     // META TAGS
-    useMetaTags('termsAndConditions', useRoute().value.path)
+    useMetaTags({
+      title: 'Terms and Conditions - XRP Finance',
+      description: 'Terms and conditions for using XRP Finance platform and services.',
+      url: useRoute().value.path
+    })
   },
   head: {},
 })

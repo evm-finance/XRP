@@ -1,5 +1,3 @@
-import { UniswapToken } from '~/types/apollo/main/types'
-
 export interface ERC20Balance {
   address: string
   balance: number
@@ -16,6 +14,12 @@ export type Dex = {
   value: string
 }
 
+export interface XRPToken {
+  symbol: string
+  name: string
+  decimals: number
+}
+
 export interface Network {
   id: string
   name: string
@@ -24,18 +28,15 @@ export interface Network {
   rpcUrl: string
   blockExplorerUrl: string
   dex: Dex[]
-  weth: UniswapToken
+  xrp: XRPToken
 }
 
 export type SearchResult = {
-  isWallet: boolean
-  isContract: boolean
-  isTransaction?: boolean
-  isXRPLedger?: boolean
-  isXRPAccount?: boolean
-  isXRPTransaction?: boolean
-  searchString: string
-  network: Network | null
-  desc: string
-  to: string
+  id: string
+  name: string
+  symbol: string
+  type: 'token' | 'pool' | 'account'
+  address?: string
+  issuer?: string
+  network?: string
 }

@@ -1,36 +1,9 @@
 import { computed, onBeforeUnmount, onMounted, ref, useContext, watch } from '@nuxtjs/composition-api'
-import { useQuery } from '@vue/apollo-composable'
+import useXrpGraphQLWithLogging from './useXrpGraphQLWithLogging'
 import { XRPScreenerGQL } from '~/apollo/queries'
-// import type { HeatmapData, HeatmapRowData, HeatmapUpdateData } from '~/types/heatmap'
-// import type { HeatmapIntervals } from '~/types/state'
+import type { HeatmapData, HeatmapRowData, HeatmapUpdateData } from '~/types/heatmap'
+import type { HeatmapIntervals } from '~/types/state'
 import useHeatmapConfigs from '~/composables/useHeatmapConfigs'
-
-// Define local types since the heatmap types are not available
-interface HeatmapData {
-  name: string
-  children: HeatmapRowData[]
-}
-
-interface HeatmapRowData {
-  qc_key: string
-  name: string
-  symbol: string
-  price: number
-  price24h: number
-  price1h: number
-  price7d: number
-  marketcap: number
-  volume24h: number
-  issuer: string
-  issuerName: string
-  icon: string
-  color: string
-  size: number
-}
-
-interface HeatmapUpdateData {
-  [key: string]: HeatmapRowData
-}
 
 // Color function for XRP token heatmap tiles
 const setXrpTokenColor = (x: number, blueTile: boolean) => {
@@ -54,7 +27,10 @@ const setXrpTokenColor = (x: number, blueTile: boolean) => {
   return ''
 }
 
-export default function useXrpTokenHeatmap() {
+export default function useXrpTokenHeatmap(userCanAccessTrend: any) {
+  const { $f } = useContext()
+  const { useLoggedQuery } = useXrpGraphQLWithLogging()
+
   // State
   const loading = ref(true)
   const error = ref<string | null>(null)
@@ -71,10 +47,22 @@ export default function useXrpTokenHeatmap() {
     displayGainersAndLosers,
   } = useHeatmapConfigs()
 
-  // Apollo query for XRP screener data
-  const { onResult } = useQuery(XRPScreenerGQL, { 
+  // Log the query content BEFORE making the call
+  console.log('🚀 [BEFORE QUERY] useXrpTokenHeatmap - XRPScreenerGQL:', {
+    query: XRPScreenerGQL.loc?.source.body,
+    variables: {},
+    timestamp: new Date().toISOString()
+  })
+
+  // Apollo query for XRP screener data with enhanced logging
+  const { onResult } = useLoggedQuery(XRPScreenerGQL, { 
     fetchPolicy: 'no-cache', 
-    pollInterval: 60000 
+    pollInterval: 60000,
+    context: {
+      queryName: 'XRPScreener',
+      component: 'useXrpTokenHeatmap',
+      purpose: 'XRP token data for heatmap visualization'
+    }
   })
 
   // Transform XRP token data to heatmap format
@@ -82,29 +70,28 @@ export default function useXrpTokenHeatmap() {
     if (!rowData.value.length) return []
 
     return rowData.value
-      .slice(0, numOfCoins.value)
       .map((item) => {
-        // Calculate price change percentage (mock data for now)
-        const priceChange = (Math.random() - 0.5) * 10 // -5% to +5%
-        
+        const priceChange = item.price_change_24h || 0
         return {
-          qc_key: `${item.currency}_${item.issuerAddress}`,
-          name: item.tokenName || item.currency,
-          symbol: item.currency,
-          price: item.price || 0,
-          price24h: priceChange,
-          price1h: priceChange * 0.1,
-          price7d: priceChange * 0.7,
+          qc_key: item.currency || '',
+          name: item.name || item.currency || '',
+          symbol: item.currency || '',
+          price: item.price_usd || 0,
+          price24h: item.price_change_24h || 0,
+          price1h: item.price_change_1h || 0,
+          price7d: item.price_change_7d || 0,
           marketcap: item.marketcap || 0,
-          volume24h: item.volume24H || 0,
-          issuer: item.issuerAddress,
-          issuerName: item.issuerName,
-          icon: item.icon,
+          volume24h: item.volume_24h || 0,
+          issuer: item.issuer || '',
+          issuerName: item.issuer || '',
+          icon: item.icon || '',
           color: setXrpTokenColor(priceChange / 100, blueTile.value),
-          size: blockSize.value === 'marketcap' ? item.marketcap || 0 : item.volume24H || 0,
+          size: blockSize.value === 'marketcap' ? item.marketcap || 0 : item.volume_24h || 0,
+          value: item.marketcap || 0,
         }
       })
       .sort((a, b) => b.size - a.size)
+      .slice(0, numOfCoins.value)
   })
 
   // Tile text template
@@ -137,9 +124,9 @@ export default function useXrpTokenHeatmap() {
       const issuerName = item.issuerName || 'Unknown'
       
       return `{name}
-Price: $${price.toLocaleString()}
-Market Cap: $${marketcap.toLocaleString()}
-24h Volume: $${volume24h.toLocaleString()}
+Price: $${$f(price, { minDigits: 6, after: '' })}
+Market Cap: $${$f(marketcap, { minDigits: 0, after: '' })}
+24h Volume: $${$f(volume24h, { minDigits: 0, after: '' })}
 ${timeFrame.value} Change: {${fieldName}:numberFormat.2}%
 Issuer: {issuerName}`
     }
@@ -149,30 +136,42 @@ Issuer: {issuerName}`
   const gainersAndLosers = computed<HeatmapData[]>(() => {
     if (displayGainersAndLosers.value) {
       const resp: HeatmapData[] = [
-        { name: 'Gainers', children: [] },
-        { name: 'Losers', children: [] },
+        { name: 'Gainers', value: 0, children: [] },
+        { name: 'Losers', value: 0, children: [] },
       ]
       transformedData.value.forEach((elem) => {
         const timeFrameMap = {
-          '1h': 'price1h',
-          '24h': 'price24h',
-          '7d': 'price7d',
+          '1h': 'price_change_1h',
+          '4h': 'price_change_4h',
+          '24h': 'price_change_24h',
+          '7d': 'price_change_7d',
+          '30d': 'price_change_30d',
         }
-        const fieldName = timeFrameMap[timeFrame.value as keyof typeof timeFrameMap] || 'price24h'
+        const fieldName = timeFrameMap[timeFrame.value as keyof typeof timeFrameMap]
         const change = elem[fieldName as keyof typeof elem] as number
-        
-        change > 0 ? resp[0].children.push(elem) : resp[1].children.push(elem)
+
+        if (change > 0 && resp[0]) {
+          resp[0].children!.push(elem)
+        } else if (change <= 0 && resp[1]) {
+          resp[1].children!.push(elem)
+        }
       })
       return resp
     } else {
-      return [{ name: '', children: transformedData.value }]
+      return []
     }
   })
 
   // Update data for real-time updates
-  const updateData = computed<HeatmapUpdateData>(() =>
-    transformedData.value.reduce((elem, item) => ({ ...elem, [item.qc_key]: item }), {})
-  )
+  const updateData = computed<HeatmapUpdateData>(() => {
+    const result: HeatmapUpdateData = { name: '', value: 0 }
+    transformedData.value.forEach((item) => {
+      if (item.qc_key) {
+        result[item.qc_key] = item
+      }
+    })
+    return result
+  })
 
   // Handle query results
   onResult((queryResult: any) => {

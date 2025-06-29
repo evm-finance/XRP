@@ -10,8 +10,6 @@ export enum EmitEvents {
   onNetworkSelectChange = 'on-network-select-change',
   onIntervalChange = 'on-interval-change',
   navigateToExplorer = 'navigate-to-explorer',
-  onUniswapTokenSelect = 'on-uniswap-token-select',
-  onUniswapTokenMenuOpen = 'on-uniswap-token-menu-open',
   onXrpInputOpen = 'on-xrp-input-open',
 }
  
@@ -21,6 +19,16 @@ export enum DefiEvents {
   toggleLendModal = 'toggle-lend-modal',
   toggleWithdrawModal = 'toggle-withdraw-modal',
 }
+
+export enum Events {
+  onTokenSelect = 'on-token-select',
+  onTokenMenuOpen = 'on-token-menu-open',
+  onPoolSelect = 'on-pool-select',
+  onPoolMenuOpen = 'on-pool-menu-open',
+  onAccountSelect = 'on-account-select',
+  onAccountMenuOpen = 'on-account-menu-open',
+}
+
 export type EmitterEvents = {
   priceStream: string
   onInitGlobalSearch: string

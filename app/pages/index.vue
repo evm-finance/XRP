@@ -130,7 +130,11 @@ export default defineComponent({
     const theme = computed(() => store.state.ui.theme)
 
     // META TAGS
-    useMetaTags('homepage')
+    useMetaTags({
+      title: 'XRP Finance - DeFi Analytics and Trading Platform',
+      description: 'Comprehensive DeFi analytics and trading tools for the XRP ecosystem. Monitor AMM pools, track token performance, and execute trades with confidence.',
+      url: '/'
+    })
 
     return { items, animatedFeatures, ui, theme }
   },

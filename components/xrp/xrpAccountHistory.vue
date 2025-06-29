@@ -109,9 +109,9 @@
 <script lang="ts">
 import { computed, defineComponent, ref, useContext, inject, onMounted } from '@nuxtjs/composition-api'
 import { plainToClass } from 'class-transformer'
-import { useQuery } from '@vue/apollo-composable/dist'
 import { XRPAccountTransactionsGQL } from '~/apollo/queries'
 import { XRP_PLUGIN_KEY, XrpClient } from '~/plugins/web3/xrp.client'
+import useXrpGraphQLWithLogging from '~/composables/useXrpGraphQLWithLogging'
 
 interface XRPTransactionElem {
     hash: string
@@ -135,10 +135,25 @@ export default defineComponent({
         // Use connected wallet address or fallback to default
         const accountAddress = computed(() => address.value || 'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj')
         
-        const { onResult } = useQuery(
+        // Log the query content BEFORE making the call
+        console.log('🚀 [BEFORE QUERY] xrpAccountHistory - XRPAccountTransactionsGQL:', {
+            query: XRPAccountTransactionsGQL.loc?.source.body,
+            variables: { address: accountAddress.value },
+            timestamp: new Date().toISOString()
+        })
+
+        const { useLoggedQuery } = useXrpGraphQLWithLogging()
+        const { onResult } = useLoggedQuery(
             XRPAccountTransactionsGQL, 
             () => ({ address: accountAddress.value }), 
-            { fetchPolicy: 'no-cache' }
+            { 
+                fetchPolicy: 'no-cache',
+                context: {
+                    queryName: 'XRPAccountTransactions',
+                    component: 'xrpAccountHistory',
+                    purpose: 'XRP account transaction history'
+                }
+            }
         )
 
         const transactionDataFormatted = computed(() =>
@@ -286,10 +301,17 @@ export default defineComponent({
         })
 
         // Add error handling
-        const { onError } = useQuery(
+        const { onError } = useLoggedQuery(
             XRPAccountTransactionsGQL, 
             () => ({ address: accountAddress.value }), 
-            { fetchPolicy: 'no-cache' }
+            { 
+                fetchPolicy: 'no-cache',
+                context: {
+                    queryName: 'XRPAccountTransactions',
+                    component: 'xrpAccountHistory',
+                    purpose: 'XRP account transaction history'
+                }
+            }
         )
 
         onError((error: any) => {

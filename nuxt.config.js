@@ -1,6 +1,7 @@
 import colors from 'vuetify/es5/util/colors'
 
-console.log('BASE_GRAPHQL_SERVER_URL:', process.env.BASE_GRAPHQL_SERVER_URL)
+const graphqlServerUrl = process.env.BASE_GRAPHQL_SERVER_URL || 'http://127.0.0.1:8080/query'
+console.log('GraphQL Server URL:', graphqlServerUrl)
 
 export default {
   // Global page headers (https://go.nuxtjs.dev/config-head)
@@ -60,12 +61,24 @@ export default {
   apollo: {
     clientConfigs: {
       default: {
-        httpEndpoint: process.env.BASE_GRAPHQL_SERVER_URL || 'https://api.github.com/graphql',
-        wsEndpoint: process.env.BASE_GRAPHQL_WEBSOCKET_URL || null,
+        httpEndpoint: graphqlServerUrl,
+        wsEndpoint: process.env.BASE_GRAPHQL_WEBSOCKET_URL || 'ws://127.0.0.1:8080/query',
         websocketsOnly: false,
-        // Add error handling for missing server
+        // Improved error handling for missing server
         onError: (error) => {
-          console.warn('GraphQL server not available:', error.message)
+          console.error('GraphQL server error:', {
+            message: error.message,
+            networkError: error.networkError,
+            graphQLErrors: error.graphQLErrors,
+            timestamp: new Date().toISOString(),
+            endpoint: graphqlServerUrl
+          })
+          
+          // Log to external service if available
+          if (process.env.NODE_ENV === 'production') {
+            // TODO: Add proper error reporting service
+            console.warn('Production error - should be reported to monitoring service')
+          }
         }
       },
     },

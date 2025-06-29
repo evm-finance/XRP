@@ -118,7 +118,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref, useContext, inject } from '@nuxtjs/composition-api'
-import { useQuery } from '@vue/apollo-composable/dist'
+import useXrpGraphQLWithLogging from '~/composables/useXrpGraphQLWithLogging'
 import { XRPAmmPoolsGQL } from '~/apollo/queries'
 import { XRP_PLUGIN_KEY, XrpClient } from '~/plugins/web3/xrp.client'
 import XrpBalanceWidget from '~/components/portfolio/XrpBalanceWidget.vue'
@@ -140,11 +140,13 @@ export default defineComponent({
   },
   setup() {
     const { $f } = useContext()
+    const { useLoggedQuery } = useXrpGraphQLWithLogging()
+    
     const loading = ref(true)
     const poolsRawData = ref<XRPAmmPool[]>([])
 
-    // Connect to live GraphQL data
-    const { onResult } = useQuery(
+    // Enhanced GraphQL query with logging
+    const { onResult, onError } = useLoggedQuery(
       XRPAmmPoolsGQL,
       null,
       { fetchPolicy: 'no-cache', pollInterval: 30000 }
@@ -191,12 +193,6 @@ export default defineComponent({
     })
 
     // Add error handling
-    const { onError } = useQuery(
-      XRPAmmPoolsGQL,
-      null,
-      { fetchPolicy: 'no-cache', pollInterval: 30000 }
-    )
-
     onError((error: any) => {
       console.error('GraphQL Error in xrp-amm-pools:', error)
       loading.value = false

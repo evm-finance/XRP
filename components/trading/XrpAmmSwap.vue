@@ -120,7 +120,7 @@
           :is-tx-mined="isTxMined"
           success-message="Swap completed successfully!"
           :scroll-height="logScrollHeight"
-          @on-result-closed="resetTransaction"
+          @close="resetTransaction"
         />
       </v-col>
     </v-row>
@@ -133,7 +133,7 @@ import { inject } from '@nuxtjs/composition-api'
 import { XRP_PLUGIN_KEY, XrpClient } from '~/plugins/web3/xrp.client'
 import { XRPToken } from '~/composables/useXrpAmm'
 import useXrpAmm from '~/composables/useXrpAmm'
-import TransactionResult from '~/components/common/TransactionResult.vue'
+import TransactionResult from '~/components/common/XrpTransactionResult.vue'
 
 const defaultXRP: XRPToken = {
   currency: 'XRP',

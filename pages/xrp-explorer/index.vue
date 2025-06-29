@@ -39,14 +39,24 @@
 <script lang="ts">
 import { computed, defineComponent } from '@nuxtjs/composition-api'
 import XRPLibeLedgersChart from '~/components/XRPLibeLedgersChart.vue'
-import useXrpScrerener from '~/composables/useXrpScrerener'
+import useXrpScreener from '~/composables/useXrpScreener'
 
 export default defineComponent({
   components: { XRPLibeLedgersChart },
   setup() {
-    const { blocks, loading, currentTime } = useXrpScrerener()
+    console.log('🔍 [DEBUG] xrp-explorer page setup() called')
+    
+    const { blocks, loading, currentTime } = useXrpScreener()
+    
+    console.log('🔍 [DEBUG] useXrpScreener result:', { 
+      blocksCount: blocks.value?.length || 0, 
+      loading: loading.value, 
+      currentTime: currentTime.value 
+    })
 
     const events = computed(() => {
+      console.log('🔍 [DEBUG] events computed called, blocks:', blocks.value?.length || 0)
+      
       const sumObject: Record<string, number> = {}
 
       for (const obj of blocks.value) {
@@ -65,6 +75,7 @@ export default defineComponent({
         .sort((a, b) => (a.name < b.name ? -1 : 1))
     })
 
+    console.log('🔍 [DEBUG] xrp-explorer setup() completed')
     return { blocks, loading, currentTime, events }
   },
   head: {},

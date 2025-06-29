@@ -100,8 +100,8 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref, useContext } from '@nuxtjs/composition-api'
-import { useQuery } from '@vue/apollo-composable/dist'
 import { XRPScreenerGQL } from '~/apollo/queries'
+import useXrpGraphQLWithLogging from '~/composables/useXrpGraphQLWithLogging'
 // import  useXrpTrade from '~/composables/useXrpTrade'
 
 interface XRPScreenerElem {
@@ -121,7 +121,7 @@ export default defineComponent({
     const loading = ref(true)
     const screenerRawData = ref<XRPScreenerElem[]>([])
     // const offers = ref<offerTypes[]>([])
-    const { onResult } = useQuery(XRPScreenerGQL, { fetchPolicy: 'no-cache', pollInterval: 60000 })
+    const { useLoggedQuery } = useXrpGraphQLWithLogging()
     // const { buy, sell, connectWallet, isOpen, openDialog, closeDialog } = useXrpTrade()
     // type offerTypes = 'buy' | 'sell'
 
@@ -138,6 +138,17 @@ export default defineComponent({
         volume24HFormatted: $f(elem.volume24H, { minDigits: 2, after: '' }),
       }))
     )
+
+    // GraphQL query with enhanced logging
+    const { onResult } = useLoggedQuery(XRPScreenerGQL, { 
+      fetchPolicy: 'no-cache', 
+      pollInterval: 60000,
+      context: {
+        queryName: 'XRPScreener',
+        component: 'xrp-screener',
+        purpose: 'XRP token screener data for main page'
+      }
+    })
 
     // EVENTS
     onResult((queryResult: any) => {

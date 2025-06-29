@@ -281,6 +281,12 @@ export default defineComponent({
       return $f(percentage, { minDigits: 2, after: '' })
     }
 
+    // Add this function for formatting issuer addresses
+    const formatIssuerAddress = (address: string) => {
+      if (!address) return '';
+      return `${address.slice(0, 6)}...${address.slice(-6)}`;
+    }
+
     const viewPool = (pool: any) => {
       // Navigate to pool page
       window.location.href = `/xrp-amm-pools/${pool.poolId}`
@@ -311,6 +317,7 @@ export default defineComponent({
       formatPercentage,
       viewPool,
       isGraphQLEndpointAvailable,
+      formatIssuerAddress,
     }
   },
 })

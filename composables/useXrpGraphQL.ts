@@ -1,5 +1,5 @@
 import { ref, computed, Ref, reactive } from '@nuxtjs/composition-api'
-import { useQuery, useSubscription, useMutation } from '@vue/apollo-composable/dist'
+import useXrpGraphQLWithLogging from './useXrpGraphQLWithLogging'
 
 import {
   XRPAccountBalancesGQL, 
@@ -83,53 +83,80 @@ export interface XRPTokenState {
 }
 
 export default function useXrpGraphQL() {
+  const { useLoggedQuery } = useXrpGraphQLWithLogging()
+  
   // Reactive state
   const currentAddress = ref('')
   const selectedPoolId = ref('')
   const selectedToken = reactive<{ currency: string; issuer: string }>({ currency: '', issuer: '' })
 
-  // Account Queries
+  // Log the query content BEFORE making the calls
+  console.log('🚀 [BEFORE QUERY] useXrpGraphQL - XRPAccountBalancesGQL:', {
+    query: XRPAccountBalancesGQL.loc?.source.body,
+    variables: { account: currentAddress.value },
+    timestamp: new Date().toISOString()
+  })
+
+  // Account Queries with Enhanced Logging
   const {
     result: accountBalancesResult,
     loading: accountBalancesLoading,
     error: accountBalancesError,
     refetch: refetchAccountBalances
-  } = useQuery(
+  } = useLoggedQuery(
     XRPAccountBalancesGQL,
     () => ({ account: currentAddress.value }),
     () => ({ enabled: !!currentAddress.value, fetchPolicy: 'cache-and-network' })
   )
+
+  console.log('🚀 [BEFORE QUERY] useXrpGraphQL - XRPAccountTransactionsGQL:', {
+    query: XRPAccountTransactionsGQL.loc?.source.body,
+    variables: { address: currentAddress.value },
+    timestamp: new Date().toISOString()
+  })
 
   const {
     result: accountTransactionsResult,
     loading: accountTransactionsLoading,
     error: accountTransactionsError,
     refetch: refetchAccountTransactions
-  } = useQuery(
+  } = useLoggedQuery(
     XRPAccountTransactionsGQL,
     () => ({ address: currentAddress.value }),
     () => ({ enabled: !!currentAddress.value, fetchPolicy: 'cache-and-network' })
   )
 
-  // Screener Query
+  console.log('🚀 [BEFORE QUERY] useXrpGraphQL - XRPScreenerGQL:', {
+    query: XRPScreenerGQL.loc?.source.body,
+    variables: {},
+    timestamp: new Date().toISOString()
+  })
+
+  // Screener Query with Enhanced Logging
   const {
     result: screenerResult,
     loading: screenerLoading,
     error: screenerError,
     refetch: refetchScreener
-  } = useQuery(
+  } = useLoggedQuery(
     XRPScreenerGQL,
     {},
     () => ({ fetchPolicy: 'cache-and-network' })
   )
 
-  // AMM Pools Query
+  console.log('🚀 [BEFORE QUERY] useXrpGraphQL - XRPAmmPoolsGQL:', {
+    query: XRPAmmPoolsGQL.loc?.source.body,
+    variables: {},
+    timestamp: new Date().toISOString()
+  })
+
+  // AMM Pools Query with Enhanced Logging
   const {
     result: ammPoolsResult,
     loading: ammPoolsLoading,
     error: ammPoolsError,
     refetch: refetchAmmPools
-  } = useQuery(
+  } = useLoggedQuery(
     XRPAmmPoolsGQL,
     {},
     () => ({ fetchPolicy: 'cache-and-network' })
@@ -208,27 +235,27 @@ export default function useXrpGraphQL() {
     refreshTokenData,
     
     // Query methods for external use
-    getAccountBalances: (address: string) => useQuery(
+    getAccountBalances: (address: string) => useLoggedQuery(
       XRPAccountBalancesGQL,
       { account: address },
       () => ({ enabled: !!address, fetchPolicy: 'cache-and-network' })
     ),
-    getAccountTransactions: (address: string) => useQuery(
+    getAccountTransactions: (address: string) => useLoggedQuery(
       XRPAccountTransactionsGQL,
       { address },
       () => ({ enabled: !!address, fetchPolicy: 'cache-and-network' })
     ),
-    getTransaction: (hash: string) => useQuery(
+    getTransaction: (hash: string) => useLoggedQuery(
       XRPTransactionGQL,
       { hash },
       () => ({ enabled: !!hash, fetchPolicy: 'cache-and-network' })
     ),
-    getScreenerData: () => useQuery(
+    getScreenerData: () => useLoggedQuery(
       XRPScreenerGQL,
       {},
       () => ({ fetchPolicy: 'cache-and-network' })
     ),
-    getAmmPools: () => useQuery(
+    getAmmPools: () => useLoggedQuery(
       XRPAmmPoolsGQL,
       {},
       () => ({ fetchPolicy: 'cache-and-network' })

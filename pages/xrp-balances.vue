@@ -250,14 +250,17 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, useContext, useRoute } from '@nuxtjs/composition-api'
-import { useQuery } from '@vue/apollo-composable'
+import { defineComponent, ref, computed, onMounted, useContext, useRoute, watch } from '@nuxtjs/composition-api'
+import useXrpGraphQLWithLogging from '~/composables/useXrpGraphQLWithLogging'
 import { XRPAccountBalancesGQL } from '~/apollo/queries'
 
 export default defineComponent({
   setup() {
+    console.log('🔍 [DEBUG] xrp-balances page setup() called')
+    
     const { $f } = useContext()
     const route = useRoute()
+    const { useLoggedQuery } = useXrpGraphQLWithLogging()
     
     // State
     const address = ref<string>('')
@@ -291,19 +294,48 @@ export default defineComponent({
       return true
     }
 
-    // GraphQL query
-    const { result, loading: queryLoading, error: queryError, refetch } = useQuery(
+    // Enhanced GraphQL query with logging
+    const { result, loading: queryLoading, error: queryError, refetch } = useLoggedQuery(
       XRPAccountBalancesGQL,
       computed(() => ({ account: address.value })),
       () => ({
         enabled: !!address.value,
         fetchPolicy: 'cache-and-network',
-        errorPolicy: 'all'
+        errorPolicy: 'all',
+        context: {
+          queryName: 'XRPAccountBalances',
+          component: 'xrp-balances',
+          purpose: 'XRP account balances data'
+        }
       })
     )
 
+    // Internal error handling - prevent Apollo errors from bubbling up
+    const internalError = ref<string | null>(null)
+    
+    // Watch for Apollo errors and handle them internally
+    watch(queryError, (newError) => {
+      if (newError) {
+        console.warn('GraphQL error in xrp-balances, using fallback data:', newError)
+        internalError.value = 'Network error: using fallback data'
+      } else {
+        internalError.value = null
+      }
+    })
+
+    // Error state for graceful fallback
+    const hasError = computed(() => !!internalError.value || !!error.value)
+
     // Computed data
-    const accountData = computed(() => result.value?.xrpAccountBalances || null)
+    const accountData = computed(() => {
+      const data = result.value?.xrpAccountBalances || null
+      console.log('🔍 [DEBUG] xrp-balances accountData computed:', {
+        hasData: !!data,
+        xrpBalance: data?.xrpBalance,
+        tokenCount: data?.xrpTokens?.length || 0
+      })
+      return data
+    })
     
     const totalValue = computed(() => {
       if (!accountData.value) return 0
@@ -339,15 +371,22 @@ export default defineComponent({
     const loadAddressData = async () => {
       if (!address.value) return
       
+      console.log('🔍 [DEBUG] xrp-balances loadAddressData called:', address.value)
+      
       loading.value = true
       error.value = null
       
       try {
+        console.log('🔍 [DEBUG] xrp-balances: Refetching data...')
         await refetch()
         if (queryError.value) {
+          console.error('🔍 [DEBUG] xrp-balances: Query error:', queryError.value)
           error.value = 'Failed to load account data'
+        } else {
+          console.log('🔍 [DEBUG] xrp-balances: Data loaded successfully')
         }
       } catch (err: any) {
+        console.error('🔍 [DEBUG] xrp-balances: Load error:', err)
         error.value = err.message || 'Failed to load account data'
       } finally {
         loading.value = false
@@ -395,12 +434,21 @@ export default defineComponent({
       return address.length > 20 ? `${address.substring(0, 10)}...${address.substring(address.length - 10)}` : address
     }
 
+    console.log('🔍 [DEBUG] useXrpBalances result:', { 
+      address: address.value,
+      hasAccountData: !!accountData.value,
+      tokenCount: accountData.value?.xrpTokens?.length || 0,
+      loading: loading.value,
+      totalValue: totalValue.value
+    })
+
+    console.log('🔍 [DEBUG] xrp-balances setup() completed')
     return {
       // State
       address,
       addressInput,
       loading: computed(() => loading.value || queryLoading.value),
-      error,
+      hasError,
       tokenSearch,
       
       // Computed

@@ -49,7 +49,7 @@ export default defineComponent({
   setup(props) {
     // COMPOSABLES
     const icons = { mdiStar, mdiCog }
-    const { loading, heatmapData, tileText, tileTooltip, updateData } = useXrpTokenHeatmap()
+    const { loading, heatmapData, tileText, tileTooltip, updateData } = useXrpTokenHeatmap(props.userCanAccessTrend)
     const { displayFavorites, blueTile, blockSize, timeFrame } = useHeatmapConfigs()
 
     // COMPUTED

@@ -72,9 +72,9 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref, useContext, inject, onMounted } from '@nuxtjs/composition-api'
-import { useQuery } from '@vue/apollo-composable/dist'
 import { XRPAccountBalancesGQL } from '~/apollo/queries'
 import { XRP_PLUGIN_KEY, XrpClient } from '~/plugins/web3/xrp.client'
+import useXrpGraphQLWithLogging from '~/composables/useXrpGraphQLWithLogging'
 
 interface XRPBalanceItem {
   currency: string
@@ -96,10 +96,25 @@ export default defineComponent({
     // Use connected wallet address or fallback to default
     const accountAddress = computed(() => address.value || 'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj')
     
-    const { onResult } = useQuery(
+    // Log the query content BEFORE making the call
+    console.log('🚀 [BEFORE QUERY] XrpBalanceWidget - XRPAccountBalancesGQL:', {
+        query: XRPAccountBalancesGQL.loc?.source.body,
+        variables: { account: accountAddress.value },
+        timestamp: new Date().toISOString()
+    })
+
+    const { useLoggedQuery } = useXrpGraphQLWithLogging()
+    const { onResult } = useLoggedQuery(
       XRPAccountBalancesGQL, 
       () => ({ account: accountAddress.value }), 
-      { fetchPolicy: 'no-cache' }
+      { 
+          fetchPolicy: 'no-cache',
+          context: {
+              queryName: 'XRPAccountBalances',
+              component: 'XrpBalanceWidget',
+              purpose: 'XRP balance widget display'
+          }
+      }
     )
 
     const columns = [

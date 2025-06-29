@@ -6,11 +6,11 @@
 
     <v-row style="margin-top: 90px">
       <v-col class="text-left mb-1">
-        <small><a class="grey--text" href="#" @click="showLogs = !showLogs">Logs</a></small>
+        <small><a class="grey--text" href="#" @click="showLogs = !showLogs">Transaction Details</a></small>
       </v-col>
       <v-col class="text-right grey--text mb-1">
-        <small v-if="isTxMined">
-          <a class="grey--text" target="_blank" :href="txHash">Transaction Details</a>
+        <small v-if="isTxMined && txHash">
+          <a class="grey--text" target="_blank" :href="txHash">View on Explorer</a>
           <v-icon color="grey" size="14">mdi-open-in-new</v-icon>
         </small>
       </v-col>
@@ -28,13 +28,23 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, inject, PropType, ref, useStore } from '@nuxtjs/composition-api'
-import { State } from '~/types/state'
-import { EmitEvents } from '~/types/events'
-import { Network } from '~/types/global'
-import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
+import { computed, defineComponent, PropType, ref } from '@nuxtjs/composition-api'
+
+interface XrpTransactionReceipt {
+  hash?: string
+  account?: string
+  destination?: string
+  transactionType?: string
+  amount?: number
+  currency?: string
+  fee?: number
+  date?: string
+  meta?: any
+  [key: string]: any
+}
+
 type Props = {
-  receipt: any
+  receipt: XrpTransactionReceipt | Error
   isTxMined: boolean
   successMessage?: string | null
 }
@@ -47,14 +57,15 @@ export default defineComponent<Props>({
     successMessage: { type: String as PropType<string | null>, default: null, required: false },
   },
   setup(props, { emit }) {
-    const { getters } = useStore<State>()
     const showLogs = ref(false)
-    const { chainId } = inject(WEB3_PLUGIN_KEY) as Web3
 
     const txHash = computed(() => {
-      const currentChain: Network = getters['configs/chainInfo'](chainId.value ?? 1)
-      return `${currentChain.blockExplorerUrl}tx/${props.receipt.transactionHash}`
+      if (props.receipt && typeof props.receipt === 'object' && 'hash' in props.receipt) {
+        return `https://livenet.xrpl.org/transactions/${props.receipt.hash}`
+      }
+      return null
     })
+
     const txData = computed(() => {
       let data: { message: string; icon: string; color: string }
       props.isTxMined
@@ -63,7 +74,8 @@ export default defineComponent<Props>({
       return data
     })
 
-    const onClose = () => emit(EmitEvents.onResultClosed)
+    const onClose = () => emit('close')
+
     return {
       // COMPUTED
       txReceipt: props.receipt,
@@ -78,4 +90,4 @@ export default defineComponent<Props>({
     }
   },
 })
-</script>
+</script> 

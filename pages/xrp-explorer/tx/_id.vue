@@ -128,21 +128,32 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref, useRoute } from '@nuxtjs/composition-api'
-import { useQuery } from '@vue/apollo-composable'
+import useXrpGraphQLWithLogging from '~/composables/useXrpGraphQLWithLogging'
 import { XRPTransactionGQL } from '~/apollo/queries'
 import { XrpTransaction } from '~/types/apollo/main/types'
+
 export default defineComponent({
   components: {},
   setup() {
     const route = useRoute()
+    const { useLoggedQuery } = useXrpGraphQLWithLogging()
+    
     const hash = computed(() => route.value.params?.id ?? '')
-    const { result } = process.browser
-      ? useQuery(XRPTransactionGQL, () => ({
+    
+    // Enhanced GraphQL query with logging
+    const { result, error } = process.browser
+      ? useLoggedQuery(XRPTransactionGQL, () => ({
           hash: hash.value,
         }))
-      : { result: ref(null) }
+      : { result: ref(null), error: ref(null) }
+      
     const txData = computed<XrpTransaction>(() => result.value?.xrpTransaction ?? null)
     const takerGets = computed(() => txData.value?.takerGets ?? null)
+
+    // Enhanced error handling
+    if (error.value) {
+      console.error('XRP Transaction query failed:', error.value)
+    }
 
     return { txData, takerGets }
   },

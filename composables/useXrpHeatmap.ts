@@ -1,7 +1,7 @@
 import { computed, onBeforeUnmount, onMounted, Ref, ref, useContext, useStore, watch } from '@nuxtjs/composition-api'
 import { useXrpConfigs, XrpTimeFrame, XrpBlockSize } from './useXrpConfigs'
-import { useQuery } from '@vue/apollo-composable/dist'
-import { GetAllAMMLiquidityValuesGQL, TestGraphQLGQL, SimpleAMMLiquidityValuesGQL } from '~/apollo/queries'
+import useXrpGraphQLWithLogging from './useXrpGraphQLWithLogging'
+import { GetAllAMMLiquidityValuesGQL, TestGraphQLGQL, GetAMMLiquidityValuesGQL } from '~/apollo/queries'
 import { State } from '~/types/state'
 
 export interface XrpAmmHeatmapData {
@@ -43,53 +43,65 @@ const setColor = (liquidity: number, maxLiquidity: number) => {
 
 export function useXrpHeatmap() {
   const { state } = useStore<State>()
+  const { useLoggedQuery } = useXrpGraphQLWithLogging()
   
   const {
     blockSize,
   } = useXrpConfigs()
 
-  // Test GraphQL endpoint first
-  const { result: testResult, error: testError } = useQuery(
+  // Log the query content BEFORE making the calls
+  console.log('🚀 [BEFORE QUERY] useXrpHeatmap - TestGraphQLGQL:', {
+    query: TestGraphQLGQL.loc?.source.body,
+    variables: {},
+    timestamp: new Date().toISOString()
+  })
+
+  // Test GraphQL endpoint first with enhanced logging
+  const { result: testResult, error: testError, loading: testLoading } = useLoggedQuery(
     TestGraphQLGQL,
     {},
     {
       errorPolicy: 'all',
       fetchPolicy: 'network-only',
+      context: {
+        queryName: 'TestGraphQL',
+        component: 'useXrpHeatmap',
+        purpose: 'Endpoint connectivity test'
+      }
     }
   )
 
-  // Log test query results
-  watch(testError, (newError) => {
-    if (newError) {
-      console.error('GraphQL Test Query Error:', {
-        message: newError.message,
-        graphQLErrors: newError.graphQLErrors,
-        networkError: newError.networkError,
-      })
-    } else if (testResult.value) {
-      console.log('GraphQL Test Query Success:', testResult.value)
-    }
+  console.log('🚀 [BEFORE QUERY] useXrpHeatmap - GetAMMLiquidityValuesGQL:', {
+    query: GetAMMLiquidityValuesGQL.loc?.source.body,
+    variables: {},
+    timestamp: new Date().toISOString()
   })
 
-  // GraphQL query for AMM liquidity data - try simple version first
-  const { result: ammData, loading, error, refetch } = useQuery(
-    SimpleAMMLiquidityValuesGQL,
+  // GraphQL query for AMM liquidity data with enhanced logging
+  const { result: ammData, loading, error, refetch } = useLoggedQuery(
+    GetAMMLiquidityValuesGQL,
     {},
     {
       errorPolicy: 'all',
       fetchPolicy: 'network-only', // Force network request
+      context: {
+        queryName: 'GetAMMLiquidityValues',
+        component: 'useXrpHeatmap',
+        purpose: 'AMM liquidity data for heatmap visualization'
+      }
     }
   )
 
-  // Log detailed error information
+  // Internal error handling - prevent Apollo errors from bubbling up
+  const internalError = ref<string | null>(null)
+  
+  // Watch for Apollo errors and handle them internally
   watch(error, (newError) => {
     if (newError) {
-      console.error('GraphQL Error Details:', {
-        message: newError.message,
-        graphQLErrors: newError.graphQLErrors,
-        networkError: newError.networkError,
-        extraInfo: newError.extraInfo
-      })
+      console.warn('GraphQL error in useXrpHeatmap, using fallback data:', newError.message)
+      internalError.value = newError.message
+    } else {
+      internalError.value = null
     }
   })
 
@@ -154,13 +166,17 @@ export function useXrpHeatmap() {
     ]
   }))
 
+  // Error state for graceful fallback - use internal error instead of Apollo error
+  const hasError = computed(() => !!internalError.value || !!error.value)
+  const errorMessage = computed(() => hasError.value ? 'Network error: showing fallback data.' : '')
+
   const heatmapData = computed(() => {
     // Use mock data if GraphQL fails or returns no data
-    const data = hasError.value || !ammData.value?.xrpAMMLiquidityValues ? mockAmmData.value : ammData.value
+    const data = hasError.value || !ammData.value?.xrpAMMLiquidityValues ? mockAmmData.value.xrpAMMLiquidityValues : ammData.value.xrpAMMLiquidityValues
     
-    if (!data?.xrpAMMLiquidityValues) return []
+    if (!data) return []
     
-    const pools = data.xrpAMMLiquidityValues as XrpAmmHeatmapData[]
+    const pools = data as XrpAmmHeatmapData[]
     
     // Sort pools based on the selected block size
     const sortedPools = [...pools].sort((a, b) => {
@@ -244,7 +260,6 @@ export function useXrpHeatmap() {
   })
 
   const isLoading = computed(() => loading.value)
-  const hasError = computed(() => !!error.value)
 
   const refreshData = () => {
     refetch()
@@ -255,6 +270,7 @@ export function useXrpHeatmap() {
     processedData,
     isLoading,
     hasError,
+    errorMessage,
     refreshData,
     blockSize,
     isGraphQLEndpointAvailable,

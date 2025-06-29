@@ -1,7 +1,6 @@
 import { reactive, Ref, computed, toRefs, onGlobalSetup, provide, ref } from '@nuxtjs/composition-api'
 import { Context } from '@nuxt/types'
-import { ethers } from 'ethers'
-import { MetamaskConnector } from '~/app/plugins/web3/metamask.connector'
+import { MetamaskConnector } from './metamask.connector'
 import { ConnectorInterface, Web3ErrorInterface } from '~/plugins/web3/connector'
 import { Cookies } from '~/types/cookies'
 import { Network } from '~/types/global'
@@ -17,7 +16,7 @@ export type Web3 = {
   resetErrors: () => void
   changeNetwork: (chain: Network) => void
   importTokenToMetamask: (params: { address: string; symbol: string; decimals: number; image: string }) => Promise<void>
-  provider: Ref<ethers.providers.Web3Provider | null>
+  provider: Ref<any | null>
   account: Ref<string>
   chainId: Ref<number | null>
   connector: Ref<ConnectorInterface | null>
@@ -27,7 +26,7 @@ export type Web3 = {
   signer: Ref<any>
   allNetworks: Ref<Network[]>
   currentNetwork: Ref<Network | null>
-  getCustomProviderByNetworkId: (networkId: string) => ethers.providers.JsonRpcProvider | null
+  getCustomProviderByNetworkId: (networkId: string) => any | null
   getNetworkById: (networkId: string) => Network | null
   getNetworkByChainNumber: (chainId: number) => Network | null
   isWrapped: (address: string, network: Network) => boolean
@@ -49,19 +48,19 @@ export default (context: Context): void => {
       walletState: 'disconnected',
     })
 
-    const errorStatus: Ref<Web3ErrorInterface> = ref({ status: false, message: null })
+    const errorStatus: Ref<Web3ErrorInterface> = ref({ code: 0, message: '' })
 
     // COMPUTED
-    const account = computed(() => pluginState.connector?.account ?? '')
-    const chainId = computed(() => pluginState.connector?.chainId ?? null)
-    const provider = computed(() => pluginState.connector?.provider ?? null)
-    const signer = computed(() => pluginState.connector?.provider?.getSigner())
+    const account = computed(() => pluginState.connector?.getAccount() ?? '')
+    const chainId = computed(() => null) // XRP doesn't use chainId
+    const provider = computed(() => null) // XRP doesn't use providers
+    const signer = computed(() => null) // XRP doesn't use signers
     const walletReady = computed(() => {
-      return !!(pluginState.connector && pluginState.connector.provider && pluginState.walletState === 'connected')
+      return !!(pluginState.connector && pluginState.connector.isConnected() && pluginState.walletState === 'connected')
     })
     const allNetworks = ref<Network[]>([])
     const currentNetwork = computed<Network | null>(
-      () => allNetworks.value.find((elem) => elem.id === chainId.value?.toString()) ?? null
+      () => allNetworks.value.find((elem) => elem.id === 'xrp') ?? null
     )
 
     // METHODS
@@ -74,19 +73,21 @@ export default (context: Context): void => {
         }
         const connector = WalletConnectorDictionary[wallet]
         pluginState.connector = connector
-        pluginState.connector.resetErrors()
 
         if (!connector) {
           throw new Error(`Wallet [${wallet}] is not supported yet. Please contact the dev team to add this connector.`)
         }
-        const { account, error } = await pluginState.connector.connect()
+        
+        await pluginState.connector.connect()
+        const account = pluginState.connector.getAccount()
 
-        // Toggling Error if account is not detected or Metamask is not installed
+        // Toggling Error if account is not detected
         if (!account) {
-          errorStatus.value = { status: error.status, message: error.message }
+          errorStatus.value = { code: 1, message: 'No account detected' }
           pluginState.walletState = 'disconnected'
           return
         }
+        
         if (account) {
           pluginState.walletState = 'connected'
           const inFifteenMinutes = new Date(new Date().getTime() + 15 * 60 * 1000)
@@ -94,15 +95,15 @@ export default (context: Context): void => {
         }
       } catch (err) {
         pluginState.walletState = 'disconnected'
+        errorStatus.value = { code: 1, message: err instanceof Error ? err.message : 'Connection failed' }
       }
     }
-    const getCustomProviderByNetworkId = (networkId: string): ethers.providers.JsonRpcProvider | null => {
-      const network = allNetworks.value.find((elem) => elem.id === networkId)
-      if (network) {
-        return new ethers.providers.JsonRpcProvider(network.rpcUrl)
-      }
+    
+    const getCustomProviderByNetworkId = (networkId: string): any | null => {
+      // XRP doesn't use providers
       return null
     }
+    
     const getNetworkById = (networkId: string): Network | null => {
       const network = allNetworks.value.find((elem) => elem.id === networkId)
       if (network) {
@@ -119,31 +120,27 @@ export default (context: Context): void => {
       return null
     }
 
-    const isWrapped = (address: string, network: Network): boolean =>
-      address.toLowerCase() === network.weth.address.toLowerCase()
+    const isWrapped = (address: string, network: Network): boolean => {
+      // XRP doesn't have wrapped tokens like ETH
+      return false
+    }
 
     const disconnectWallet = () => {
       if (!pluginState.connector) {
         throw new Error('Cannot disconnect a wallet. No wallet currently connected.')
       }
-      const connector = pluginState.connector as ConnectorInterface
-      connector.handleDisconnect()
+      pluginState.connector.disconnect()
       pluginState.connector = null
       pluginState.walletState = 'disconnected'
       context.$cookies.remove(Cookies.walletConnected)
     }
 
     const resetErrors = () => {
-      errorStatus.value = { status: false, message: null }
-      if (pluginState.connector) {
-        pluginState.connector.resetErrors()
-      }
+      errorStatus.value = { code: 0, message: '' }
     }
 
     const changeNetwork = (chain: Network) => {
-      if (pluginState.connector) {
-        pluginState.connector.handleChanChange(chain)
-      }
+      // XRP doesn't support network switching
     }
 
     const importTokenToMetamask = async (params: {
@@ -152,9 +149,7 @@ export default (context: Context): void => {
       decimals: number
       image: string
     }) => {
-      if (pluginState.connector) {
-        await pluginState.connector.importTokenToMetamask(params)
-      }
+      // XRP doesn't use Metamask token import
     }
 
     const plugin: Web3 = {
@@ -186,3 +181,4 @@ export default (context: Context): void => {
     }
   })
 }
+

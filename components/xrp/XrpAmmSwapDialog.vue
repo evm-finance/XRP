@@ -122,8 +122,8 @@
 <script lang="ts">
 import { computed, defineComponent, ref, useContext, watch } from '@nuxtjs/composition-api'
 import useXrpAmmSwap from '~/composables/useXrpAmmSwap'
-import TransactionResult from '~/components/common/TransactionResult.vue'
-import TokenInputField from '~/components/trading/TokenInputField.vue'
+import XrpTransactionResult from '~/components/common/XrpTransactionResult.vue'
+import XrpTokenInputField from '~/components/trading/XrpTokenInputField.vue'
 
 interface XrpAmmPool {
   id: string
@@ -140,8 +140,8 @@ interface XrpAmmPool {
 
 export default defineComponent({
   components: {
-    TransactionResult,
-    TokenInputField,
+    XrpTransactionResult,
+    XrpTokenInputField,
   },
   props: {
     pool: { type: Object as () => XrpAmmPool, required: true },

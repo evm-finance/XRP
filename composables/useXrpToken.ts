@@ -1,5 +1,5 @@
 import { computed, ref, useRoute } from '@nuxtjs/composition-api'
-import { useQuery } from '@vue/apollo-composable/dist'
+import useXrpGraphQLWithLogging from './useXrpGraphQLWithLogging'
 import { XRPScreenerGQL, XRPAccountTransactionsGQL, XRPAccountBalancesGQL } from '~/apollo/queries'
 
 interface XRPTokenData {
@@ -40,13 +40,21 @@ interface XRPAMMData {
   volume: number
 }
 
-export default function useXrpToken() {
+export function useXrpToken() {
+  console.log('🔍 [DEBUG] useXrpToken() called')
+  
   const route = useRoute()
+  const { useLoggedQuery } = useXrpGraphQLWithLogging()
   const loading = ref(true)
   
   // Get token currency and issuer from route
   const tokenCurrency = computed(() => route.value.params?.id ?? '')
   const issuerAddress = computed(() => route.value.query?.issuer as string ?? '')
+  
+  console.log('🔍 [DEBUG] useXrpToken: Route params:', {
+    tokenCurrency: tokenCurrency.value,
+    issuerAddress: issuerAddress.value
+  })
   
   // State
   const selectedTimeframe = ref('1d')
@@ -69,23 +77,67 @@ export default function useXrpToken() {
   const walletTransactions = ref<XRPTransaction[]>([])
   const ammChartData = ref<XRPAMMData[]>([])
   
-  // Queries
-  const { onResult: onScreenerResult } = useQuery(XRPScreenerGQL, { 
-    fetchPolicy: 'no-cache', 
-    pollInterval: 60000 
-  })
+  console.log('🔍 [DEBUG] useXrpToken: About to execute GraphQL queries')
   
-  const { onResult: onTransactionsResult } = useQuery(
+  // Log the query content BEFORE making the calls
+  console.log('🚀 [BEFORE QUERY] useXrpToken - XRPScreenerGQL:', {
+    query: XRPScreenerGQL.loc?.source.body,
+    variables: {},
+    timestamp: new Date().toISOString()
+  })
+
+  // GraphQL queries with enhanced logging
+  const { onResult: onScreenerResult } = useLoggedQuery(XRPScreenerGQL, {
+    fetchPolicy: 'no-cache',
+    pollInterval: 60000,
+    context: {
+      queryName: 'XRPScreener',
+      component: 'useXrpToken',
+      purpose: 'XRP token screener data'
+    }
+  })
+
+  console.log('🚀 [BEFORE QUERY] useXrpToken - XRPAccountTransactionsGQL:', {
+    query: XRPAccountTransactionsGQL.loc?.source.body,
+    variables: { address: issuerAddress.value },
+    timestamp: new Date().toISOString()
+  })
+
+  const { onResult: onTransactionsResult } = useLoggedQuery(
     XRPAccountTransactionsGQL,
     () => ({ address: issuerAddress.value }),
-    { fetchPolicy: 'no-cache', pollInterval: 30000 }
+    {
+      fetchPolicy: 'no-cache',
+      pollInterval: 30000,
+      context: {
+        queryName: 'XRPTransactions',
+        component: 'useXrpToken',
+        purpose: 'XRP account transactions'
+      }
+    }
   )
-  
-  const { onResult: onBalancesResult } = useQuery(
+
+  console.log('🚀 [BEFORE QUERY] useXrpToken - XRPAccountBalancesGQL:', {
+    query: XRPAccountBalancesGQL.loc?.source.body,
+    variables: { account: issuerAddress.value },
+    timestamp: new Date().toISOString()
+  })
+
+  const { onResult: onBalancesResult } = useLoggedQuery(
     XRPAccountBalancesGQL,
     () => ({ account: issuerAddress.value }),
-    { fetchPolicy: 'no-cache', pollInterval: 30000 }
+    {
+      fetchPolicy: 'no-cache',
+      pollInterval: 30000,
+      context: {
+        queryName: 'XRPBalances',
+        component: 'useXrpToken',
+        purpose: 'XRP account balances'
+      }
+    }
   )
+  
+  console.log('🔍 [DEBUG] useXrpToken: GraphQL queries executed, setting up result handlers')
   
   // Computed
   const transactionHeaders = computed(() => [
@@ -144,12 +196,19 @@ export default function useXrpToken() {
   
   // Event handlers
   onScreenerResult((queryResult: any) => {
+    console.log('🔍 [DEBUG] useXrpToken onScreenerResult called:', {
+      hasData: !!queryResult.data,
+      screenerCount: queryResult.data?.xrpScreener?.length || 0,
+      loading: queryResult.loading
+    })
+    
     const screenerData = queryResult.data?.xrpScreener ?? []
     const tokenInfo = screenerData.find((t: any) => 
       t.currency === tokenCurrency.value && t.issuerAddress === issuerAddress.value
     )
     
     if (tokenInfo) {
+      console.log('🔍 [DEBUG] useXrpToken: Found token info:', tokenInfo)
       tokenData.value = {
         ...tokenData.value,
         tokenName: tokenInfo.tokenName || `${tokenCurrency.value} Token`,
@@ -164,6 +223,7 @@ export default function useXrpToken() {
         discordUrl: tokenInfo.discordUrl,
       }
     } else {
+      console.log('🔍 [DEBUG] useXrpToken: Token not found in screener, using defaults')
       // Set default values if token not found in screener
       tokenData.value = {
         ...tokenData.value,
@@ -179,6 +239,12 @@ export default function useXrpToken() {
   })
   
   onTransactionsResult((queryResult: any) => {
+    console.log('🔍 [DEBUG] useXrpToken onTransactionsResult called:', {
+      hasData: !!queryResult.data,
+      transactionsCount: queryResult.data?.xrpTransactions?.length || 0,
+      loading: queryResult.loading
+    })
+    
     const transactions = queryResult.data?.xrpTransactions ?? []
     walletTransactions.value = transactions.map((tx: any) => ({
       hash: tx.hash || '',
@@ -186,13 +252,19 @@ export default function useXrpToken() {
       destination: tx.destination || '',
       transactionType: tx.transactionType || 'Unknown',
       amount: typeof tx.amount === 'string' ? parseFloat(tx.amount) : (tx.amount || 0),
-      currency: tokenCurrency.value,
+      currency: tx.currency,
       fee: typeof tx.fee === 'string' ? parseFloat(tx.fee) : (tx.fee || 0),
-      date: tx.date || new Date().toISOString(),
+      date: tx.date ? new Date(tx.date).toISOString() : new Date().toISOString(),
     }))
   })
   
   onBalancesResult((queryResult: any) => {
+    console.log('🔍 [DEBUG] useXrpToken onBalancesResult called:', {
+      hasData: !!queryResult.data,
+      balancesCount: queryResult.data?.xrpAccountBalances?.xrpTokens?.length || 0,
+      loading: queryResult.loading
+    })
+    
     const balances = queryResult.data?.xrpAccountBalances?.xrpTokens ?? []
     tokenBalances.value = balances
       .filter((token: any) => token.symbol === tokenCurrency.value)
@@ -203,22 +275,43 @@ export default function useXrpToken() {
       }))
   })
 
-  // Add error handling for all queries
-  const { onError: onScreenerError } = useQuery(XRPScreenerGQL, { 
-    fetchPolicy: 'no-cache', 
-    pollInterval: 60000 
+  // Error handling queries with enhanced logging
+  const { onError: onScreenerError } = useLoggedQuery(XRPScreenerGQL, {
+    fetchPolicy: 'no-cache',
+    pollInterval: 60000,
+    context: {
+      queryName: 'XRPScreener',
+      component: 'useXrpToken',
+      purpose: 'XRP token screener data (error handling)'
+    }
   })
 
-  const { onError: onTransactionsError } = useQuery(
+  const { onError: onTransactionsError } = useLoggedQuery(
     XRPAccountTransactionsGQL,
     () => ({ address: issuerAddress.value }),
-    { fetchPolicy: 'no-cache', pollInterval: 30000 }
+    {
+      fetchPolicy: 'no-cache',
+      pollInterval: 30000,
+      context: {
+        queryName: 'XRPTransactions',
+        component: 'useXrpToken',
+        purpose: 'XRP account transactions (error handling)'
+      }
+    }
   )
 
-  const { onError: onBalancesError } = useQuery(
+  const { onError: onBalancesError } = useLoggedQuery(
     XRPAccountBalancesGQL,
     () => ({ account: issuerAddress.value }),
-    { fetchPolicy: 'no-cache', pollInterval: 30000 }
+    {
+      fetchPolicy: 'no-cache',
+      pollInterval: 30000,
+      context: {
+        queryName: 'XRPBalances',
+        component: 'useXrpToken',
+        purpose: 'XRP account balances (error handling)'
+      }
+    }
   )
 
   onScreenerError((error: any) => {
@@ -239,6 +332,7 @@ export default function useXrpToken() {
   loading.value = false
   
   return {
+    // State
     loading,
     tokenData,
     tokenBalances,
@@ -247,7 +341,11 @@ export default function useXrpToken() {
     selectedTimeframe,
     priceDisplayMode,
     xrpPrice,
+    
+    // Computed
     transactionHeaders,
+    
+    // Methods
     copyToClipboard,
     formatAddress,
     formatHash,
@@ -256,4 +354,7 @@ export default function useXrpToken() {
     formatDate,
     getTransactionTypeColor,
   }
-} 
+}
+
+// Add default export for compatibility
+export default useXrpToken 

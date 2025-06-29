@@ -38,3 +38,8 @@ export interface EvmTransaction {
       }
     | undefined
 }
+
+export type GraphData = {
+  // XRP-specific graph data structure
+  // No chainId needed for XRP
+}

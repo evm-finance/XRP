@@ -149,25 +149,6 @@ type EthGasStatsResult {
   suggestBaseFee: Float!
 }
 
-type EvmTransaction {
-  block: Int!
-  chainId: Int!
-  from: String!
-  gasPrice: Float!
-  gssLimit: Float!
-  hash: String!
-  input: TxInput!
-  isPending: Boolean!
-  logEvents: TransactionEvents!
-  nonce: Float!
-  status: String!
-  timestamp: Int!
-  to: String!
-  transactionFee: Float!
-  txDataHex: String!
-  value: Float!
-}
-
 type GasStats {
   blockExplorer: String!
   gas: EthGasStatsResult!
@@ -224,7 +205,7 @@ type Network {
   nativeTokenSymbol: String!
   rpcUrl: String!
   symbol: String!
-  weth: UniswapToken!
+  xrp: XRPToken!
 }
 
 type News {
@@ -291,22 +272,15 @@ type PriceStream {
 }
 
 type Query {
-  aavePools(chainId: Int!, version: String!): [AavePool!]!
-  balances(address: String!, chainIds: [Int!]!): [Balance!]!
   block(blockNumber: Int!, network: String!): Block!
   blocks(network: String!): [Block!]!
   dailyChart(coinGeckoID: String! = ""): [DailyChart!]!
-  evmTransaction(chainId: Int!, hash: String!): EvmTransaction!
   fiatPrices(addresses: [String!]!, platform: String! = "ethereum"): Map!
   gas: [GasStats!]!
   globalStats: GlobalStats!
   networks: [Network!]!
   poolScreener(dex: String!, network: String!, pageNumber: Int! = 0, sort: String!, sortBy: String!): [Pool!]!
   recentPrices: Map!
-  token(chainId: Int! = 1, contractAddress: String! = "", decimals: Int! = 18, interval: TimeInterval! = INTERVAL_1H, qcKey: String!, walletAddress: String! = ""): Token!
-  transactions(address: String!, chainId: Int! = 0, pageNumber: Int! = 0, pageSize: Int! = 100): Transaction!
-  transfers(address: String!, chainId: Int! = 0, contractAddress: String!, pageNumber: Int! = 0, pageSize: Int! = 100): Transfers!
-  uniswapTokens(chainId: Int! = 1, pageNumber: Int! = 0, pageSize: Int! = 100, searchString: String! = "", source: [UniswapTokenSource!]!, userWallet: String! = ""): UniswapTokens!
   xrpScreener: [XRPTokenFields!]!
   xrpBalances(account String!): XRPBalances!
   xrpTransaction(hash: String!): XRPTransaction!
@@ -343,44 +317,6 @@ type Time {
   unixTime: Int!
 }
 
-type Token {
-  ID: ID
-  aavePools: [AavePool!]!
-  aaveSymbol: String!
-  balances: [Balance!]!
-  bitbucketRepos: JSONMap
-  chainId: Int!
-  circulatingSupply: Float!
-  coinDescription: String!
-  coinGeckoID: String!
-  contractAddress: String!
-  decimals: Int!
-  discordChannelId: String!
-  explorerUrls: JSONMap
-  facebookUrl: String!
-  githubRepos: JSONMap
-  interval: TimeInterval!
-  isAaveToken: Boolean!
-  isQCToken: Boolean!
-  marketcap: Float!
-  news: [News!]!
-  price: Price!
-  price24h: Float!
-  qcKey: String!
-  rank: Int!
-  resistance1h: Float!
-  safeScore: Float!
-  subredditUrl: String!
-  support1h: Float!
-  symbolName: String!
-  telegramChannelId: String!
-  tokenInterval: HighAndLow!
-  twitterUrl: String!
-  volume24h: Float!
-  walletAddress: String!
-  websiteUrl: JSONMap
-}
-
 type TokenTransferItem {
   contractAddress: String!
   contractDecimals: Int!
@@ -400,16 +336,6 @@ type TokenTransferItem {
   toAddressName: String!
   toAddressSymbol: String!
   transferType: String!
-}
-
-type Transaction {
-  address: String!
-  chainID: Int!
-  items: [TransactionItem!]!
-  nextUpdateAt: String!
-  pagination: Pagination
-  quoteCurrency: String!
-  updatedAt: String!
 }
 
 type TransactionEvent {
@@ -452,16 +378,6 @@ type TransactionItem {
   valueQuote: Float!
 }
 
-type Transfers {
-  address: String!
-  chainId: Int!
-  items: [BlockTransactionContractTransfer!]!
-  nextUpdateAt: String!
-  pagination: Pagination!
-  quoteCurrency: String!
-  updatedAt: String!
-}
-
 type TxDetail {
   fromAddress: String!
   method: String!
@@ -482,19 +398,6 @@ type TxInput {
   inputsMap: JSONMap
   inputsSigDataStr: String!
   methodSigDataStr: String!
-}
-
-type UniswapToken {
-  address: String!
-  chainId: Int!
-  decimals: Int!
-  name: String!
-  symbol: String!
-}
-
-type UniswapTokens {
-  items: [UniswapToken!]!
-  pagination: Pagination
 }
 
 type XRPLedger {
@@ -615,13 +518,6 @@ enum TimeInterval {
   INTERVAL_30MIN
   INTERVAL_4H
   INTERVAL_5MIN
-}
-
-enum UniswapTokenSource {
-  aave
-  coinGecko
-  uniswap
-  userBalances
 }
 
 scalar Any

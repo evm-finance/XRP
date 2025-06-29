@@ -225,7 +225,7 @@ type Network {
   nativeTokenSymbol: String!
   rpcUrl: String!
   symbol: String!
-  weth: UniswapToken!
+  xrp: XRPToken!
 }
 
 type News {
@@ -307,7 +307,6 @@ type Query {
   token(chainId: Int! = 1, contractAddress: String! = "", decimals: Int! = 18, interval: TimeInterval! = INTERVAL_1H, qcKey: String!, walletAddress: String! = ""): Token!
   transactions(address: String!, chainId: Int! = 0, pageNumber: Int! = 0, pageSize: Int! = 100): Transaction!
   transfers(address: String!, chainId: Int! = 0, contractAddress: String!, pageNumber: Int! = 0, pageSize: Int! = 100): Transfers!
-  uniswapTokens(chainId: Int! = 1, pageNumber: Int! = 0, pageSize: Int! = 100, searchString: String! = "", source: [UniswapTokenSource!]!, userWallet: String! = ""): UniswapTokens!
   xrpScreener: [XRPTokenFields!]!
   xrpBalances(account String!): XRPBalances!
   xrpTransaction(hash: String!): XRPTransaction!
@@ -485,19 +484,6 @@ type TxInput {
   methodSigDataStr: String!
 }
 
-type UniswapToken {
-  address: String!
-  chainId: Int!
-  decimals: Int!
-  name: String!
-  symbol: String!
-}
-
-type UniswapTokens {
-  items: [UniswapToken!]!
-  pagination: Pagination
-}
-
 type XRPLedger {
   eventsCount: Map
   ledger: XRPLedgerData!
@@ -616,13 +602,6 @@ enum TimeInterval {
   INTERVAL_30MIN
   INTERVAL_4H
   INTERVAL_5MIN
-}
-
-enum UniswapTokenSource {
-  aave
-  coinGecko
-  uniswap
-  userBalances
 }
 
 scalar Any

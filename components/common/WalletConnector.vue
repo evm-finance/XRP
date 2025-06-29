@@ -1,7 +1,7 @@
 <template>
   <client-only>
     <v-menu
-      v-if="walletReady"
+      v-if="isWalletReady"
       :close-on-content-click="false"
       :nudge-width="250"
       nudge-bottom="8"
@@ -37,50 +37,49 @@
         </v-list>
       </v-card>
     </v-menu>
-    <v-btn v-else tile depressed @click="dispatch('ui/walletDialogStatus', true)">Connect to Wallet</v-btn>
+    <v-btn v-else tile depressed @click="connectWallet">Connect XRP Wallet</v-btn>
   </client-only>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, useStore, inject, useContext } from '@nuxtjs/composition-api'
+import { computed, defineComponent, inject, useContext } from '@nuxtjs/composition-api'
 import { create } from 'blockies-ts'
-import { State } from '~/types/state'
-import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
+import { XRP_PLUGIN_KEY, XrpClient } from '~/plugins/web3/xrp.client'
 
 export default defineComponent({
   setup() {
     // COMPOSABLE
-    const { dispatch } = useStore<State>()
-    const { disconnectWallet, account, walletReady } = inject(WEB3_PLUGIN_KEY) as Web3
+    const { connectWallet, disconnectWallet, address, isWalletReady } = inject(XRP_PLUGIN_KEY) as XrpClient
     const { $copyAddressToClipboard } = useContext()
 
     // COMPUTED
-    const avatar = computed(() => create({ seed: account.value }).toDataURL() || '')
+    const avatar = computed(() => create({ seed: address.value }).toDataURL() || '')
     const accountShortCut = computed(
-      () => `${account.value.slice(0, 5)}.....${account.value.slice(account.value.length - 5, account.value.length)}`
+      () => `${address.value.slice(0, 5)}.....${address.value.slice(address.value.length - 5, address.value.length)}`
     )
 
     // METHODS
     const walletActions = computed(() => {
       return [
         { text: 'Copy Address', icon: 'mdi-content-copy', action: copyAccountAddress },
-        { text: 'View on Block Explorer', icon: 'mdi-open-in-new', action: navigateToExplorer },
+        { text: 'View on XRP Explorer', icon: 'mdi-open-in-new', action: navigateToExplorer },
         { text: 'Disconnect Wallet', icon: 'mdi-power', action: disconnectWallet },
       ]
     })
 
-    const copyAccountAddress = async () => await $copyAddressToClipboard(account.value)
+    const copyAccountAddress = async () => await $copyAddressToClipboard(address.value)
 
     function navigateToExplorer() {
       try {
-        window.open(`https://etherscan.io/address/${account.value}`, '_blank')
+        window.open(`https://xrpscan.com/account/${address.value}`, '_blank')
       } catch {}
     }
 
     return {
-      dispatch,
-      walletReady,
-      account,
+      connectWallet,
+      disconnectWallet,
+      isWalletReady,
+      address,
       avatar,
       accountShortCut,
       walletActions,

@@ -337,6 +337,8 @@ export default defineComponent({
     XrpAmmSwap,
   },
   setup() {
+    console.log('🔍 [DEBUG] xrp-token/_id page setup() called')
+    
     const {
       loading,
       tokenData,
@@ -355,7 +357,17 @@ export default defineComponent({
       formatDate,
       getTransactionTypeColor,
     } = useXrpToken()
+    
+    console.log('🔍 [DEBUG] useXrpToken result:', { 
+      tokenCurrency: tokenData.value?.currency,
+      issuerAddress: tokenData.value?.issuerAddress,
+      tokenBalancesCount: tokenBalances.value?.length || 0,
+      transactionsCount: walletTransactions.value?.length || 0,
+      ammDataCount: ammChartData.value?.length || 0,
+      loading: loading.value 
+    })
 
+    console.log('🔍 [DEBUG] xrp-token/_id setup() completed')
     return {
       loading,
       tokenData,

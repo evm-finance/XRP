@@ -1,13 +1,10 @@
-import { GasStats } from './apollo/main/types'
 import { Network, SearchResult } from '~/types/global'
 
 export type ThemeOptions = 'dark' | 'light'
 
 export interface ConfigState {
   title: string
-  gasStats: GasStats[] | null
   networks: Network[]
-  balancesChains: number[]
   protocols: { name: string; symbol: string; id: string }[]
   globalSearchResult: SearchResult[]
 }

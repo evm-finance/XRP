@@ -75,6 +75,7 @@ import { plainToClass } from 'class-transformer'
 import { useQuery } from '@vue/apollo-composable/dist'
 import { XRPAccountBalancesGQL } from '~/apollo/queries'
 import { XRP_PLUGIN_KEY, XrpClient } from '~/plugins/web3/xrp.client'
+import useXrpGraphQLWithLogging from '~/composables/useXrpGraphQLWithLogging'
 
 //import { State } from '~/types/state'
 //import { result } from '~/composables/useXrpAccounts'
@@ -99,10 +100,25 @@ export default defineComponent({
         // Use connected wallet address or fallback to default
         const accountAddress = computed(() => address.value || 'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj')
         
-        const { onResult } = useQuery(
+        // Log the query content BEFORE making the call
+        console.log('🚀 [BEFORE QUERY] xrpBalances - XRPAccountBalancesGQL:', {
+            query: XRPAccountBalancesGQL.loc?.source.body,
+            variables: { account: accountAddress.value },
+            timestamp: new Date().toISOString()
+        })
+
+        const { useLoggedQuery } = useXrpGraphQLWithLogging()
+        const { onResult } = useLoggedQuery(
             XRPAccountBalancesGQL, 
             () => ({ account: accountAddress.value }), 
-            { fetchPolicy: 'no-cache' }
+            { 
+                fetchPolicy: 'no-cache',
+                context: {
+                    queryName: 'XRPAccountBalances',
+                    component: 'xrpBalances',
+                    purpose: 'XRP account balances display'
+                }
+            }
         )
 
         const screenerDataFormatted = computed(() =>
@@ -242,17 +258,18 @@ export default defineComponent({
         })
 
         // Add error handling
-        const { onError } = useQuery(
+        const { onError } = useLoggedQuery(
             XRPAccountBalancesGQL, 
             () => ({ account: accountAddress.value }), 
-            { fetchPolicy: 'no-cache' }
+            { 
+                fetchPolicy: 'no-cache',
+                context: {
+                    queryName: 'XRPAccountBalances',
+                    component: 'xrpBalances',
+                    purpose: 'XRP account balances error handling'
+                }
+            }
         )
-
-        onError((error: any) => {
-            console.error('GraphQL Error in xrpBalances:', error)
-            loading.value = false
-            // You could add error state handling here
-        })
 
         // Watch for wallet address changes
         onMounted(() => {

@@ -6,14 +6,14 @@
       <v-row justify="center" class="text-center">
         <v-col cols="12" class="mt-6">
           <h1 class="text-h2 font-weight-regular">
-            EVM Finance <br />
-            <span class="text-h4 font-weight-light mt-3 grey--text"> Unified Interface for Decentralized Finance </span>
+            XRP Finance <br />
+            <span class="text-h4 font-weight-light mt-3 grey--text"> Unified Interface for XRP Ledger </span>
           </h1>
         </v-col>
 
         <v-col cols="12">
           <p class="text-h4 font-weight-light">
-            Token Pages • Aave Professional Interface • Multi Chain Balances • Advanced Analytics
+            Token Pages • AMM Trading • Multi Account Balances • Advanced Analytics
           </p>
         </v-col>
       </v-row>
@@ -62,22 +62,22 @@ export default defineComponent({
     const items = ref([
       {
         color: 'primary lighten-2',
-        icon: 'mdi-tablet-dashboard',
-        header: 'Aave Professional Trader',
-        desc: 'Easier Interface using Aave smart contracts',
+        icon: 'mdi-swap-horizontal',
+        header: 'XRP AMM Trading',
+        desc: 'Advanced Automated Market Maker trading on XRP Ledger',
       },
       {
         color: 'red lighten-2',
         icon: 'mdi-wallet-outline',
         header: 'Asset Management',
-        desc: 'Full Wallet Balance, Chain Balances, Token Balance',
+        desc: 'Full Wallet Balance, Account Balances, Token Balance',
       },
 
       {
         color: 'orange lighten-2',
         icon: 'mdi-desktop-mac-dashboard',
         header: 'Token Pages',
-        desc: 'Balances, investment options, and metrics on a single screen',
+        desc: 'Balances, trading options, and metrics on a single screen',
       },
       {
         color: 'red lighten-2',
@@ -89,13 +89,13 @@ export default defineComponent({
         color: 'primary lighten-2',
         icon: 'mdi-transit-connection-variant',
         header: 'Self Custody',
-        desc: 'Support for Ethereum Mainnet, Binance Smart Chain, Matic, Fantom Opera, Avalanche networks and more',
+        desc: 'Support for XRP Ledger with secure wallet connections',
       },
       {
         color: 'red lighten-2',
         icon: 'mdi-rocket-launch-outline',
-        header: 'NFT Launch',
-        desc: 'Check this site for future updates',
+        header: 'Advanced Features',
+        desc: 'Trust lines, token mints, and more XRP-specific features',
       },
     ])
 
@@ -106,10 +106,12 @@ export default defineComponent({
     const ui = computed(() => store.state.ui)
     const theme = computed(() => store.state.ui.theme)
 
+    useMetaTags({
+      title: 'XRP Finance - Unified Interface for XRP Ledger',
+      description: 'Advanced trading, analytics, and asset management for XRP Ledger'
+    })
+
     return { items, ui, theme }
-  },
-  head() {
-    return useMetaTags('homepage')
   },
 })
 </script>

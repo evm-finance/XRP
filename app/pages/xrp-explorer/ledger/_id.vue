@@ -123,8 +123,8 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, useRoute, useRouter } from '@nuxtjs/composition-api'
-import { useQuery } from '@vue/apollo-composable/dist'
+import { computed, defineComponent, useRoute, useRouter, ref, watch } from '@nuxtjs/composition-api'
+import useXrpGraphQLWithLogging from '~/composables/useXrpGraphQLWithLogging'
 import { BlockGQL } from '~/apollo/main/token.query.graphql'
 import { Block, XrpTransaction } from '~/types/apollo/main/types'
 export default defineComponent({
@@ -132,10 +132,39 @@ export default defineComponent({
   setup() {
     const route = useRoute()
     const router = useRouter()
+    const { useLoggedQuery } = useXrpGraphQLWithLogging()
+    
     const ledgerIndex = computed(() => route.value.params?.id ?? 0)
-    const { result } = useQuery(BlockGQL, () => ({ network: 'ripple', blockNumber: ledgerIndex.value }), {
-      fetchPolicy: 'no-cache',
+    
+    // Internal error handling - prevent Apollo errors from bubbling up
+    const internalError = ref<string | null>(null)
+    
+    const { result, error } = useLoggedQuery(
+      BlockGQL, 
+      () => ({ network: 'ripple', blockNumber: ledgerIndex.value }), 
+      {
+        fetchPolicy: 'no-cache',
+        context: {
+          queryName: 'Block',
+          component: 'xrp-explorer-ledger',
+          purpose: 'XRP ledger block data'
+        }
+      }
+    )
+    
+    // Watch for Apollo errors and handle them internally
+    watch(error, (newError) => {
+      if (newError) {
+        console.warn('GraphQL error in xrp-explorer-ledger, using fallback data:', newError)
+        internalError.value = 'Network error: using fallback data'
+      } else {
+        internalError.value = null
+      }
     })
+    
+    // Error state for graceful fallback
+    const hasError = computed(() => !!internalError.value || !!error.value)
+    
     const ledger = computed<Block | null>(() => result.value?.block ?? null)
 
     const transactions = computed(() =>

@@ -1,7 +1,49 @@
 # MASTER ACTIONABLE TASK LIST - XRP PROJECT
 
+## CRITICAL RULE: CORE XRP FUNCTIONALITY PROTECTION
+**NEVER disable core XRP functionality by renaming files with .disabled extension**
+- [x] Core XRP components must remain enabled: XrpTerminal, XrpAmmSwapDialog, XrpAmmActionDialog, XrpAmmHeatmap
+- [x] Core XRP composables must remain enabled: useXrpAmmSwap, useXrpAmmHeatmap, useXrpAmmLiveData, useXrpAmmTransactions
+- [x] Core XRP pages must remain enabled: xrp-amm-pools/_id.vue
+- [ ] Only Ethereum-specific or non-functional components should be disabled
+- [ ] If a component is needed for XRP functionality, it should be fixed rather than disabled
+
 ## Overview
 This document provides a comprehensive breakdown of all XRP project requirements into detailed, actionable sub-tasks. Each task is organized by feature/module and includes clear acceptance criteria for testing.
+
+---
+
+## 🚨 HIGH PRIORITY: XRP-ONLY CLEANUP TASK 🚨
+**ALWAYS ACTIVE - MAIN OBJECTIVE**
+
+### Remove All Non-XRP Components and Files
+- [ ] **Remove all Uniswap/Aave/Ethereum related files:**
+  - [ ] Delete `test/uniswap.bch-chain.spec.ts`
+  - [ ] Delete `test/uniswap.mainnet.spec.ts`
+  - [ ] Delete `types/aave.ts`
+  - [ ] Delete `types/aaveMarket.ts`
+  - [ ] Delete `types/abi/` directory (all ERC20/Uniswap ABIs)
+  - [ ] Delete `app/types/apollo/main/types.ts` (corrupted file)
+  - [ ] Remove all Uniswap/Aave imports from remaining files
+
+- [ ] **Fix composable import conflicts:**
+  - [ ] Remove duplicate query definitions in `useXrpTokenMints.ts`
+  - [ ] Add missing `XRPDefiDataGQL` to queries.ts
+  - [ ] Fix `useXrpTokenHeatmap.ts` type issues
+  - [ ] Fix `useXrpGraphQLLogging.ts` undefined object issues
+  - [ ] Fix `useXrpGraphQLWithLogging.ts` retry function type issues
+
+- [ ] **Remove non-XRP web3 components:**
+  - [ ] Delete or disable `plugins/web3/` non-XRP connectors
+  - [ ] Remove Metamask/Ethereum wallet integrations
+  - [ ] Keep only GEM wallet/XRP wallet functionality
+
+- [ ] **Clean up remaining type imports:**
+  - [ ] Remove all references to deleted types in remaining files
+  - [ ] Update import statements to use only XRP types
+  - [ ] Ensure all composables only import XRP-related queries
+
+**OBJECTIVE: The project should ONLY contain XRP-related functionality. All Ethereum, Uniswap, Aave, and other non-XRP components must be completely removed.**
 
 ---
 
@@ -476,4 +518,78 @@ This document provides a comprehensive breakdown of all XRP project requirements
 
 **Total Tasks: 89 actionable sub-tasks across 15 modules**
 **Estimated Timeline: 10 weeks**
-**Priority Focus: High-priority modules first** 
+**Priority Focus: High-priority modules first**
+
+## HIGH PRIORITY: XRP-ONLY CLEANUP (IN PROGRESS)
+- [x] Remove all non-XRP GraphQL queries from apollo/queries.ts
+- [x] Remove duplicate query definitions in `useXrpTokenMints.ts`
+- [x] Fix `useXrpTokenHeatmap.ts` type issues
+- [x] Remove Ethereum-specific components: GasInfo.vue, SwitchNetworkDialog.vue, NetworkSelection.vue
+- [x] Remove Ethereum-specific TransactionResult.vue and create XRP-specific XrpTransactionResult.vue
+- [x] Update layout to remove Ethereum-specific components and focus on XRP
+- [x] Fix useMetaTags function calls in pages
+- [x] Update index page to be XRP-focused instead of Ethereum-focused
+- [x] Fix WalletSelectDialog to use new Web3ErrorInterface structure
+- [x] Re-enable core XRP components that were incorrectly disabled
+- [ ] Remove PortfolioBalanceGrid.vue (Ethereum-specific, not used in XRP pages)
+- [ ] Remove DefiNodeTree.vue (Ethereum-specific, shows Aave/Uniswap)
+- [ ] Fix remaining type issues in web3 plugin and metamask connector
+- [ ] Remove all references to deleted Ethereum types (UniswapToken, GasStats, etc.)
+- [ ] Update all pages to use correct useMetaTags format
+- [ ] Remove any remaining Ethereum-specific imports and dependencies
+
+## 1. Integrate and summarize requirements from xrp-amm-specs.mdc, xrpl-finance-spec.mdc, and xrp-token-pages.mdc
+- [x] Read and summarize requirements from all three spec files
+- [x] Document the summary for future reference
+
+## 2. Generate a master actionable task list from all specs
+- [ ] Break down each major requirement into detailed, actionable sub-tasks
+- [ ] Organize tasks by feature/module (AMM, Token Pages, Analytics, Wallet, etc.)
+- [ ] Ensure each sub-task is clear and testable
+
+## 3. Set up progress tracking in tasks-progress.mdc
+- [ ] Copy the master task list to tasks-progress.mdc
+- [ ] Add checkboxes for each sub-task
+- [ ] Mark progress as tasks are completed
+
+## 4. Audit all files in [xrp-structure] for documentation, style, and API handler compliance
+- [ ] Review all files listed in [xrp-structure] for documentation
+- [ ] Check for code style and consistency
+- [ ] Ensure API handlers follow project conventions
+
+## 5. Implement wallet integration (GEM wallet)
+- [ ] Integrate GEM wallet for authentication and transactions
+- [ ] Display XRP balances and transactions in the UI
+- [ ] Support wallet connection only when needed (not on page load)
+- [ ] Support multiple wallet addresses (EVM and XRP)
+
+## 6. Implement AMM interface and swap functionality
+- [ ] Set up xrpl.js in the frontend
+- [ ] Implement AMM swap function (AMMTrade/OfferCreate)
+- [ ] Build UI for swap operations
+- [ ] Handle transaction signing and submission
+- [ ] Display swap results and errors
+
+## 7. Update and improve XRP token pages (UI, data, copy icon, USD/XRP toggle)
+- [ ] Remove Uniswap/Aave interfaces
+- [ ] Add XRP screener fields (issuer, price, volume, etc.)
+- [ ] Add copy icon for issuer address
+- [ ] Add AMM chart data (tabs for 1H, 1D, 1W)
+- [ ] Show wallet transactions and transaction summary links
+- [ ] Add USD/XRP price toggle
+
+## 8. Add and display XRP balances and transactions on relevant pages
+- [ ] Show balances and transactions on balances, screener, and portfolio pages
+- [ ] Add widgets for XRP balance display
+
+## 11. Add Trust line interface
+- [ ] Implement Trust line management in the UI
+- [ ] Integrate with GEM wallet
+
+## 12. Add new token mints page and DEX/liquidity pool displays
+- [ ] Create new token mints page
+- [ ] Show liquidity and analytics for new tokens
+- [ ] Add DEX/liquidity pool displays
+
+## 15. Ongoing: Mark tasks as completed in tasks-progress.mdc after each step
+- [ ] Update progress tracker after each completed task 

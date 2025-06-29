@@ -67,60 +67,34 @@
 <script lang="ts">
 import { computed, defineComponent, inject, PropType } from '@nuxtjs/composition-api'
 import { BalanceItem, Balance } from '~/types/apollo/main/types'
-import { Web3, WEB3_PLUGIN_KEY } from '~/plugins/web3/web3'
+import { useHelpers } from '~/composables/useHelpers'
 
 type Props = {
   data: Balance
+  height?: number
 }
 
-export default defineComponent<Props>({
+export default defineComponent({
   props: {
-    data: { type: Object as PropType<Balance>, default: () => ({}) },
+    data: { type: Object as () => Balance, required: true },
+    height: { type: Number, default: 400 },
   },
-
   setup(props) {
     // COMPOSABLES
-    const { getNetworkByChainNumber } = inject(WEB3_PLUGIN_KEY) as Web3
+    const { getCurrentNetwork } = useHelpers()
     // DATA
     const columns = [
-      {
-        text: 'Token',
-        align: 'start',
-        value: 'contractTickerSymbol',
-        class: 'px-2',
-        width: 60,
-      },
-      {
-        text: 'Balance',
-        align: 'start',
-        value: 'balance',
-        class: 'px-2',
-        width: 60,
-      },
-      {
-        text: 'Price',
-        align: 'start',
-        value: 'quoteRate',
-        width: 80,
-        class: ['px-2', 'text-truncate'],
-        cellClass: ['px-2', 'text-truncate'],
-      },
-      {
-        text: 'Value',
-        align: 'start',
-        value: 'quote',
-        class: ['px-2', 'text-truncate'],
-        cellClass: ['px-2', 'text-truncate'],
-        width: 90,
-      },
+      { text: 'Token', value: 'symbol', width: '30%' },
+      { text: 'Balance', value: 'balance', width: '25%' },
+      { text: 'Price', value: 'price', width: '20%' },
+      { text: 'Value', value: 'value', width: '25%' },
     ]
-    const height = 450
 
     // COMPUTED
     const totalBalance = computed(() => props.data.items.reduce((n, { quote }) => n + quote, 0))
     const balanceItems = computed<BalanceItem[]>(() => props.data.items.filter((elem) => elem.quote > 0))
-    const chainData = computed(() => getNetworkByChainNumber(props.data.chainId))
-    return { columns, balanceItems, height, chainData, totalBalance }
+    const chainData = computed(() => getCurrentNetwork())
+    return { columns, balanceItems, height: props.height, chainData, totalBalance }
   },
 })
 </script>

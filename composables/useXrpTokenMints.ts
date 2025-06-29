@@ -1,65 +1,6 @@
 import { ref, computed } from '@nuxtjs/composition-api'
-import { useQuery } from '@vue/apollo-composable'
-import { gql } from 'graphql-tag'
-
-// GraphQL queries
-const XRPTokenMintsGQL = gql`
-  query XRPTokenMintsGQL($limit: Int = 50) {
-    xrpTokenMints(limit: $limit) {
-      currency
-      issuerAddress
-      tokenName
-      issuerName
-      mintDate
-      initialSupply
-      currentSupply
-      price
-      marketcap
-      volume24H
-      holders
-      liquidityPools {
-        poolId
-        asset1
-        asset2
-        liquidity
-        volume24H
-        fees24H
-        apr
-      }
-    }
-  }
-`
-
-const XRPLiquidityPoolsGQL = gql`
-  query XRPLiquidityPoolsGQL($limit: Int = 50) {
-    xrpLiquidityPools(limit: $limit) {
-      poolId
-      asset1 {
-        currency
-        issuer
-        symbol
-        name
-      }
-      asset2 {
-        currency
-        issuer
-        symbol
-        name
-      }
-      liquidity
-      volume24H
-      volume7D
-      fees24H
-      fees7D
-      apr
-      tvl
-      priceChange24H
-      priceChange7D
-      transactions24H
-      uniqueTraders24H
-    }
-  }
-`
+import useXrpGraphQLWithLogging from './useXrpGraphQLWithLogging'
+import { XRPTokenMintsGQL, XRPLiquidityPoolsGQL } from '~/apollo/queries'
 
 // Interfaces
 export interface XRPTokenMint {
@@ -144,6 +85,8 @@ interface LiquidityPool {
 }
 
 export default function useXrpTokenMints() {
+  const { useLoggedQuery } = useXrpGraphQLWithLogging()
+  
   // State
   const loading = ref(false)
   const tokenMints = ref<TokenMint[]>([])
@@ -169,15 +112,38 @@ export default function useXrpTokenMints() {
     sortOrder: 'desc'
   })
 
-  // Queries
-  const { onResult: onTokenMintsResult, refetch: refetchTokenMints } = useQuery(XRPTokenMintsGQL, { 
-    fetchPolicy: 'no-cache', 
-    pollInterval: 60000 
+  // Log the query content BEFORE making the calls
+  console.log('🚀 [BEFORE QUERY] useXrpTokenMints - XRPTokenMintsGQL:', {
+    query: XRPTokenMintsGQL.loc?.source.body,
+    variables: {},
+    timestamp: new Date().toISOString()
   })
-  
-  const { onResult: onLiquidityPoolsResult, refetch: refetchLiquidityPools } = useQuery(XRPLiquidityPoolsGQL, { 
-    fetchPolicy: 'no-cache', 
-    pollInterval: 30000 
+
+  // Queries
+  const { onResult: onTokenMintsResult, refetch: refetchTokenMints } = useLoggedQuery(XRPTokenMintsGQL, {
+    fetchPolicy: 'no-cache',
+    pollInterval: 60000,
+    context: {
+      queryName: 'XRPTokenMints',
+      component: 'useXrpTokenMints',
+      purpose: 'XRP token mints data'
+    }
+  })
+
+  console.log('🚀 [BEFORE QUERY] useXrpTokenMints - XRPLiquidityPoolsGQL:', {
+    query: XRPLiquidityPoolsGQL.loc?.source.body,
+    variables: {},
+    timestamp: new Date().toISOString()
+  })
+
+  const { onResult: onLiquidityPoolsResult, refetch: refetchLiquidityPools } = useLoggedQuery(XRPLiquidityPoolsGQL, {
+    fetchPolicy: 'no-cache',
+    pollInterval: 60000,
+    context: {
+      queryName: 'XRPLiquidityPools',
+      component: 'useXrpTokenMints',
+      purpose: 'XRP liquidity pools data'
+    }
   })
 
   // Computed
@@ -403,17 +369,31 @@ export default function useXrpTokenMints() {
     liquidityPools.value = transformedPools
   })
 
-  // Add error handling
-  const { onError: onTokenMintsError } = useQuery(
+  // Error handling queries with enhanced logging
+  const { onError: onTokenMintsError } = useLoggedQuery(
     XRPTokenMintsGQL,
-    null,
-    { fetchPolicy: 'no-cache', pollInterval: 60000 }
+    {
+      fetchPolicy: 'no-cache',
+      pollInterval: 60000,
+      context: {
+        queryName: 'XRPTokenMints',
+        component: 'useXrpTokenMints',
+        purpose: 'XRP token mints data (error handling)'
+      }
+    }
   )
 
-  const { onError: onLiquidityPoolsError } = useQuery(
+  const { onError: onLiquidityPoolsError } = useLoggedQuery(
     XRPLiquidityPoolsGQL,
-    null,
-    { fetchPolicy: 'no-cache', pollInterval: 30000 }
+    {
+      fetchPolicy: 'no-cache',
+      pollInterval: 60000,
+      context: {
+        queryName: 'XRPLiquidityPools',
+        component: 'useXrpTokenMints',
+        purpose: 'XRP liquidity pools data (error handling)'
+      }
+    }
   )
 
   onTokenMintsError((error: any) => {

@@ -72,7 +72,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref, useContext } from '@nuxtjs/composition-api'
-import { useQuery } from '@vue/apollo-composable/dist'
+import useXrpGraphQLWithLogging from '~/composables/useXrpGraphQLWithLogging'
 import { XRPScreenerGQL } from '~/apollo/queries'
 import XrpBalanceWidget from '~/components/portfolio/XrpBalanceWidget.vue'
 // import  useXrpTrade from '~/composables/useXrpTrade'
@@ -93,16 +93,37 @@ export default defineComponent({
     XrpBalanceWidget,
   },
   setup() {
+    console.log('🔍 [DEBUG] xrp-screener page setup() called')
+    
     const { $f } = useContext()
+    const { useLoggedQuery } = useXrpGraphQLWithLogging()
+    
     const loading = ref(true)
     const screenerRawData = ref<XRPScreenerElem[]>([])
     // const offers = ref<offerTypes[]>([])
-    const { onResult } = useQuery(XRPScreenerGQL, { fetchPolicy: 'no-cache', pollInterval: 60000 })
+    
+    console.log('🔍 [DEBUG] xrp-screener: About to execute GraphQL query')
+    
+    // GraphQL query with enhanced logging
+    const { onResult, onError } = useLoggedQuery(XRPScreenerGQL, { 
+      fetchPolicy: 'no-cache', 
+      pollInterval: 60000,
+      context: {
+        queryName: 'XRPScreener',
+        component: 'xrp-screener',
+        purpose: 'XRP token screener data for main page'
+      }
+    })
+    
+    console.log('🔍 [DEBUG] xrp-screener: GraphQL query executed, setting up result handlers')
+    
     // const { buy, sell, connectWallet, isOpen, openDialog, closeDialog } = useXrpTrade()
     // type offerTypes = 'buy' | 'sell'
 
-    const screenerDataFormatted = computed(() =>
-      screenerRawData.value.map((elem) => ({
+    const screenerDataFormatted = computed(() => {
+      console.log('🔍 [DEBUG] xrp-screener screenerDataFormatted computed called, data count:', screenerRawData.value.length)
+      
+      return screenerRawData.value.map((elem) => ({
         ...elem,
         currencyShort: elem.currency.length > 20 ? elem.currency.substring(0, 20) + '...' : elem.currency,
         issuerAddressShort: `${elem.issuerAddress.slice(0, 10)}........${elem.issuerAddress.slice(
@@ -113,7 +134,7 @@ export default defineComponent({
         marketCapFormatted: $f(elem.marketcap, { minDigits: 2, after: '' }),
         volume24HFormatted: $f(elem.volume24H, { minDigits: 2, after: '' }),
       }))
-    )
+    })
 
     const copyToClipboard = async (text: string) => {
       try {
@@ -126,11 +147,22 @@ export default defineComponent({
 
     // EVENTS
     onResult((queryResult: any) => {
+      console.log('🔍 [DEBUG] xrp-screener onResult called:', {
+        hasData: !!queryResult.data,
+        screenerCount: queryResult.data?.xrpScreener?.length || 0,
+        loading: queryResult.loading
+      })
+      
       screenerRawData.value = queryResult.data?.xrpScreener ?? []
       loading.value = false
     })
 
-    // const screenerData = computed(() => result.value?.xrpScreener ?? [])
+    // Enhanced error handling for screener query
+    onError((error: any) => {
+      console.error('🔍 [DEBUG] xrp-screener onError called:', error)
+      loading.value = false
+      // TODO: Add user-friendly error message display
+    })
 
     const cols = computed(() => {
       return [
@@ -143,22 +175,6 @@ export default defineComponent({
           cellClass: ['px-4', 'text-truncate'],
           sortable: true,
         },
-        // {
-        //   text: '',
-        //   value: 'buy',
-        //   width: 50,
-        //   sortable: false,
-        //   class: ['px-2', 'text-truncate'],
-        //   cellClass: ['px-2', 'text-truncate'],
-        // },
-        // {
-        //   text: '',
-        //   value: 'sell',
-        //   width: 50,
-        //   sortable: false,
-        //   class: ['px-2', 'text-truncate'],
-        //   cellClass: ['px-2', 'text-truncate'],
-        // },
         {
           text: 'Issuer Name',
           align: 'left',
@@ -168,7 +184,6 @@ export default defineComponent({
           class: ['px-2', 'text-truncate'],
           cellClass: ['px-2', 'text-truncate'],
         },
-
         {
           text: 'Issuer Address',
           align: 'left',
@@ -178,7 +193,6 @@ export default defineComponent({
           class: ['px-2', 'text-truncate'],
           cellClass: ['px-2', 'text-truncate', 'grey--text'],
         },
-
         {
           text: 'Price (XRP)',
           align: 'left',
@@ -188,7 +202,6 @@ export default defineComponent({
           class: ['px-2', 'text-truncate'],
           cellClass: ['px-2', 'text-truncate'],
         },
-
         {
           text: 'MarketCap (XRP)',
           align: 'left',
@@ -198,7 +211,6 @@ export default defineComponent({
           class: ['px-2', 'text-truncate'],
           cellClass: ['px-2', 'text-truncate'],
         },
-
         {
           text: 'Volume 24H (XRP)',
           align: 'left',
@@ -211,18 +223,8 @@ export default defineComponent({
       ]
     })
 
-    return {
-      loading,
-      cols,
-      screenerDataFormatted,
-      copyToClipboard,
-      // buy,
-      // sell,
-      // connectWallet,
-      // isOpen,
-      // openDialog,
-      // closeDialog,
-    }
+    console.log('🔍 [DEBUG] xrp-screener setup() completed')
+    return { loading, screenerDataFormatted, copyToClipboard, cols }
   },
   head: {},
 })

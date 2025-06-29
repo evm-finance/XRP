@@ -89,7 +89,7 @@ export default function useXrpAmmTransactions(pool: XrpAmmPool, amount: any) {
       console.log('Creating AMM deposit transaction:', depositParams)
       
       // Sign transaction with wallet
-      const signedTx = await signAMMDepositTransaction(depositParams)
+      const signedTx = await signAMMDepositTransaction()
       
       // Submit and confirm transaction
       const txReceipt = await submitAndConfirm(signedTx)
@@ -141,7 +141,7 @@ export default function useXrpAmmTransactions(pool: XrpAmmPool, amount: any) {
       console.log('Creating AMM withdraw transaction:', withdrawParams)
       
       // Sign transaction with wallet
-      const signedTx = await signAMMWithdrawTransaction(withdrawParams)
+      const signedTx = await signAMMWithdrawTransaction()
       
       // Submit and confirm transaction
       const txReceipt = await submitAndConfirm(signedTx)

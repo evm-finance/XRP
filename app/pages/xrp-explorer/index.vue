@@ -39,13 +39,12 @@
 <script lang="ts">
 import { computed, defineComponent } from '@nuxtjs/composition-api'
 import XRPLibeLedgersChart from '~/components/XRPLibeLedgersChart.vue'
-import useXrpScrerener from '~/composables/useXrpScrerener'
-import AaveCompositionChart from '~/components/pools/AaveCompositionChart.vue'
+import useXrpScreener from '~/composables/useXrpScreener'
 
 export default defineComponent({
-  components: { AaveCompositionChart, XRPLibeLedgersChart },
+  components: { XRPLibeLedgersChart },
   setup() {
-    const { blocks, loading, currentTime } = useXrpScrerener()
+    const { blocks, loading, currentTime } = useXrpScreener()
 
     const events = computed(() => {
       const sumObject: Record<string, number> = {}

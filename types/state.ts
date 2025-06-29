@@ -1,4 +1,3 @@
-import { GasStats } from './apollo/main/types'
 import { Network, SearchResult } from '~/types/global'
 
 export type ThemeOptions = 'dark' | 'light'
@@ -8,18 +7,25 @@ export type HeatmapTileSize = 'marketcap' | 'volume' | 'price' | 'change'
 
 export interface ConfigState {
   title: string
-  gasStats: GasStats[] | null
   networks: Network[]
-  balancesChains: number[]
+  balancesChains: string[]
   protocols: { name: string; symbol: string; id: string }[]
   globalSearchResult: SearchResult[]
 }
 
 export interface UiState {
   theme: ThemeOptions
+  gasStats: XRPGasStats[] | null
+  searchResults: SearchResult[]
   dark: { [key: string]: string }
   light: { [key: string]: string }
   walletSelectionDialog: boolean
+}
+
+export interface XRPGasStats {
+  network: string
+  fee: number
+  symbol: string
 }
 
 export interface WalletState {

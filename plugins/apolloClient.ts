@@ -3,6 +3,9 @@ import { DefaultApolloClient } from '@vue/apollo-composable/dist'
 
 export default defineNuxtPlugin(({ app }) =>
   onGlobalSetup(() => {
-    provide(DefaultApolloClient, app.apolloProvider?.defaultClient)
+    // Get the Apollo client
+    const apolloClient = app.apolloProvider?.defaultClient
+    
+    provide(DefaultApolloClient, apolloClient)
   })
 )

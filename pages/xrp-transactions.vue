@@ -270,14 +270,15 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, useContext, useRoute } from '@nuxtjs/composition-api'
-import { useQuery } from '@vue/apollo-composable'
+import { defineComponent, ref, computed, onMounted, useContext, useRoute, watch } from '@nuxtjs/composition-api'
+import useXrpGraphQLWithLogging from '~/composables/useXrpGraphQLWithLogging'
 import { XRPAccountTransactionsGQL } from '~/apollo/queries'
 
 export default defineComponent({
   setup() {
     const { $f } = useContext()
     const route = useRoute()
+    const { useLoggedQuery } = useXrpGraphQLWithLogging()
     
     // State
     const address = ref<string>('')
@@ -325,8 +326,8 @@ export default defineComponent({
       { text: 'AMMTrade', value: 'AMMTrade' },
     ]
 
-    // GraphQL query
-    const { result, loading: queryLoading, error: queryError, refetch } = useQuery(
+    // Enhanced GraphQL query with logging
+    const { result, loading: queryLoading, error: queryError, refetch } = useLoggedQuery(
       XRPAccountTransactionsGQL,
       computed(() => ({ address: address.value })),
       () => ({
@@ -335,6 +336,22 @@ export default defineComponent({
         errorPolicy: 'all'
       })
     )
+
+    // Internal error handling - prevent Apollo errors from bubbling up
+    const internalError = ref<string | null>(null)
+    
+    // Watch for Apollo errors and handle them internally
+    watch(queryError, (newError) => {
+      if (newError) {
+        console.warn('GraphQL error in xrp-transactions, using fallback data:', newError)
+        internalError.value = 'Network error: using fallback data'
+      } else {
+        internalError.value = null
+      }
+    })
+
+    // Error state for graceful fallback
+    const hasError = computed(() => !!internalError.value || !!error.value)
 
     // Computed data
     const transactions = computed(() => result.value?.xrpTransactions || [])
@@ -483,7 +500,7 @@ export default defineComponent({
       address,
       addressInput,
       loading: computed(() => loading.value || queryLoading.value),
-      error,
+      hasError,
       searchQuery,
       transactionType,
       

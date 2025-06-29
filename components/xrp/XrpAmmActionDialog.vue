@@ -103,7 +103,7 @@ import {
 } from '@nuxtjs/composition-api'
 import { State } from '~/types/state'
 import useXrpAmmTransactions from '~/composables/useXrpAmmTransactions'
-import TransactionResult from '~/components/common/TransactionResult.vue'
+import XrpTransactionResult from '~/components/common/XrpTransactionResult.vue'
 import XrpAmmActionForm from '~/components/xrp/XrpAmmActionForm.vue'
 
 interface XrpAmmPool {
@@ -132,7 +132,7 @@ type ActionOptions = {
 export default defineComponent({
   components: {
     XrpAmmActionForm,
-    TransactionResult,
+    XrpTransactionResult,
   },
   props: {
     pool: { type: Object as () => XrpAmmPool, required: true },

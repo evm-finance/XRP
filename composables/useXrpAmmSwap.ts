@@ -60,8 +60,8 @@ export default function useXrpAmmSwap(
   // Get live quote when amount changes
   const { quote: liveQuote, loading: quoteLoading, error: quoteError } = getQuote(
     pool.id,
-    computed(() => fromAmount.value?.toString() || '0'),
-    computed(() => fromToken.value?.symbol || '')
+    fromAmount.value?.toString() || '0',
+    fromToken.value?.symbol || ''
   )
   
   // Computed balances
@@ -181,13 +181,13 @@ export default function useXrpAmmSwap(
         amount: fromAmount.value.toString(),
         amount2Currency: toToken.value.symbol,
         amount2Issuer: toToken.value.issuer,
-        amount2Value: liveQuote.value.outputAmount
+        amount2Value: liveQuote.value?.outputAmount || '0'
       }
       
       console.log('Creating AMM trade transaction:', tradeParams)
       
       // Sign transaction with wallet
-      const signedTx = await signAMMTradeTransaction(tradeParams)
+      const signedTx = await signAMMTradeTransaction()
       
       // Submit and confirm transaction
       const txReceipt = await submitAndConfirm(signedTx)
@@ -199,8 +199,8 @@ export default function useXrpAmmSwap(
         to: pool.id,
         poolId: pool.id,
         inputAmount: fromAmount.value,
-        outputAmount: liveQuote.value.outputAmount,
-        priceImpact: liveQuote.value.priceImpact
+        outputAmount: liveQuote.value?.outputAmount || '0',
+        priceImpact: liveQuote.value?.priceImpact || 0
       }
       
       isTxMined.value = true
@@ -209,7 +209,7 @@ export default function useXrpAmmSwap(
       // Refresh data
       await refreshAll()
       
-      console.log(`Successfully swapped ${fromAmount.value} ${fromToken.value.symbol} for ${liveQuote.value.outputAmount} ${toToken.value.symbol}`)
+      console.log(`Successfully swapped ${fromAmount.value} ${fromToken.value.symbol} for ${liveQuote.value?.outputAmount || '0'} ${toToken.value.symbol}`)
       
     } catch (err: any) {
       errorMessage.value = err.message || 'Swap failed'

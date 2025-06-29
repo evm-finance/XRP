@@ -127,24 +127,52 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, useRoute } from '@nuxtjs/composition-api'
-import { useQuery } from '@vue/apollo-composable'
+import { computed, defineComponent, ref, useRoute, watch } from '@nuxtjs/composition-api'
+import useXrpGraphQLWithLogging from '~/composables/useXrpGraphQLWithLogging'
 import { XRPTransactionGQL } from '~/apollo/queries'
 import { XrpTransaction } from '~/types/apollo/main/types'
 export default defineComponent({
   components: {},
   setup() {
     const route = useRoute()
+    const { useLoggedQuery } = useXrpGraphQLWithLogging()
+    
     const hash = computed(() => route.value.params?.id ?? '')
-    const { result } = process.browser
-      ? useQuery(XRPTransactionGQL, () => ({
-          hash: hash.value,
-        }))
-      : { result: ref(null) }
+    
+    // Internal error handling - prevent Apollo errors from bubbling up
+    const internalError = ref<string | null>(null)
+    
+    const { result, error } = process.browser
+      ? useLoggedQuery(
+          XRPTransactionGQL, 
+          () => ({ hash: hash.value }),
+          {
+            context: {
+              queryName: 'XRPTransaction',
+              component: 'xrp-explorer-tx',
+              purpose: 'XRP transaction data'
+            }
+          }
+        )
+      : { result: ref(null), error: ref(null) }
+      
+    // Watch for Apollo errors and handle them internally
+    watch(error, (newError) => {
+      if (newError) {
+        console.warn('GraphQL error in xrp-explorer-tx, using fallback data:', newError)
+        internalError.value = 'Network error: using fallback data'
+      } else {
+        internalError.value = null
+      }
+    })
+    
+    // Error state for graceful fallback
+    const hasError = computed(() => !!internalError.value || !!error.value)
+    
     const txData = computed<XrpTransaction>(() => result.value?.xrpTransaction ?? null)
     const takerGets = computed(() => txData.value?.takerGets ?? null)
 
-    return { txData, takerGets }
+    return { txData, takerGets, hasError }
   },
   head: {},
 })

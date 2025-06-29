@@ -1,3 +1,5 @@
+import type { XRPToken } from './global'
+
 export interface HeatmapData {
   name: string
   value: number
@@ -27,6 +29,8 @@ export interface HeatmapRowData {
   issuerName?: string
   icon?: string
   size?: number
+  token1?: XRPToken & { issuer?: string; currency?: string; icon?: string }
+  token2?: XRPToken & { issuer?: string; currency?: string; icon?: string }
 }
 
 export interface HeatmapUpdateData {
