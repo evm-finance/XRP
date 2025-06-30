@@ -81,22 +81,9 @@ export const XRPTransactionGQL = gql`
 `
 
 // XRP Account Queries
-export const XRPAccountTransactionsGQL = gql`
-  query XRPAccountTransactionsGQL($address: String!) {
-    xrpTransactions(address: $address) {
-      amount
-      destination
-      transactionType
-      fee
-      hash
-      ledgerIndex
-    }
-  }
-`
-
 export const XRPAccountBalancesGQL = gql`
-  query XRPAccountBalancesGQL($account: String!) {
-    xrpAccountBalances(account: $account) {
+  query XRPAccountBalancesGQL($address: String!) {
+    xrpAccountBalances(address: $address) {
       account
       xrpBalance
       xrpPrice
@@ -112,9 +99,38 @@ export const XRPAccountBalancesGQL = gql`
   }
 `
 
+export const XRPAccountTransactionsGQL = gql`
+  query XRPAccountTransactionsGQL($address: String!) {
+    xrpAccountTransactions(address: $address) {
+      account
+      amount
+      destination
+      fee
+      flags
+      lastLedgerSequence
+      offerSequence
+      sequence
+      signingPubKey
+      takerGets
+      takerPays
+      transactionType
+      txnSignature
+      date
+      hash
+      inLedger
+      ledgerIndex
+      meta
+      metadata
+      validated
+      warnings
+      memos
+    }
+  }
+`
+
 export const XRPAccountDataGQL = gql`
-  query XRPAccountDataGQL($address: String!) {
-    xrpAccountData(address: $address) {
+  query XRPAccountDataGQL($account: String!) {
+    xrpAccountData(account: $account) {
       account
       balances {
         account
@@ -158,8 +174,8 @@ export const XRPAccountDataGQL = gql`
 `
 
 export const XRPDefiDataGQL = gql`
-  query XRPDefiDataGQL($address: String!) {
-    xrpDefiData(address: $address) {
+  query XRPDefiDataGQL($account: String!) {
+    xrpDefiData(account: $account) {
       account
       xrpBalance
       xrpPrice
@@ -275,8 +291,8 @@ export const XRPAmmPoolDetailsGQL = gql`
 `
 
 export const XRPAmmUserPositionsGQL = gql`
-  query XRPAmmUserPositionsGQL($address: String!) {
-    xrpAmmUserPositions(address: $address) {
+  query XRPAmmUserPositionsGQL($account: String!) {
+    xrpAmmUserPositions(account: $account) {
       poolId
       pool {
         id
@@ -349,8 +365,8 @@ export const XRPTokenPriceGQL = gql`
 `
 
 export const XRPTokenBalancesGQL = gql`
-  query XRPTokenBalancesGQL($address: String!) {
-    xrpTokenBalances(address: $address) {
+  query XRPTokenBalancesGQL($account: String!) {
+    xrpTokenBalances(account: $account) {
       currency
       issuer
       balance

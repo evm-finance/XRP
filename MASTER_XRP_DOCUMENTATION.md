@@ -457,3 +457,33 @@ This document provides comprehensive documentation for all XRP-related files in 
 - [x] Test all live data connections
 
 **Status: ✅ COMPLETED - All mock data removed, 100% live GraphQL integration achieved** 
+
+## 16. ✅ COMPLETED: Create comprehensive codebase architecture documentation
+- [x] Map complete data flow from GraphQL queries to composables to components
+- [x] Document all 5 key validation areas (balances, transactions, AMM heatmap, token pages, pool pages)
+- [x] Create wallet integration architecture mapping
+- [x] Document all critical composables and their purposes
+- [x] Provide validation checkpoints and debugging guidelines
+- [x] Create quick file reference for development
+- [x] Generate `XRP_CODEBASE_ARCHITECTURE_FLOW.md` as comprehensive up-to-speed guide
+
+**Status: ✅ COMPLETED - Complete architecture documentation created for validation and development**
+
+## 17. ✅ COMPLETED: Standardize test wallet addresses across all components
+- [x] Updated all XRP components to use primary test address as default
+- [x] Replaced old default address with `rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo`
+- [x] Updated components: `xrpBalances.vue`, `xrpAccountHistory.vue`, `XrpBalanceWidget.vue`
+- [x] Updated composables: `useXrpAccounts.ts`, `useXrpFallbackData.ts`
+- [x] Updated documentation files and examples
+- [x] Ensured consistent test address usage for validation
+
+**Status: ✅ COMPLETED - All components now use consistent primary test address**
+
+## Architecture Documentation
+
+For a complete understanding of the XRP codebase architecture and data flow patterns, see:
+📋 **[XRP_CODEBASE_ARCHITECTURE_FLOW.md](./XRP_CODEBASE_ARCHITECTURE_FLOW.md)** - Complete guide mapping GraphQL queries → composables → components for all XRP features.
+
+### Test Addresses:
+- **Primary**: `rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo` (Default in all components)
+- **Secondary**: `rDodqfAoF8pVh2SoUwhQRfvkqrs4wwxUrz` (Additional testing) 

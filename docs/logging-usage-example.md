@@ -39,7 +39,7 @@ When you use the logged wrapper, you'll see output like this in the console:
   id: "XRPAccountBalancesGQL_1703123456789_abc123def",
   operation: "query",
   queryString: "query XRPAccountBalancesGQL($account: String!) { xrpAccountBalances(account: $account) { account xrpBalance xrpPrice xrpTokens { symbol issuer name balance price value } } }",
-  variables: { account: "rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj" },
+  variables: { account: "rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo" },
   page: "/xrp-balances",
   timestamp: "2023-12-21T10:30:45.123Z"
 }
@@ -55,7 +55,7 @@ When you use the logged wrapper, you'll see output like this in the console:
   error: { networkError: { statusCode: 500, message: "Internal Server Error" } },
   duration: "5000ms",
   page: "/xrp-balances",
-  variables: { account: "rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj" },
+  variables: { account: "rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo" },
   queryString: "query XRPAccountBalancesGQL($account: String!) { xrpAccountBalances(account: $account) { account xrpBalance xrpPrice xrpTokens { symbol issuer name balance price value } } }"
 }
 ```

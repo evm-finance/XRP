@@ -93,8 +93,8 @@ export default defineComponent({
     const loading = ref(true)
     const balanceData = ref<XRPBalanceItem[]>([])
     
-    // Use connected wallet address or fallback to default
-    const accountAddress = computed(() => address.value || 'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj')
+    // Use connected wallet address or fallback to primary test address
+    const accountAddress = computed(() => address.value || 'rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo')
     
     // Log the query content BEFORE making the call
     console.log('🚀 [BEFORE QUERY] XrpBalanceWidget - XRPAccountBalancesGQL:', {

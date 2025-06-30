@@ -97,20 +97,22 @@ export default defineComponent({
         const loading = ref(true)
         const balancesRawData = ref<XRPBalanceElem[]>([])
         
-        // Use connected wallet address or fallback to default
-        const accountAddress = computed(() => address.value || 'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj')
+        // Use connected wallet address or fallback to primary test address
+        const accountAddress = computed(() => address.value || 'rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo')
         
         // Log the query content BEFORE making the call
         console.log('🚀 [BEFORE QUERY] xrpBalances - XRPAccountBalancesGQL:', {
             query: XRPAccountBalancesGQL.loc?.source.body,
-            variables: { account: accountAddress.value },
-            timestamp: new Date().toISOString()
+            variables: { address: accountAddress.value },
+            timestamp: new Date().toISOString(),
+            component: 'xrpBalances.vue',
+            graphqlEndpoint: process.env.BASE_GRAPHQL_SERVER_URL || 'http://127.0.0.1:8080/query'
         })
 
         const { useLoggedQuery } = useXrpGraphQLWithLogging()
         const { onResult } = useLoggedQuery(
             XRPAccountBalancesGQL, 
-            () => ({ account: accountAddress.value }), 
+            () => ({ address: accountAddress.value }), 
             { 
                 fetchPolicy: 'no-cache',
                 context: {
@@ -217,50 +219,85 @@ export default defineComponent({
 
         // Handle query results
         onResult((queryResult: any) => {
+            console.log('🎯 [XRP BALANCES QUERY RESULT]', {
+                timestamp: new Date().toISOString(),
+                component: 'xrpBalances.vue',
+                accountAddress: accountAddress.value,
+                hasData: !!queryResult.data,
+                hasXrpAccountBalances: !!queryResult.data?.xrpAccountBalances,
+                fullResult: queryResult,
+                dataStructure: queryResult.data ? Object.keys(queryResult.data) : 'no data',
+                loadingState: loading.value
+            })
+
             if (queryResult.data?.xrpAccountBalances) {
                 const data = queryResult.data.xrpAccountBalances
+                
+                console.log('📊 [XRP BALANCES DATA RECEIVED]', {
+                    timestamp: new Date().toISOString(),
+                    account: data.account,
+                    xrpBalance: data.xrpBalance,
+                    xrpPrice: data.xrpPrice,
+                    tokensCount: data.xrpTokens ? data.xrpTokens.length : 0,
+                    tokensData: data.xrpTokens,
+                    fullData: data
+                })
                 
                 // Transform GraphQL data to component format
                 const transformedData: XRPBalanceElem[] = []
                 
                 // Add XRP balance if available
                 if (data.xrpBalance && data.xrpBalance > 0) {
-                    transformedData.push({
+                    const xrpBalance = {
                         issuer: '',
                         currency: 'XRP',
                         name: 'XRP',
                         balance: data.xrpBalance,
                         price: data.xrpPrice || 0,
                         value: data.xrpBalance * (data.xrpPrice || 0)
-                    })
+                    }
+                    transformedData.push(xrpBalance)
+                    console.log('💰 [XRP BALANCE ADDED]', xrpBalance)
                 }
                 
                 // Add token balances
                 if (data.xrpTokens && Array.isArray(data.xrpTokens)) {
-                    data.xrpTokens.forEach((token: any) => {
-                        transformedData.push({
+                    data.xrpTokens.forEach((token: any, index: number) => {
+                        const tokenBalance = {
                             issuer: token.issuer || '',
                             currency: token.symbol || '',
                             name: token.name || token.symbol || '',
                             balance: token.balance || 0,
                             price: token.price || 0,
                             value: token.value || 0
-                        })
+                        }
+                        transformedData.push(tokenBalance)
+                        console.log(`🪙 [TOKEN BALANCE ${index + 1} ADDED]`, tokenBalance)
                     })
                 }
                 
+                console.log('✅ [TRANSFORMED DATA COMPLETE]', {
+                    totalItems: transformedData.length,
+                    totalValue: transformedData.reduce((sum, item) => sum + item.value, 0),
+                    transformedData
+                })
+                
                 balancesRawData.value = transformedData
             } else {
-                // No data found
+                console.log('❌ [NO XRP BALANCE DATA]', {
+                    timestamp: new Date().toISOString(),
+                    queryResult,
+                    message: 'No xrpAccountBalances found in response'
+                })
                 balancesRawData.value = []
             }
             loading.value = false
         })
 
-        // Add error handling
+        // Add error handling with detailed logging
         const { onError } = useLoggedQuery(
             XRPAccountBalancesGQL, 
-            () => ({ account: accountAddress.value }), 
+            () => ({ address: accountAddress.value }), 
             { 
                 fetchPolicy: 'no-cache',
                 context: {
@@ -271,10 +308,26 @@ export default defineComponent({
             }
         )
 
+        onError((error) => {
+            console.error('🚨 [XRP BALANCES QUERY ERROR]', {
+                timestamp: new Date().toISOString(),
+                component: 'xrpBalances.vue',
+                accountAddress: accountAddress.value,
+                errorMessage: error.message,
+                networkError: error.networkError,
+                graphQLErrors: error.graphQLErrors,
+                fullError: error,
+                graphqlEndpoint: process.env.BASE_GRAPHQL_SERVER_URL || 'http://127.0.0.1:8080/query'
+            })
+            loading.value = false
+        })
+
         // Watch for wallet address changes
         onMounted(() => {
             // Initial load
         })
+
+        const error = ref(null)
 
         return {
             cols, 
@@ -284,7 +337,8 @@ export default defineComponent({
             formatBalance,
             formatCurrency,
             copyToClipboard,
-            isWalletReady
+            isWalletReady,
+            error
         }
     }
 })

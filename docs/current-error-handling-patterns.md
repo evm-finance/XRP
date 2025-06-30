@@ -153,7 +153,7 @@ onScreenerError((error) => {
 **Files**: `composables/useXrpAccounts.ts`, `composables/useXrpScrerener.ts`
 ```javascript
 const { result } = useQuery(XRPDefiDataGQL, () => ({ 
-  account: 'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj' 
+        account: 'rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo' 
 }), {
   fetchPolicy: 'no-cache',
   pollInterval: 60000

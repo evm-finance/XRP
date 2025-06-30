@@ -11,12 +11,12 @@ export function useXrpAccounts() {
   // Log the query content BEFORE making the call
   console.log('🚀 [BEFORE QUERY] useXrpAccounts - XRPDefiDataGQL:', {
     query: XRPDefiDataGQL.loc?.source.body,
-    variables: { account: 'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj' },
+    variables: { account: 'rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo' },
     timestamp: new Date().toISOString()
   })
 
   // GraphQL query for XRP DeFi data with enhanced logging
-  const { result } = useLoggedQuery(XRPDefiDataGQL, () => ({ account: 'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj' }), {
+  const { result } = useLoggedQuery(XRPDefiDataGQL, () => ({ account: 'rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo' }), {
     fetchPolicy: 'no-cache',
     pollInterval: 30000,
     context: {

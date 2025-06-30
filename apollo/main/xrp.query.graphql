@@ -42,8 +42,8 @@ query XRPAccountTransactions($address: String!) {
   }
 }
 
-query XRPAccountData($address: String!) {
-  xrpAccountData(address: $address) {
+query XRPAccountData($account: String!) {
+  xrpAccountData(account: $account) {
     account
     balances {
       account

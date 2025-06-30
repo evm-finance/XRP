@@ -106,7 +106,7 @@ export function useXrpFallbackData() {
     {
       hash: 'txn_1234567890abcdef',
       account: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh',
-      destination: 'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj',
+      destination: 'rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo',
       amount: '1000',
       fee: '0.000012',
       date: new Date(Date.now() - 3600000).toISOString(),
@@ -115,7 +115,7 @@ export function useXrpFallbackData() {
     },
     {
       hash: 'txn_abcdef1234567890',
-      account: 'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj',
+              account: 'rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo',
       destination: 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh',
       amount: '500',
       fee: '0.000012',
@@ -228,7 +228,7 @@ export function useXrpFallbackData() {
     },
     {
       currency: 'TESTTOKEN',
-      issuerAddress: 'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj',
+              issuerAddress: 'rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo',
       tokenName: 'Test Token',
       issuerName: 'Test Issuer',
       totalSupply: '500000',

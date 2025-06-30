@@ -132,14 +132,16 @@ export default defineComponent({
         const loading = ref(true)
         const transactionRawData = ref<XRPTransactionElem[]>([])
         
-        // Use connected wallet address or fallback to default
-        const accountAddress = computed(() => address.value || 'rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj')
+        // Use connected wallet address or fallback to primary test address
+        const accountAddress = computed(() => address.value || 'rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo')
         
         // Log the query content BEFORE making the call
         console.log('🚀 [BEFORE QUERY] xrpAccountHistory - XRPAccountTransactionsGQL:', {
             query: XRPAccountTransactionsGQL.loc?.source.body,
             variables: { address: accountAddress.value },
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            component: 'xrpAccountHistory.vue',
+            graphqlEndpoint: process.env.BASE_GRAPHQL_SERVER_URL || 'http://127.0.0.1:8080/query'
         })
 
         const { useLoggedQuery } = useXrpGraphQLWithLogging()
@@ -275,32 +277,64 @@ export default defineComponent({
             window.open(`/xrp-explorer/tx/${hash}`, '_blank')
         }
 
-        // Handle query results
+        // Handle query results with comprehensive logging
         onResult((queryResult: any) => {
-            if (queryResult.data?.xrpTransactions) {
-                const transactions = queryResult.data.xrpTransactions
+            console.log('🎯 [XRP TRANSACTIONS QUERY RESULT]', {
+                timestamp: new Date().toISOString(),
+                component: 'xrpAccountHistory.vue',
+                accountAddress: accountAddress.value,
+                hasData: !!queryResult.data,
+                hasXrpAccountTransactions: !!queryResult.data?.xrpAccountTransactions,
+                fullResult: queryResult,
+                dataStructure: queryResult.data ? Object.keys(queryResult.data) : 'no data',
+                loadingState: loading.value
+            })
+
+            if (queryResult.data?.xrpAccountTransactions) {
+                const transactions = queryResult.data.xrpAccountTransactions
+                
+                console.log('📊 [XRP TRANSACTIONS DATA RECEIVED]', {
+                    timestamp: new Date().toISOString(),
+                    account: queryResult.data.xrpAccountTransactions.account || 'unknown',
+                    transactionsCount: Array.isArray(transactions) ? transactions.length : 0,
+                    transactionsData: transactions,
+                    fullData: queryResult.data.xrpAccountTransactions
+                })
                 
                 // Transform GraphQL data to component format
-                const transformedTransactions: XRPTransactionElem[] = transactions.map((tx: any) => ({
-                    hash: tx.hash || '',
-                    from: tx.account || '',
-                    to: tx.destination || '',
-                    action: tx.transactionType || 'Unknown',
-                    amount: typeof tx.amount === 'string' ? parseFloat(tx.amount) : (tx.amount || 0),
-                    fee: typeof tx.fee === 'string' ? parseFloat(tx.fee) : (tx.fee || 0),
-                    timestamp: tx.date ? new Date(tx.date).toISOString() : new Date().toISOString(),
-                    ledgerIndex: tx.ledgerIndex || 0
-                }))
+                const transformedTransactions: XRPTransactionElem[] = transactions.map((tx: any, index: number) => {
+                    const transformedTx = {
+                        hash: tx.hash || '',
+                        from: tx.account || '',
+                        to: tx.destination || '',
+                        action: tx.transactionType || 'Unknown',
+                        amount: typeof tx.amount === 'string' ? parseFloat(tx.amount) : (tx.amount || 0),
+                        fee: typeof tx.fee === 'string' ? parseFloat(tx.fee) : (tx.fee || 0),
+                        timestamp: tx.date ? new Date(tx.date).toISOString() : new Date().toISOString(),
+                        ledgerIndex: tx.ledgerIndex || 0
+                    }
+                    console.log(`📝 [TRANSACTION ${index + 1} TRANSFORMED]`, transformedTx)
+                    return transformedTx
+                })
+                
+                console.log('✅ [TRANSFORMED TRANSACTIONS COMPLETE]', {
+                    totalTransactions: transformedTransactions.length,
+                    transformedTransactions
+                })
                 
                 transactionRawData.value = transformedTransactions
             } else {
-                // No transactions found
+                console.log('❌ [NO XRP TRANSACTIONS DATA]', {
+                    timestamp: new Date().toISOString(),
+                    queryResult,
+                    message: 'No xrpAccountTransactions found in response'
+                })
                 transactionRawData.value = []
             }
             loading.value = false
         })
 
-        // Add error handling
+        // Add error handling with detailed logging
         const { onError } = useLoggedQuery(
             XRPAccountTransactionsGQL, 
             () => ({ address: accountAddress.value }), 
@@ -309,15 +343,23 @@ export default defineComponent({
                 context: {
                     queryName: 'XRPAccountTransactions',
                     component: 'xrpAccountHistory',
-                    purpose: 'XRP account transaction history'
+                    purpose: 'XRP account transaction history error handling'
                 }
             }
         )
 
         onError((error: any) => {
-            console.error('GraphQL Error in xrpAccountHistory:', error)
+            console.error('🚨 [XRP TRANSACTIONS QUERY ERROR]', {
+                timestamp: new Date().toISOString(),
+                component: 'xrpAccountHistory.vue',
+                accountAddress: accountAddress.value,
+                errorMessage: error.message,
+                networkError: error.networkError,
+                graphQLErrors: error.graphQLErrors,
+                fullError: error,
+                graphqlEndpoint: process.env.BASE_GRAPHQL_SERVER_URL || 'http://127.0.0.1:8080/query'
+            })
             loading.value = false
-            // You could add error state handling here
         })
 
         // Watch for wallet address changes
