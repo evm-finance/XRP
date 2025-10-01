@@ -1,0 +1,644 @@
+package xrp
+
+import (
+	"bytes"
+	"compress/gzip"
+	"database/sql/driver"
+	"encoding/json"
+	"io/ioutil"
+
+	"gorm.io/gorm"
+)
+
+// JSONMap represents a generic JSON map for flexible data handling
+type JSONMap map[string]interface{}
+
+type TokenWeblink struct {
+	Url   string `json:"url"`
+	Type  string `json:"type"`
+	Title string `json:"title,omitempty"`
+}
+
+type XRPTokenList struct {
+	Count  int64          `json:"count"`
+	Tokens []XRPTokenData `json:"tokens"`
+}
+
+type XRPTokenData struct {
+	gorm.Model
+	Currency string `gorm:"uniqueIndex:currency_issuer" json:"currency"`
+	Issuer   string `gorm:"uniqueIndex:currency_issuer" json:"issuer"`
+	Meta     struct {
+		Token struct {
+			Description    string         `json:"description"`
+			SelfAssessment bool           `json:"self_assessment"`
+			TrustLevel     int            `json:"trust_level"`
+			Name           string         `json:"name"`
+			Icon           string         `json:"icon"`
+			Weblinks       []TokenWeblink `json:"weblinks" gorm:"-"`
+		} `json:"token"`
+		Issuer struct {
+			Description string         `json:"description"`
+			Domain      string         `json:"domain"`
+			Followers   int            `json:"followers"`
+			Icon        string         `json:"icon"`
+			Kyc         bool           `json:"kyc"`
+			Name        string         `json:"name"`
+			TrustLevel  int            `json:"trust_level"`
+			Weblinks    []TokenWeblink `json:"weblinks" gorm:"-"`
+		} `json:"issuer"`
+	} `json:"meta"`
+	Metrics struct {
+		Trustlines   int     `json:"trustlines"`
+		Holders      int     `json:"holders"`
+		Supply       string  `json:"supply"`
+		Marketcap    float64 `json:"marketCap,string"`
+		Price        float64 `json:"price,string"`
+		Volume24H    float64 `json:"volume24H,string"`
+		Volume7D     string  `json:"volume_7d"`
+		Exchanges24H string  `json:"exchanges_24h"`
+		Exchanges7D  string  `json:"exchanges_7d"`
+		Takers24H    string  `json:"takers_24h"`
+		Takers7D     string  `json:"takers_7d"`
+	} `json:"metrics"`
+}
+
+type XRPTokensQuery struct {
+	Tokens []*XRPTokenFields
+}
+
+type XRPTokenFields struct {
+	Currency      string  `json:"currency"`
+	IssuerAddress string  `json:"issuerAddress"`
+	Icon          string  `json:"icon"`
+	TokenName     string  `json:"tokenName"`
+	IssuerName    string  `json:"issuerName"`
+	Marketcap     float64 `json:"marketCap,string"`
+	Price         float64 `json:"price,string"`
+	Volume24H     float64 `json:"volume24H,string"`
+}
+
+type CurrencyOfferObject struct {
+	Currency string `json:"currency"`
+	Issuer   string `json:"issuer"`
+}
+type XRPOfferObject struct {
+	Currency string `json:"currency"`
+}
+
+type XRPNFTBuyOffers struct {
+}
+
+type XRPNFTSellOffer struct {
+}
+
+type XRPInBookOfferRequest struct {
+	Id        int                 `json:"id"`
+	Command   string              `json:"command"`
+	Taker     string              `json:"taker"`
+	TakerGets CurrencyOfferObject `json:"taker_gets"`
+	TakerPays XRPOfferObject      `json:"taker_pays"`
+	Limit     int                 `json:"limit"`
+}
+
+type XRPCurrentLedgerRequest struct {
+	Command string `json:"command"`
+	ID      int    `json:"id"`
+}
+
+type XRPCurrentLedgerStart struct {
+	ID                 int    `json:"id"`
+	Status             string `json:"status"`
+	Type               string `json:"type"`
+	LedgerCurrentIndex int    `json:"ledger_current_index"`
+}
+
+type XRPOutBookOfferRequest struct {
+	Id        int                 `json:"id"`
+	Command   string              `json:"command"`
+	Taker     string              `json:"taker"`
+	TakerGets XRPOfferObject      `json:"taker_gets"`
+	TakerPays CurrencyOfferObject `json:"taker_pays"`
+	Limit     int                 `json:"limit"`
+}
+
+type ResponseWarnings struct {
+	Id      int    `json:"id"`
+	Message string `json:"message"`
+}
+
+type XRPInBookOfferResult struct {
+	LedgerHash  string           `json:"ledger_hash"`
+	Ledgerindex int              `json:"ledger_index"`
+	Offers      []XRPInBookOffer `json:"offers"`
+	Validated   bool             `json:"validated"`
+	Warnings    ResponseWarnings `json:"warnings"`
+}
+
+type XRPOutBookOfferResult struct {
+	LedgerHash  string            `json:"ledger_hash"`
+	Ledgerindex int               `json:"ledger_index"`
+	Offers      []XRPOutBookOffer `json:"offers"`
+	Validated   bool              `json:"validated"`
+	Warnings    ResponseWarnings  `json:"warnings"`
+}
+
+type XRPInBookOfferResponse struct {
+	Id     string               `json:"id"`
+	Result XRPInBookOfferResult `json:"result"`
+	Status string               `json:"status"`
+	Type   string               `json:"type"`
+}
+
+type XRPOutBookOfferResponse struct {
+	Id     string                `json:"id"`
+	Result XRPOutBookOfferResult `json:"result"`
+	Status string                `json:"status"`
+	Type   string                `json:"type"`
+}
+
+type XRPInBookOffer struct {
+	Account           string            `json:"Account"`
+	BookDirectory     string            `json:"BookDirectory"`
+	BookNode          string            `json:"BookNode"`
+	Expiration        int               `json:"Expiration"`
+	Flags             int               `json:"Flags"`
+	LedgerEntryType   string            `json:"LedgerEntryType"`
+	OwnerNode         string            `json:"OwnerNode"`
+	PreviousTxnID     string            `json:"PreviousTxnID"`
+	PreviousTxnLgrSeq int               `json:"PreviousTxnLgrSeq"`
+	Sequence          int               `json:"Sequence"`
+	TakerGets         TakerGetsCurrency `json:"TakerGets"`
+	TakerPays         string            `json:"TakerPays"`
+	Index             string            `json:"index"`
+	OwnerFunds        string            `json:"owner_funds"`
+	Quality           string            `json:"quality"`
+}
+
+type XRPOutBookOffer struct {
+	Account           string            `json:"Account"`
+	BookDirectory     string            `json:"BookDirectory"`
+	BookNode          string            `json:"BookNode"`
+	Expiration        int               `json:"Expiration"`
+	Flags             int               `json:"Flags"`
+	LedgerEntryType   string            `json:"LedgerEntryType"`
+	OwnerNode         string            `json:"OwnerNode"`
+	PreviousTxnID     string            `json:"PreviousTxnID"`
+	PreviousTxnLgrSeq int               `json:"PreviousTxnLgrSeq"`
+	Sequence          int               `json:"Sequence"`
+	TakerGets         string            `json:"TakerGets"`
+	TakerPays         TakerPaysCurrency `json:"TakerPays"`
+	Index             string            `json:"index"`
+	OwnerFunds        string            `json:"owner_funds"`
+	Quality           string            `json:"quality"`
+}
+
+type TakerPaysCurrency struct {
+	Currency string `json:"currency"`
+	Issuer   string `json:"issuer"`
+	Value    string `json:"value"`
+}
+
+type TakerPaysXRP struct {
+	Currency string `json:"currency"`
+	Value    string `json:"value"`
+}
+
+type TakerGetsCurrency struct {
+	Currency string `json:"currency"`
+	Issuer   string `json:"issuer"`
+	Value    string `json:"value"`
+}
+
+type TakerGetsXRP struct {
+	Currency string `json:"currency"`
+	Value    string `json:"value"`
+}
+
+type XRPOutOfferCreate struct {
+	TransactionType    string            `json:"TransactionType"`
+	Account            string            `json:"Account"`
+	Fee                string            `json:"Fee"`
+	Flags              int               `json:"Flags"`
+	LastLedgerSequence int               `json:"LastLedgerSequence"`
+	Sequence           int               `json:"Sequence"`
+	TakerGets          TakerGetsXRP      `json:"TakerGets"`
+	TakerPays          TakerPaysCurrency `json:"TakerPays"`
+}
+
+type XRPInOfferCreate struct {
+	TransactionType    string            `json:"TransactionType"`
+	Account            string            `json:"Account"`
+	Fee                string            `json:"Fee"`
+	Flags              int               `json:"Flags"`
+	LastLedgerSequence int               `json:"LastLedgerSequence"`
+	Sequence           int               `json:"Sequence"`
+	TakerGets          TakerGetsCurrency `json:"TakerGets"`
+	TakerPays          TakerPaysXRP      `json:"TakerPays"`
+}
+
+type XRPAccountRoot struct {
+	Account              string `json:"Account"`
+	AccountTxnID         string `json:"AccountTxnID"`
+	Balance              string `json:"Balance"`              //Amount	No	The account's current XRP balance in drops, represented as a string.
+	BurnedNFTokens       int    `json:"BurnedNFTokens"`       //No	How many total of this account's issued non-fungible tokens have been burned. This number is always equal or less than MintedNFTokens.
+	Domain               string `json:"Domain"`               //Blob	No	A domain associated with this account. In JSON, this is the hexadecimal for the ASCII representation of the domain. Cannot be more than 256 bytes in length.
+	EmailHash            string `json:"EmailHash"`            //Hash128	No	The md5 hash of an email address. Clients can use this to look up an avatar through services such as Gravatar .
+	FirstNFTokenSequence int    `json:"FirstNFTokenSequence"` //UInt32	No	The account's Sequence Number at the time it minted its first non-fungible-token. (Added by the fixNFTokenRemint amendment )
+	Flags                int    `json:"Flags"`                //Yes	A bit-map of boolean flags enabled for this account.
+	LedgerEntryType      string `json:"LedgerEntryType"`      //UInt16	Yes	The value 0x0061, mapped to the string AccountRoot, indicates that this is an AccountRoot object.
+	MessageKey           string `json:"MessageKey"`           //Blob	No	A public key that may be used to send encrypted messages to this account. In JSON, uses hexadecimal. Must be exactly 33 bytes, with the first byte indicating the key type: 0x02 or 0x03 for secp256k1 keys, 0xED for Ed25519 keys.
+	MintedNFTokens       int    `json:"MintedNFTokens"`       //UInt32	No	How many total non-fungible tokens have been minted by and on behalf of this account. (Added by the NonFungibleTokensV1_1 amendment)
+	NFTokenMinter        string `json:"NFTokenMinter"`        //AccountID	No	Another account that can mint non-fungible tokens on behalf of this account. (Added by the NonFungibleTokensV1_1 amendment)
+	OwnerCount           int    `json:"OwnerCount"`           //UInt32	Yes	The number of objects this account owns in the ledger, which contributes to its owner reserve.
+	PreviousTxnID        string `json:"PreviousTxnID"`        //Hash256	Yes	The identifying hash of the transaction that most recently modified this object.
+	PreviousTxnLgrSeq    int    `json:"PreviousTxnLgrSeq"`    //UInt32	Yes	The index of the ledger that contains the transaction that most recently modified this object.
+	RegularKey           string `json:"RegularKey"`           //AccountID	No	The address of a key pair that can be used to sign transactions for this account instead of the master key. Use a SetRegularKey transaction to change this value.
+	Sequence             int    `json:"Sequence"`             //UInt32	Yes	The sequence number of the next valid transaction for this account.
+	TicketCount          int    `json:"TicketCount"`          //UInt32	No	How many Tickets this account owns in the ledger. This is updated automatically to ensure that the account stays within the hard limit of 250 Tickets at a time. This field is omitted if the account has zero Tickets. (Added by the TicketBatch amendment.)
+	TickSize             int    `json:"TickSize"`             //UInt8	No	How many significant digits to use for exchange rates of Offers involving currencies issued by this address. Valid values are 3 to 15, inclusive. (Added by the TickSize amendment.)
+	TransferRate         int    `json:"TransferRate"`         //UInt32	No	A transfer fee to charge other users for sending currency issued by this account to each other.
+	WalletLocator        string `json:"WalletLocator"`        //Hash256	No	An arbitrary 256-bit value that users can set.
+	WalletSize           int    `json:"WalletSize"`           //UInt32	No	Unused. (The code supports this field but there is no way to set it.)
+}
+
+type XRPAccountFlags struct {
+	DefaultRipple                bool `json:"defaultRipple"`                //If true, the account allows rippling on its trust lines by default.
+	DepositAuth                  bool `json:"depositAuth"`                  //If true, the account is using Deposit Authorization and does not accept any payments from unknown parties.
+	DisableMasterKey             bool `json:"disableMasterKey"`             //If true, the account's master key pair is disabled.
+	DisallowIncomingCheck        bool `json:"disallowIncomingCheck"`        //If true, the account does not allow others to send Checks to it. (Requires the DisallowIncoming amendment)
+	DisallowIncomingNFTokenOffer bool `json:"disallowIncomingNFTokenOffer"` //If true, the account does not allow others to make NFT buy or sell offers to it. (Requires the DisallowIncoming amendment)
+	DisallowIncomingPayChan      bool `json:"disallowIncomingPayChan"`      //If true, the account does not allow others to make Payment Channels to it. (Requires the DisallowIncoming amendment)
+	DisallowIncomingTrustline    bool `json:"disallowIncomingTrustline"`    //If true, the account does not allow others to make trust lines to it. (Requires the DisallowIncoming amendment)
+	DisallowIncomingXRP          bool `json:"disallowIncomingXRP"`          //If true, the account does not want to receive XRP from others. (This is advisory, and not enforced at a protocol level.)
+	GlobalFreeze                 bool `json:"globalFreeze"`                 //If true, all tokens issued by the account are currently frozen.
+	NoFreeze                     bool `json:"noFreeze"`                     //If true, the account has permanently given up the abilities to freeze individual trust lines or end a global freeze. See No Freeze for details.
+	PasswordSpent                bool `json:"passwordSpent"`                //If false, the account can send a special key reset transaction with a transaction cost of 0. The protocol turns this flag on and off automatically; it is not controlled by a user-facing setting.
+	RequireAuthorization         bool `json:"requireAuthorization"`         //If true, the account is using Authorized Trust Lines to limit who can hold the tokens it issues.
+	RequireDestinationTag        bool `json:"requireDestinationTag"`        //If true, the account requires a destination tag on all payments it receives.
+}
+
+type XRPQueueData struct {
+	TxnCount           int                     `json:"txn_count"`             //Number of queued transactions from this address.
+	AuthChangeQueued   bool                    `json:"auth_change_queued"`    //(May be omitted) Whether a transaction in the queue changes this address's ways of authorizing transactions. If true, this address can queue no further transactions until that transaction has been executed or dropped from the queue.
+	LowestSequence     int                     `json:"lowest_sequence"`       //(May be omitted) The lowest Sequence Number among transactions queued by this address.
+	HighestSequence    int                     `json:"highest_sequence"`      //(May be omitted) The highest Sequence Number among transactions queued by this address.
+	MaxSpendDropsTotal string                  `json:"max_spend_drops_total"` //(May be omitted) Integer amount of drops of XRP that could be debited from this address if every transaction in the queue consumes the maximum amount of XRP possible.
+	Transactions       []XRPQueuedTransactions `json:"transactions"`          //(May be omitted) Information about each queued transaction from this address.
+}
+
+type XRPQueuedTransactions struct {
+	AuthChange    bool   `json:"auth_change"`     //Whether this transaction changes this address's ways of authorizing transactions.
+	Fee           string `json:"fee"`             //The Transaction Cost of this transaction, in drops of XRP.
+	FeeLevel      string `json:"fee_level"`       //The transaction cost of this transaction, relative to the minimum cost for this type of transaction, in fee levels.
+	MaxSpendDrops string `json:"max_spend_drops"` //The maximum amount of XRP, in drops, this transaction could send or destroy.
+	Seq           int    `json:"seq"`             //The Sequence Number of this transaction
+}
+
+type XRPAccountInfoResult struct {
+	AccountData        XRPAccountData  `json:"account_data"`
+	AccountFlags       XRPAccountFlags `json:"account_flags"`
+	LedgerCurrentIndex int             `json:"ledger_current_index"`
+	QueueData          XRPQueueData    `json:"queue_data"`
+	Status             string          `json:"status"`
+	Validated          bool            `json:"validated"`
+}
+
+type XRPAccountInfo struct {
+	Id     int                  `json:"id"`
+	Status string               `json:"status"`
+	Type   string               `json:"type"`
+	Result XRPAccountInfoResult `json:"result"`
+}
+
+type XRPAccountData struct {
+	Account           string `json:"Account"`
+	Balance           string `json:"Balance"`
+	Flags             int    `json:"Flags"`
+	LedgerEntryType   string `json:"LedgerEntryType"`
+	OwnerCount        int    `json:"OwnerCount"`
+	PreviousTxnID     string `json:"PreviousTxnID"`
+	PreviousTxnLgrSeq int    `json:"PreviousTxnLgrSeq"`
+	Sequence          int    `json:"Sequence"`
+	Index             string `json:"index"`
+}
+
+type XRPLedgerResult struct {
+	Id     int        `json:"id,string"`
+	Status string     `json:"status"`
+	Type   string     `json:"type"`
+	Result *XRPLedger `json:"result"`
+}
+
+type XRPLedgerData struct {
+	Accepted            bool              `json:"accepted"`
+	AccountHash         string            `json:"account_hash"`
+	CloseFlags          int               `json:"close_flags"`
+	CloseTime           int               `json:"close_time"`
+	CloseTimeHuman      string            `json:"close_time_human"`
+	CloseTimeResolution int               `json:"close_time_resolution"`
+	Closed              bool              `json:"closed"`
+	Hash                string            `json:"hash"`
+	LedgerHash          string            `json:"ledger_hash"`
+	LedgerIndex         string            `json:"ledger_index"`
+	ParentCloseTime     int               `json:"parent_close_time"`
+	ParentHash          string            `json:"parent_hash"`
+	SeqNum              string            `json:"seqNum"`
+	TotalCoins          string            `json:"totalCoins"`
+	TotalCoins1         string            `json:"total_coins"`
+	TransactionHash     string            `json:"transaction_hash"`
+	Transactions        []*XRPTransaction `json:"transactions"`
+}
+
+type XRPLedger struct {
+	LedgerHash  string                 `json:"ledger_hash"`
+	LedgerIndex int                    `json:"ledger_index"`
+	Validated   bool                   `json:"validated"`
+	EventsCount map[string]interface{} `json:"eventsCount"`
+	TxCount     int                    `json:"txCount"`
+	Ledger      *XRPLedgerData         `json:"ledger"`
+}
+
+func (te *XRPLedger) CountEvents() {
+	d := JSONMap{}
+	for _, tx := range te.Ledger.Transactions {
+		d[tx.TransactionType] = 0
+	}
+	for _, tx := range te.Ledger.Transactions {
+		txType := tx.TransactionType
+		if res, ok := d[txType]; ok {
+			r := res.(int) + 1
+			d[txType] = r
+		}
+	}
+	te.EventsCount = d
+	te.TxCount = len(te.Ledger.Transactions)
+}
+
+func (te *XRPLedger) Scan(value interface{}) error {
+	compressedBytes, ok := value.([]byte)
+	if !ok {
+		return gorm.ErrInvalidData
+	}
+	gz, err := gzip.NewReader(bytes.NewReader(compressedBytes))
+	if err != nil {
+		return err
+	}
+	decompressedBytes, err := ioutil.ReadAll(gz)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(decompressedBytes, &te)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (te *XRPLedger) Value() (driver.Value, error) {
+	compressedBytes := new(bytes.Buffer)
+	gz := gzip.NewWriter(compressedBytes)
+	encodedData, err := json.Marshal(te)
+	if err != nil {
+		return nil, err
+	}
+	_, err = gz.Write(encodedData)
+	if err != nil {
+		return nil, err
+	}
+	err = gz.Close()
+	if err != nil {
+		return nil, err
+	}
+	return compressedBytes.Bytes(), nil
+}
+
+type XRPTransactionResult struct {
+	Id     int             `json:"id,string"`
+	Status string          `json:"status"`
+	Type   string          `json:"type"`
+	Result *XRPTransaction `json:"result"`
+}
+
+type XRPTransaction struct {
+	Account            string        `json:"Account"`
+	Amount             interface{}   `json:"Amount,omitempty"`
+	Destination        string        `json:"Destination,omitempty"`
+	Fee                string        `json:"Fee"`
+	Flags              int           `json:"Flags"`
+	LastLedgerSequence int           `json:"LastLedgerSequence"`
+	OfferSequence      int           `json:"OfferSequence"`
+	Sequence           int           `json:"Sequence"`
+	SigningPubKey      string        `json:"SigningPubKey"`
+	TakerGets          interface{}   `json:"TakerGets"`
+	TakerPays          interface{}   `json:"TakerPays"`
+	TransactionType    string        `json:"TransactionType"`
+	TxnSignature       string        `json:"TxnSignature"`
+	Date               int           `json:"date"`
+	Hash               string        `json:"hash"`
+	InLedger           int           `json:"inLedger"`
+	LedgerIndex        int           `json:"ledger_index"`
+	Meta               interface{}   `json:"meta"`
+	Metadata           interface{}   `json:"metadata"`
+	Validated          bool          `json:"validated"`
+	Warnings           []interface{} `json:"warnings"`
+	Memos              []interface{} `json:"Memos"`
+	Currency           string        `json:"currency,omitempty"`
+	Issuer             string        `json:"issuer,omitempty"`
+}
+
+type XRPTransactions struct {
+	Items []*XRPTransaction `json:"items"`
+}
+
+func (te *XRPTransactions) Scan(value interface{}) error {
+	compressedBytes, ok := value.([]byte)
+	if !ok {
+		return gorm.ErrInvalidData
+	}
+	gz, err := gzip.NewReader(bytes.NewReader(compressedBytes))
+	if err != nil {
+		return err
+	}
+	decompressedBytes, err := ioutil.ReadAll(gz)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(decompressedBytes, &te)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (te *XRPTransactions) Value() (driver.Value, error) {
+	compressedBytes := new(bytes.Buffer)
+	gz := gzip.NewWriter(compressedBytes)
+	encodedData, err := json.Marshal(te)
+	if err != nil {
+		return driver.Value(nil), err
+	}
+	_, err = gz.Write(encodedData)
+	if err != nil {
+		return driver.Value(nil), err
+	}
+	err = gz.Close()
+	if err != nil {
+		return driver.Value(nil), err
+	}
+	return driver.Value(compressedBytes.Bytes()), nil
+}
+
+// XRP Account Balance Types
+type XRPBalanceElem struct {
+	Currency string  `json:"currency"` // XRP Ledger standard currency field
+	Issuer   string  `json:"issuer"`
+	Name     string  `json:"name"`
+	Balance  float64 `json:"balance"`
+	Price    float64 `json:"price"`
+	Value    float64 `json:"value"`
+}
+
+type XRPAccountBalances struct {
+	Account    string            `json:"account"`
+	XRPBalance float64           `json:"xrpBalance"`
+	XRPPrice   float64           `json:"xrpPrice"`
+	XRPTokens  []*XRPBalanceElem `json:"xrpTokens"`
+}
+
+type XRPAccountDataGQL struct {
+	Account      string              `json:"account"`
+	Balances     *XRPAccountBalances `json:"balances"`
+	Transactions []*XRPTransaction   `json:"transactions"`
+}
+
+type BalanceObjectAnnoying struct {
+	Balance  string `json:"Balance,omitempty"`
+	Currency string `json:"currency,omitempty"`
+	Issuer   string `json:"issuer,omitempty"`
+	Value    string `json:"value,omitempty"`
+}
+
+func (b *BalanceObjectAnnoying) UnmarshalJSON(data []byte) error {
+	var str string
+	err := json.Unmarshal(data, &str)
+	if err != nil {
+		b.Balance = b.Value
+	} else {
+		b.Balance = str
+	}
+	return nil
+}
+
+type XRPTrustlinesRequest struct {
+	Id      int    `json:"id"`
+	Command string `json:"command"`
+	Account string `json:"account"`
+}
+
+type XRPLinesArray struct {
+	Account      string `json:"account"`
+	Balance      string `json:"balance"`
+	Currency     string `json:"currency"`
+	Limit        string `json:"limit"`
+	LimitPeer    string `json:"limit_peer"`
+	QualityIn    int    `json:"quality_in"`
+	QualityOut   int    `json:"quality_out"`
+	NoRipple     bool   `json:"no_ripple,omitempty"`
+	NoRipplePeer bool   `json:"no_ripple_peer,omitempty"`
+}
+
+type XRPTrustlinesResponse struct {
+	Id     int    `json:"id"`
+	Status string `json:"status"`
+	Type   string `json:"type"`
+	Result struct {
+		Account string          `json:"account"`
+		Lines   []XRPLinesArray `json:"lines"`
+	} `json:"result"`
+}
+
+type XRPBalanceItemAnnoying struct {
+	Issuer   string `json:"issuer"`
+	Balance  string `json:"balance"`
+	Currency string `json:"currency"`
+}
+
+type XRPDefiData struct {
+	Balances     XRPAccountBalances `json:"balances"`
+	Transactions []XRPTransaction   `json:"transactions"`
+}
+
+// AMM Asset representation
+type XRPAsset struct {
+	Currency string `json:"currency"`
+	Issuer   string `json:"issuer,omitempty"`
+}
+
+// AMM Pool data structure
+type XRPAMMPool struct {
+	PoolID           string   `json:"pool_id"`
+	Asset1           XRPAsset `json:"asset1"`
+	Asset2           XRPAsset `json:"asset2"`
+	Asset1Balance    float64  `json:"asset1_balance"`
+	Asset2Balance    float64  `json:"asset2_balance"`
+	LPBalance        float64  `json:"lp_balance"`
+	Fee              float64  `json:"fee"`
+	TradingVolume24H float64  `json:"trading_volume_24h,omitempty"`
+	TradingVolume7D  float64  `json:"trading_volume_7d,omitempty"`
+	CreatedAt        int64    `json:"created_at"`
+	LastUpdated      int64    `json:"last_updated"`
+}
+
+// AMM Liquidity calculation result
+type XRPAMMLiquidityCalculation struct {
+	PoolID            string   `json:"pool_id"`
+	Asset1            XRPAsset `json:"asset1"`
+	Asset2            XRPAsset `json:"asset2"`
+	Asset1Balance     float64  `json:"asset1_balance"`
+	Asset2Balance     float64  `json:"asset2_balance"`
+	Asset1ValueUsd    float64  `json:"asset1_value_usd"`
+	Asset2ValueUsd    float64  `json:"asset2_value_usd"`
+	TotalLiquidityUsd float64  `json:"total_liquidity_usd"`
+	Fee               float64  `json:"fee"`
+	CreatedAt         int64    `json:"created_at"`
+}
+
+// AMM Swap quote result
+type XRPAMMSwapQuote struct {
+	InputAmount     float64 `json:"input_amount"`
+	OutputAmount    float64 `json:"output_amount"`
+	PriceImpact     float64 `json:"price_impact"`
+	Fee             float64 `json:"fee"`
+	MinimumReceived float64 `json:"minimum_received"`
+	InputUSDValue   float64 `json:"input_usd_value"`
+	OutputUSDValue  float64 `json:"output_usd_value"`
+	Timestamp       int64   `json:"timestamp"`
+}
+
+// AMM Transaction data structure
+type AMMTransaction struct {
+	TransactionHash string                 `json:"transaction_hash"`
+	TransactionType string                 `json:"transaction_type"`
+	PoolID          string                 `json:"pool_id,omitempty"`
+	Asset1          XRPAsset               `json:"asset1,omitempty"`
+	Asset2          XRPAsset               `json:"asset2,omitempty"`
+	Amount1         float64                `json:"amount1,omitempty"`
+	Amount2         float64                `json:"amount2,omitempty"`
+	LPAmount        float64                `json:"lp_amount,omitempty"`
+	Fee             float64                `json:"fee,omitempty"`
+	Account         string                 `json:"account"`
+	LedgerIndex     int                    `json:"ledger_index"`
+	Timestamp       int64                  `json:"timestamp"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
+}
+
+// AMM Transaction types
+const (
+	AMMCreate   = "AMMCreate"
+	AMMDelete   = "AMMDelete"
+	AMMDeposit  = "AMMDeposit"
+	AMMWithdraw = "AMMWithdraw"
+	AMMBid      = "AMMBid"
+	AMMVote     = "AMMVote"
+)

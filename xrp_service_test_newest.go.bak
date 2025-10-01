@@ -1,0 +1,100 @@
+package block
+
+import (
+	"github.com/xrpscan/xrpl-go"
+	"testing"
+)
+
+//func TestGetClient(t *testing.T) {
+//
+//	fmt.Println(xrpClient)
+//}
+//
+//func TestGetCurrentLedgerIndex(t *testing.T) {
+//	fmt.Println(xrpService.GetCurrentLedgerIndex(xrpClient))
+//}
+//
+//func TestGetLedgerData(t *testing.T) {
+//
+//	fmt.Println(xrpService.GetLedgerData(81966755, xrpClient))
+//}
+//
+//func TestGetBookOffersSample(t *testing.T) {
+//
+//	fmt.Println(xrpService.GetBookOffersSample(81966755, xrpClient))
+//}
+//
+//func TestGetPrice(t *testing.T) {
+//
+//	fmt.Println(xrpService.GetPrice(xrpClient, "USD", "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"))
+//	conf, err := configs.NewConfigRepo()
+//	dbConn := conf.DeFiDB
+//	fmt.Println(dbConn, err)
+//}
+//
+//func TestGetOffers(t *testing.T) {
+//	curreny := "ETH"
+//	issuer := "rcA8X3TVMST1n3CJeAdGk1RdRCHii7N2h"
+//	fmt.Println(xrpService.GetPrice(xrpClient, curreny, issuer))
+//}
+//
+//func TestGetTokenList(t *testing.T) {
+//
+//	tokens, err := xrpService.GetTokenList()
+//	fmt.Println(tokens, err)
+//
+//	for index, value := range tokens {
+//		fmt.Println(index, value)
+//	}
+//}
+//
+//func TestGetAllPrices(t *testing.T) {
+//	XRPService.GetAllPrices(81966755, xrpClient)
+//}
+
+func TestGetAccountTransactions(t *testing.T) {
+
+	client := xrpl.NewClient(xrpl.ClientConfig{URL: "wss://xrplcluster.com", Timeout: 1, ConnectionTimeout: 10})
+	service := XRPService{xrpWssURL: "wss://xrplcluster.com", xrpDataApiURL: "https://data.ripple.com/v2", client: client}
+	service.GetAccountTransactions("rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj")
+
+}
+
+func TestGetAccountBalances(t *testing.T) {
+	client := xrpl.NewClient(xrpl.ClientConfig{URL: "wss://xrplcluster.com", Timeout: 1, ConnectionTimeout: 10})
+	service := XRPService{xrpWssURL: "wss://xrplcluster.com", xrpDataApiURL: "https://data.ripple.com/v2", client: client}
+	service.GetAccountBalances("rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj")
+}
+
+func TestXRPPrices(t *testing.T) {
+	client := xrpl.NewClient(xrpl.ClientConfig{URL: "wss://xrplcluster.com", Timeout: 1, ConnectionTimeout: 10})
+	service := XRPService{xrpWssURL: "wss://xrplcluster.com", xrpDataApiURL: "https://data.ripple.com/v2", client: client}
+	service.GetAllPrices(0, client)
+}
+
+func TestGetAllAMM(t *testing.T) {
+	client := xrpl.NewClient(xrpl.ClientConfig{URL: "wss://xrplcluster.com", Timeout: 1, ConnectionTimeout: 10})
+	service := XRPService{xrpWssURL: "wss://xrplcluster.com", xrpDataApiURL: "https://data.ripple.com/v2", client: client}
+	service.GetTokenData(0, client)
+}
+
+func TestAMMInfo(t *testing.T) {
+	client := xrpl.NewClient(xrpl.ClientConfig{URL: "wss://xrplcluster.com", Timeout: 1, ConnectionTimeout: 10})
+	service := XRPService{xrpWssURL: "wss://xrplcluster.com", xrpDataApiURL: "https://data.ripple.com/v2", client: client}
+	service.GetAMMAccount("TST", "rP9jPyP5kyvFRb6ZiRghAGw5u8SGAmU4bd")
+}
+
+func TestStoreTokenData(t *testing.T) {
+	client := xrpl.NewClient(xrpl.ClientConfig{URL: "wss://xrplcluster.com", Timeout: 1, ConnectionTimeout: 10})
+	service := XRPService{xrpWssURL: "wss://xrplcluster.com", xrpDataApiURL: "https://data.ripple.com/v2", client: client}
+
+	service.StoreTokenData(0, client)
+}
+
+//func TestGetAccountBalances(t *testing.T) {
+//	xrpService.GetAccountBalances("rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj", xrpClient)
+//}
+//
+//func TestDefiData(t *testing.T) {
+//	xrpService.GetDefiData("rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj")
+//}

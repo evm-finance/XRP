@@ -1,0 +1,80 @@
+=== AMM Liquidity Discovery Results ===
+Generated: 2025-06-29 18:29:37
+Total tokens processed: 100
+
+Pool Account                                       Token Pair           Liquidity USD   Asset1 Value    Asset2 Value    Trading Fee     Status         
+--------------------------------------------------------------------------------------------------------------------------------------------
+rMEJo9H5XvTe17UoAJzj8jtKVvTRcxwngo                 XRP/534F4C4F00000000000000000000000000000000 $297863.83      297863833773.000000 2609501.135175  830             FOUND          
+rJvuDNFkb25GybpHvqCmQzEMjycqBn3uTi                 XRP/BTC              $10226.67       10226667487.000000 0.207285        958             FOUND          
+rs9ineLqrCzeAGS1bxsrW8x2n3bRJYAh3Q                 XRP/USD              $10853.88       10853879621.000000 23878.634442    462             FOUND          
+rEDFZUyyikyUbjNoMsSgmXfZNN53rwLLZv                 XRP/ETH              $7552.09        7552091105.000000 6.782279        1000            FOUND          
+rGfoHj3yYUDvoLvQBcAXKQqfZqz4yjmp52                 XRP/ELS              $2456.34        2456338895.000000 4157721.953134  813             FOUND          
+rw3tWE23X3Qn43XGKwqVJ7J8QA42rYEGy4                 XRP/EUR              $2678.80        2678799113.000000 4982.539537     854             FOUND          
+rBu4LXTxM9cfs3JsFCuDbPMzvGBDR66wpi                 XRP/434F524500000000000000000000000000000000 $90038.29       90038292431.000000 1541352.293034  1000            FOUND          
+rhWTXC2m2gGGA9WozUaoMm6kLAVPb1tcS3                 XRP/524C555344000000000000000000000000000000 $2324456.52     526783466250.000000 1162228.259450  351             FOUND          
+rf7g4JWCxu9oE1MKsWTihL9whY75AphCaV                 XRP/CSC              $36401.79       36401792343.000000 810186470.429012 226             FOUND          
+rUw4bsCaZyRiZJLzh2Hb3fujnSXiieHarz                 XRP/VGB              $915.50         915503700.000000 120334.988955   611             FOUND          
+rwmP5KpxyXazdGuUxWy94Vf35FTiwKFdTA                 XRP/58434F5245000000000000000000000000000000 $4480.79        4480792250.000000 85689.999107    985             FOUND          
+rwXGa9o6AEAYPAT7FUY8hCjndwyWKi3yCM                 XRP/CX1              $60.45          60449815.000000 12125289.107992 978             FOUND          
+rfr4u17gTmpQbmgZZS8gjxi4w1MmYzHds                  XRP/4252425200000000000000000000000000000000 $3155.31        3155314892.000000 459702330.291214 14              FOUND          
+r9ZKrNu1RJQg1UoqJ24pn5ZqynJg7rifGY                 XRP/FLR              $48882.08       48882083305.000000 6186075.117574  990             FOUND          
+rKZEd8TV1pwdjLDdzi1b4N1gFe8EBVUWR3                 XRP/58524D696E650000000000000000000000000000 $0.00           1366.000000     814.528397      32              FOUND          
+r5GMHtkmtAnMBgJFSZnwwAHj8rJ92yqwS                  XRP/457175696C69627269756D000000000000000000 $6293.99        6293985470.000000 871104.201358   53              FOUND          
+rB3nE2RcnhAqUj3xYczakzvF72uW6ML9UM                 XRP/5852646F67650000000000000000000000000000 $10976.42       10976424101.000000 1616285017.909933 882             FOUND          
+rHUpaqUPbwzKZdzQ8ZQCme18FrgW9pB4am                 XRP/USD              $2394.96        2394957307.000000 5291.206770     219             FOUND          
+rEaErQ5vEbHXThFedUrjz9YFotG5HHcxoW                 XRP/SGB              $14049.82       14049824978.000000 6153390.053777  1000            FOUND          
+rLJMi56CJMUnELQ5XzSrefn2WuFAwKQmDt                 XRP/50484E4958000000000000000000000000000000 $181846.71      181846705951.000000 26931396276.943020 319             FOUND          
+rsxbGeLDA2v6W7hbp2MGdus62ouuuNpHZn                 XRP/FSE              $224.29         224291402.000000 5506.367321     999             FOUND          
+rJSfYGyMUP7ZaNWCVkfEsobCtSZPd6ApNh                 XRP/584F4E4500000000000000000000000000000000 $12810.31       12810306214.000000 0.026819        1000            FOUND          
+rhEwhutV5EyYzTbBYDdK7dHxwdi5omqffB                 XRP/XDX              $1160.72        1160720630.000000 38916860.557801 979             FOUND          
+rKC8WECFbynMGZ1gWrnpWZyz8Zapucykm8                 XRP/43616C6C43656E74726500000000000000000000 $85.82          85824447.000000 260041712221.191101 943             FOUND          
+rNsiJLTeHWvurtFSH4FVV1DQrckS65RsSs                 XRP/XTK              $173.89         173885544.000000 190479.104304   1000            FOUND          
+rnsRq5ahgbFeRiAgBVvFTafyAgiS9x9Ztn                 XRP/41524D5900000000000000000000000000000000 $306086.03      306086030576.000000 32565680.316178 4               FOUND          
+rpaKhTBRkCSLdWT5SpEcQybC667semWAET                 XRP/XQK              $107.57         107572164.000000 268546946.296018 1000            FOUND          
+rwY2UUWaLMngYBRdFrGsbrYTgNWiGHssrH                 XRP/584D455441000000000000000000000000000000 $39.47          39469835.000000 94787395.756405 1000            FOUND          
+ravug7nFenV5VYBa5aitExQijhbvLdtwb4                 XRP/5452535259000000000000000000000000000000 $178.28         178282419.000000 983299.577901   702             FOUND          
+r4H8XWDfW3BrG4h4cuX1fe83ZWfBBu2VU6                 XRP/5852534849420000000000000000000000000000 $162.54         162538477.000000 2680382113772.097168 905             FOUND          
+rEKkGGiLMfL28q74W4QAEPeRwXvcxWdutn                 XRP/CNY              $60354.17       60354173772.000000 958323.963101   300             FOUND          
+rpnAMBAyBMhK4RN1qDLsgENrLMYNEsx3i4                 XRP/RPR              $3307.28        3307276919.000000 930146.892905   279             FOUND          
+rUDdZsUbxbyCp2WeB2DTRLUpyDs1LUubK9                 XRP/ATM              $103056.59      103056591013.000000 7582925199.481610 12              FOUND          
+rLikwdZqS14VEqtAB43NAYeCv8uJVYQXzJ                 XRP/586F676500000000000000000000000000000000 $17637.71       17637708078.000000 6299746475344.492188 45              FOUND          
+rQBeAghWHEwWvKShryBSa5yR3VRX9oyQ5T                 XRP/BTC              $1759.86        1759859597.000000 0.035638        766             FOUND          
+rs2T2iHdLrzQUYsFx7H1MnijNgWZEaPQtj                 XRP/QWK              $952.44         952437252.000000 17821.968363    1000            FOUND          
+rLuZkHtELeKea3izWw25wfTfn6PXyQDwtB                 XRP/4E49434500000000000000000000000000000000 $3.23           3232412.000000  244930264.563705 959             FOUND          
+rhDx4NgeWz6jzs4TwiwYDmpeF2maJFZBtr                 XRP/43616C6F72696500000000000000000000000000 $61.76          61763988.000000 360044676.625928 926             FOUND          
+raqws63JKigZSnZBTXBRSFqM5XDwBQK9jN                 XRP/SEC              $9.38           9378181.000000  9366.132885     451             FOUND          
+rMouQfMETTVa3q1VsFpShSpUgA92Cb75TL                 XRP/BCH              $29.60          29601847.000000 0.131879        1000            FOUND          
+rwE86ARLXfyKYCVmFpk511ddYfs5Fh6Vcp                 XRP/4245415200000000000000000000000000000000 $102454.71      102454707493.000000 33995537.083762 928             FOUND          
+rBH5G6HRqanZRLwzmpnp3ebYnYGJHxh7Li                 XRP/MLD              $2.03           2030641.000000  4103303.124317  1000            FOUND          
+rMN8UR8dGvtUEhogSac4w6C64tfBsugu1R                 XRP/785354494B000000000000000000000000000000 $569.51         569508625.000000 9603698.849902  632             FOUND          
+rnZRziP9EnFpQvpNFRmCPAnCFiL6pydHuc                 XRP/53686962614E4654000000000000000000000000 $404.03         404029326.000000 47720699449768.726562 1000            FOUND          
+rakZprdzwsUJ1rD2ouhYYAVP7tPbhrCbtz                 XRP/XPM              $611489.86      611489859636.000000 58327927.356069 1000            FOUND          
+rdrBYMcjBo9zVExL7V3DicH48FXgKW5RX                  XRP/5852505300000000000000000000000000000000 $79547.84       79547836573.000000 360302303.912827 511             FOUND          
+rJfo8TMRQ59JxGEossWK758tALRbDmaszE                 XRP/XQN              $17.74          17739069.000000 62554649.672454 1000            FOUND          
+rnWJdsgvS2U1t5DT8BkCzVXj217ub3BKHS                 XRP/65646974696F6E73000000000000000000000000 $26.45          26454717.000000 14452815.463141 1000            FOUND          
+rMz3CB6SnH6NPnjhcmLsDHTxPfY3b7Bp6d                 XRP/7842414E4B000000000000000000000000000000 $199.71         199705660.000000 2128310852.743651 1000            FOUND          
+r9zeQhjj3scQFDRriCJpMjDtW6eWjWnp6M                 XRP/XAH              $35098.15       35098150818.000000 1133807.694728  895             FOUND          
+r9jXCrRNXJm2w8jtPp9WoaqAqg5oaUu38w                 XRP/XUM              $485.51         485511322.000000 1533371.325338  958             FOUND          
+rQLPUvKqugM6qjzooxkjYjNvSFepamCKuQ                 XRP/4641495448000000000000000000000000000000 $404.13         404125720.000000 48437137641.450638 77              FOUND          
+rUoGE5HQ1eudJ5pfj7RgwhVfMAvZ1xnYjk                 XRP/47616D657258476F6C6400000000000000000000 $102.94         102938403.000000 491807675.040903 1000            FOUND          
+rdN7axUmvZBiFf6kg82nKKjbt4xD7y4vL                  XRP/78436F696E000000000000000000000000000000 $2.13           2128427.000000  18969.920701    1000            FOUND          
+rQsVyaB2jEmVMydcByNiK7p4bzVkwYohML                 XRP/5847424C00000000000000000000000000000000 $38.35          38353726.000000 76972634.116833 1000            FOUND          
+rsKuiczZKG1jXdTDBJnZombGeENYvrmY2U                 XRP/5363686D65636B6C657300000000000000000000 $21522.79       21522794388.000000 25834.670027    250             FOUND          
+rN8bA4UWCmA4bo2MrHcyZXDci8ibGkEPWf                 XRP/TPR              $1155.67        1155673111.000000 37476325.662815 949             FOUND          
+rNZ2ZVF1ZU34kFQvcN4xkFAvdSvve5bXce                 XRP/MAG              $1120894.23     1120894233948.000000 853.389327      842             FOUND          
+rMzZ16KNa5NRbosSp3Y3enxVDb6DrjhJ3L                 XRP/44524F5000000000000000000000000000000000 $100884.16      100884164491.000000 41201.019346    323             FOUND          
+rUGqgPbzKFVsSkTYUk4hdRoPwTaLv1iSDS                 XRP/7853504543544152000000000000000000000000 $20365.43       20365429109.000000 3048002.796979  989             FOUND          
+rLpnXUyv4zqNUGcPaCe5FWnXFXy1eTDZzZ                 XRP/5852504800000000000000000000000000000000 $42923.00       42922996591.000000 1696625.821013  987             FOUND          
+rKRpSsdzUwEvPnkowg66umD1NEwWeDiMpg                 XRP/OCW              $1.36           1364095.000000  1.289873        1000            FOUND          
+rP5J7x4HyHKQUUfrfzvuq28iLwiKPf7yv5                 XRP/504F4E474F000000000000000000000000000000 $33482.01       33482011074.000000 6029997393345.267578 336             FOUND          
+rEe57LSKzfxaqMvhQuRnWsi2qWdtEkYKmf                 XRP/5377697373546563680000000000000000000000 $1451.31        1451314913.000000 468211.941693   944             FOUND          
+rPSb6USdM9zhb5Qx3EV8iqYRkeb1TWwa55                 XRP/42454E544C455900000000000000000000000000 $544.46         544456990.000000 187845271.087034 74              FOUND          
+
+============================================================================================================================================
+SUMMARY
+============================================================================================================================================
+Total tokens processed: 100
+Total pools checked: 398
+Total AMM pools found: 65
+Total liquidity across all pools: $5737852.72 USD
+Average liquidity per pool: $88274.66 USD

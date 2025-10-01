@@ -1,0 +1,686 @@
+package block
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/xrpscan/xrpl-go"
+	"go.uber.org/zap"
+	"gorm.io/gorm"
+	"io"
+	"net/http"
+	"qc-defi-graphql-server/configs"
+	"qc-defi-graphql-server/configs/log"
+	"qc-defi-graphql-server/internal/models"
+	"qc-defi-graphql-server/internal/pkg"
+	"qc-defi-graphql-server/internal/utils"
+	"strconv"
+)
+
+type XRPService struct {
+	xrpWssURL     string
+	xrpDataApiURL string
+	client        *xrpl.Client
+}
+
+type XRPInterface interface {
+	GetClient(xrpWssUrl string) (*xrpl.Client, error)
+	GetOffers(ledgerIndex int, offers int, client *xrpl.Client, currencySymbol string, currencyIssuer string) (*models.XRPInBookOfferResponse, error)
+	GetAccountTransactions(address string)
+	ConnectClient(xrpWssURL string) *xrpl.Client
+	GetPriceFromClob(ledgerIndex int, currencySymbol string, currencyIssuer string) (*models.XRPInBookOfferResponse, error)
+	GetTokenData(ledgerIndex int, client *xrpl.Client)
+	StoreTokenData(ledgerIndex int, client *xrpl.Client)
+	GetConnectionRedshift() (*gorm.DB, error)
+}
+
+func (svc *XRPService) GetConnectionRedshift() (*gorm.DB, error) {
+	conf, err := configs.NewConfigRepo("../../.env")
+	if err != nil {
+		fmt.Println("error", err)
+		return nil, err
+	}
+	db := conf.RedshiftDB()
+	fmt.Println("db", db)
+
+	return db, nil
+}
+
+func (svc *XRPService) ConnectClient(xrpWssURL string) *xrpl.Client {
+	return xrpl.NewClient(xrpl.ClientConfig{URL: xrpWssURL, Timeout: 1, ConnectionTimeout: 10})
+}
+
+func (svc *XRPService) GetClient(xrpWssURL string) (*xrpl.Client, error) {
+	client := svc.ConnectClient(xrpWssURL)
+	err := client.Ping([]byte("PING"))
+	if err != nil {
+		return nil, err
+	}
+
+	return client, err
+}
+
+func (svc *XRPService) GetOffers(ledgerIndex int, offers int, client *xrpl.Client, currencySymbol string, currencyIssuer string) (*models.XRPInBookOfferResponse, error) {
+
+	var result models.XRPInBookOfferResponse
+	takerPays := models.XRPOfferObject{Currency: "XRP"}
+	takerGets := models.CurrencyOfferObject{Currency: currencySymbol, Issuer: currencyIssuer}
+	bookOfferRequest := models.XRPInBookOfferRequest{
+		Id:        4,
+		Command:   "book_offers",
+		Taker:     "r9cZA1mLK5R5Am25ArfXFmqgNwjZgnfk59",
+		TakerPays: takerPays,
+		TakerGets: takerGets,
+		Limit:     10,
+	}
+
+	request, err := json.Marshal(bookOfferRequest)
+	var requestMap map[string]interface{}
+	json.Unmarshal(request, &requestMap)
+	fmt.Println(string(request))
+	fmt.Println(err)
+	sendRequest := xrpl.BaseRequest{
+		"id":         4,
+		"command":    "book_offers",
+		"taker":      "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+		"taker_gets": takerGets,
+		"taker_pays": takerPays,
+		"limit":      offers,
+	}
+	fmt.Println(sendRequest)
+	response, err := client.Request(sendRequest)
+	if err != nil {
+		return nil, err
+	}
+	jsonStr, err := json.Marshal(response)
+	fmt.Println(string(jsonStr))
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(jsonStr, &result); err != nil {
+		return nil, err
+	}
+	if result.Status == "error" {
+		return nil, fmt.Errorf("invalid Hash: %v", ledgerIndex)
+	}
+	fmt.Println(result)
+	return &result, err
+}
+
+func (svc *XRPService) GetPriceFromClob(ledgerIndex int, currencySymbol string, currencyIssuer string) (*models.XRPInBookOfferResponse, error) {
+
+	var result models.XRPInBookOfferResponse
+	takerPays := models.XRPOfferObject{Currency: "XRP"}
+	takerGets := models.CurrencyOfferObject{Currency: currencySymbol, Issuer: currencyIssuer}
+	bookOfferRequest := models.XRPInBookOfferRequest{
+		Id:        4,
+		Command:   "book_offers",
+		Taker:     "r9cZA1mLK5R5Am25ArfXFmqgNwjZgnfk59",
+		TakerPays: takerPays,
+		TakerGets: takerGets,
+		Limit:     10,
+	}
+
+	request, err := json.Marshal(bookOfferRequest)
+	var requestMap map[string]interface{}
+	json.Unmarshal(request, &requestMap)
+	fmt.Println(string(request))
+	fmt.Println(err)
+	sendRequest := xrpl.BaseRequest{
+		"id":         4,
+		"command":    "book_offers",
+		"taker":      "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+		"taker_gets": takerGets,
+		"taker_pays": takerPays,
+		"limit":      10,
+	}
+	fmt.Println(sendRequest)
+	response, err := svc.client.Request(sendRequest)
+	if err != nil {
+		return nil, err
+	}
+	jsonStr, err := json.Marshal(response)
+	fmt.Println(string(jsonStr))
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(jsonStr, &result); err != nil {
+		return nil, err
+	}
+	if result.Status == "error" {
+		return nil, fmt.Errorf("invalid Hash: %v", ledgerIndex)
+	}
+	fmt.Println(result)
+	return &result, err
+}
+
+func (svc *XRPService) GetTokenData(ledgerIndex int, client *xrpl.Client) {
+	url := "https://s1.xrplmeta.org/tokens"
+
+	method := "GET"
+	var tokenList models.XRPTokenList
+	connection := &http.Client{}
+	req, err := http.NewRequest(method, url, nil)
+
+	if err != nil {
+		fmt.Printf("ERROR %s\n", err)
+	}
+
+	response, err := connection.Do(req)
+	fmt.Println(response)
+	if err != nil {
+		fmt.Printf("The HTTP request failed with error %s\n", err)
+	}
+	data, err := io.ReadAll(response.Body)
+
+	if err != nil {
+		fmt.Printf("ERROR %s\n", err)
+	}
+
+	json.Unmarshal(data, &tokenList)
+
+	for i := 0; i < 25; i++ {
+		fmt.Println(tokenList.Tokens[i])
+		fmt.Println(tokenList.Tokens[i].Issuer)
+		fmt.Println(tokenList.Tokens[i].Currency)
+
+		fmt.Println(tokenList.Tokens[i].Metrics.Trustlines)
+		fmt.Println(tokenList.Tokens[i].Metrics.Holders)
+		fmt.Println(tokenList.Tokens[i].Metrics.Supply)
+		fmt.Println(tokenList.Tokens[i].Metrics.Marketcap)
+		fmt.Println(tokenList.Tokens[i].Metrics.Price)
+		fmt.Println(tokenList.Tokens[i].Metrics.Volume24H)
+		fmt.Println(tokenList.Tokens[i].Metrics.Volume7D)
+
+		//fmt.Println(tokenList.Tokens[i].Meta)
+		fmt.Println(tokenList.Tokens[i].Meta.Token.Name)
+		fmt.Println(tokenList.Tokens[i].Meta.Token.Icon)
+		fmt.Println(tokenList.Tokens[i].Meta.Token.Description)
+		fmt.Println(tokenList.Tokens[i].Meta.Token.Weblinks)
+
+		svc.GetAMMAccount(tokenList.Tokens[i].Currency, tokenList.Tokens[i].Issuer)
+
+		// svc.GetPrice(ledgerIndex, client, tokenList.Tokens[i].Currency, tokenList.Tokens[i].Issuer)
+	}
+	//fmt.Println(data)
+}
+
+func (svc *XRPService) StoreTokenData(ledgerIndex int, client *xrpl.Client) {
+
+	// connect to database
+	db, err := svc.GetConnectionRedshift()
+
+	fmt.Println("db", db)
+
+	url := "https://s1.xrplmeta.org/tokens"
+
+	method := "GET"
+	var tokenList models.XRPTokenList
+	connection := &http.Client{}
+	req, err := http.NewRequest(method, url, nil)
+
+	if err != nil {
+		fmt.Printf("ERROR %s\n", err)
+	}
+
+	response, err := connection.Do(req)
+	fmt.Println(response)
+	if err != nil {
+		fmt.Printf("The HTTP request failed with error %s\n", err)
+	}
+	data, err := io.ReadAll(response.Body)
+
+	if err != nil {
+		fmt.Printf("ERROR %s\n", err)
+	}
+
+	json.Unmarshal(data, &tokenList)
+
+	for i := 0; i < 25; i++ {
+		fmt.Println(tokenList.Tokens[i])
+		fmt.Println(tokenList.Tokens[i].Issuer)
+		fmt.Println(tokenList.Tokens[i].Currency)
+
+		fmt.Println(tokenList.Tokens[i].Metrics.Trustlines)
+		fmt.Println(tokenList.Tokens[i].Metrics.Holders)
+		fmt.Println(tokenList.Tokens[i].Metrics.Supply)
+		fmt.Println(tokenList.Tokens[i].Metrics.Marketcap)
+		fmt.Println(tokenList.Tokens[i].Metrics.Price)
+		fmt.Println(tokenList.Tokens[i].Metrics.Volume24H)
+		fmt.Println(tokenList.Tokens[i].Metrics.Volume7D)
+
+		//fmt.Println(tokenList.Tokens[i].Meta)
+		fmt.Println(tokenList.Tokens[i].Meta.Token.Name)
+		fmt.Println(tokenList.Tokens[i].Meta.Token.Icon)
+		fmt.Println(tokenList.Tokens[i].Meta.Token.Description)
+		fmt.Println(tokenList.Tokens[i].Meta.Token.Weblinks)
+
+		svc.GetAMMAccount(tokenList.Tokens[i].Currency, tokenList.Tokens[i].Issuer)
+
+		// svc.GetPrice(ledgerIndex, client, tokenList.Tokens[i].Currency, tokenList.Tokens[i].Issuer)
+	}
+	//fmt.Println(data)
+}
+
+func (svc *XRPService) GetAllPrices(ledgerIndex int, client *xrpl.Client) {
+	url := "https://s1.xrplmeta.org/tokens"
+
+	method := "GET"
+	var tokenList models.XRPTokenList
+	connection := &http.Client{}
+	req, err := http.NewRequest(method, url, nil)
+
+	if err != nil {
+		fmt.Printf("ERROR %s\n", err)
+	}
+
+	response, err := connection.Do(req)
+	fmt.Println(response)
+	if err != nil {
+		fmt.Printf("The HTTP request failed with error %s\n", err)
+	}
+	data, err := io.ReadAll(response.Body)
+
+	if err != nil {
+		fmt.Printf("ERROR %s\n", err)
+	}
+
+	json.Unmarshal(data, &tokenList)
+
+	for i := 0; i < 25; i++ {
+		//fmt.Println(tokenList.Tokens[i])
+		fmt.Println(tokenList.Tokens[i].Issuer)
+		fmt.Println(tokenList.Tokens[i].Currency)
+		fmt.Println(tokenList.Tokens[i].ID)
+		fmt.Println(tokenList.Tokens[i].Metrics.Trustlines)
+		fmt.Println(tokenList.Tokens[i].Metrics.Holders)
+		fmt.Println(tokenList.Tokens[i].Metrics.Supply)
+		fmt.Println(tokenList.Tokens[i].Metrics.Marketcap)
+		fmt.Println(tokenList.Tokens[i].Metrics.Price)
+		fmt.Println(tokenList.Tokens[i].Metrics.Volume24H)
+		fmt.Println(tokenList.Tokens[i].Metrics.Volume7D)
+
+		//fmt.Println(tokenList.Tokens[i].Meta)
+		fmt.Println(tokenList.Tokens[i].Meta.Token.Name)
+		fmt.Println(tokenList.Tokens[i].Meta.Token.Icon)
+		fmt.Println(tokenList.Tokens[i].Meta.Token.Description)
+		fmt.Println(tokenList.Tokens[i].Meta.Token.Weblinks)
+
+		// svc.GetPrice(ledgerIndex, client, tokenList.Tokens[i].Currency, tokenList.Tokens[i].Issuer)
+	}
+	//fmt.Println(data)
+}
+
+func (svc *XRPService) GetTokenList() ([]*models.XRPTokenFields, error) {
+
+	var (
+		url          = "https://s1.xrplmeta.org/tokens"
+		tokenList    models.XRPTokenList
+		allTokenData models.XRPTokensQuery
+		count        int
+	)
+
+	resp, err := http.Get(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.BackgroundJobsLogger.Error("something went wrong while reading from request data", zap.Error(err))
+		}
+	}(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("received non-OK response: %s", resp.Status)
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(data, &tokenList)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: optimize this loop
+	for i := 0; i < 25; count++ {
+		if tokenList.Tokens[count].Meta.Token.Name != "" {
+			//fmt.Println("Token #", i, tokenList.Tokens[count].Meta.Token.Name, "Position in list:", count)
+			allTokenData.Tokens = append(allTokenData.Tokens, &models.XRPTokenFields{
+				Currency:      tokenList.Tokens[count].Currency,
+				IssuerAddress: tokenList.Tokens[count].Issuer,
+				Icon:          tokenList.Tokens[count].Meta.Token.Icon,
+				TokenName:     tokenList.Tokens[count].Meta.Token.Name,
+				IssuerName:    tokenList.Tokens[count].Meta.Issuer.Name,
+				Marketcap:     tokenList.Tokens[count].Metrics.Marketcap,
+				Price:         tokenList.Tokens[count].Metrics.Price,
+				Volume24H:     tokenList.Tokens[count].Metrics.Volume24H,
+			})
+			i++
+		}
+	}
+
+	return allTokenData.Tokens, nil
+}
+
+func (svc *XRPService) GetBookOffersSample(ledgerIndex int, client *xrpl.Client) (*models.XRPOutBookOfferResponse, error) {
+
+	var result models.XRPOutBookOfferResponse
+	takerGets := models.XRPOfferObject{Currency: "XRP"}
+	takerPays := models.CurrencyOfferObject{Currency: "USD", Issuer: "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}
+	bookOfferRequest := models.XRPOutBookOfferRequest{
+		Id:        4,
+		Command:   "book_offers",
+		Taker:     "r9cZA1mLK5R5Am25ArfXFmqgNwjZgnfk59",
+		TakerGets: takerGets,
+		TakerPays: takerPays,
+		Limit:     10,
+	}
+
+	request, err := json.Marshal(bookOfferRequest)
+	var requestMap map[string]interface{}
+	json.Unmarshal(request, &requestMap)
+	fmt.Println(string(request))
+	fmt.Println(err)
+	sendRequest := xrpl.BaseRequest{
+		"id":         4,
+		"command":    "book_offers",
+		"taker":      "rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn",
+		"taker_gets": takerGets,
+		"taker_pays": takerPays,
+		"limit":      10,
+	}
+	fmt.Println(sendRequest)
+	response, err := client.Request(sendRequest)
+	if err != nil {
+		return nil, err
+	}
+	jsonStr, err := json.Marshal(response)
+	fmt.Println(jsonStr)
+	fmt.Println(string(jsonStr))
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(jsonStr, &result); err != nil {
+		return nil, err
+	}
+	if result.Status == "error" {
+		return nil, fmt.Errorf("invalid Hash: %v", ledgerIndex)
+	}
+	fmt.Println(result)
+	return &result, err
+}
+
+func (svc *XRPService) GetLedgerData(ledgerIndex int, client *xrpl.Client) (*models.XRPLedger, error) {
+
+	var result models.XRPLedgerResult
+	request := xrpl.BaseRequest{
+		"id":           1,
+		"command":      "ledger",
+		"ledger_index": ledgerIndex,
+		"full":         false,
+		"accounts":     false,
+		"transactions": true,
+		"expand":       true,
+		"owner_funds":  false,
+	}
+
+	response, err := client.Request(request)
+	if err != nil {
+		return nil, err
+	}
+	jsonStr, err := json.Marshal(response)
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(jsonStr, &result); err != nil {
+		return nil, err
+	}
+	if result.Status == "error" {
+		return nil, fmt.Errorf("invalid Hash: %v", ledgerIndex)
+	}
+
+	return result.Result, err
+}
+
+func (svc *XRPService) GetTransactionData(txHash string, client *xrpl.Client) (*models.XRPTransaction, error) {
+
+	var result models.XRPTransactionResult
+
+	request := xrpl.BaseRequest{"id": 1, "command": "tx", "transaction": txHash, "binary": false}
+
+	response, err := client.Request(request)
+	if err != nil {
+		return nil, err
+	}
+	jsonStr, err := json.Marshal(response)
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(jsonStr, &result); err != nil {
+		return nil, err
+	}
+
+	return result.Result, err
+}
+
+func (svc *XRPService) GetLedger(ledgerHash string) (models.XRPLedgerResult, error) {
+	var (
+		url = svc.xrpDataApiURL + "/ledgers/?transactions=true" + ledgerHash
+		r   models.XRPLedgerResult
+	)
+	bytes, err := utils.GetExternalAPIData(url)
+	if err != nil {
+		return r, err
+	}
+	if err = json.Unmarshal(bytes, &r); err != nil {
+		return r, err
+	}
+	return r, nil
+}
+
+func (svc *XRPService) GetTransaction(txHash string) (models.XRPTransaction, error) {
+	var (
+		url = svc.xrpDataApiURL + "/transactions/" + txHash
+		r   models.XRPTransaction
+	)
+	bytes, err := pkg.HttpRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return r, err
+	}
+	if err = json.Unmarshal(bytes, &r); err != nil {
+		return r, err
+	}
+	return r, nil
+}
+
+type QcData struct {
+	// CoinSymbol string  `json:"coin_symbol"`
+	CoinPrice float64 `json:"coin_price"`
+}
+
+type QcResponse struct {
+	// Status QcStatus `json:"status"`
+	Data QcData `json:"data"`
+}
+
+func (svc *XRPService) FetchQcPrice(symbol string) (price float64) {
+
+	qc_api_key := "3F6TTBN3YLEG4P6IYSTY"
+	qc_secret_key := "0U0Sikx06M9rMZjRQ7BnJ3Uxjc53Wsh07Kq4pL2h7IzuaJmP"
+	url := "https://quantifycrypto.com/api/v1/coins/" + symbol + "?currency=USD&include_signals=false"
+	method := "GET"
+	var qcResponse QcResponse
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, nil)
+
+	req.Header.Add("QC-Access-Key", qc_api_key)
+	req.Header.Add("QC-Secret-Key", qc_secret_key)
+
+	if err != nil {
+		fmt.Printf("ERROR %s\n", err)
+	}
+	//r := make(map[string]interface{})
+	//err = json.Unmarshal(data, &r)
+	//fmt.Println(string(data))
+
+	response, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("The HTTP request failed with error %s\n", err)
+	}
+	data, err := io.ReadAll(response.Body)
+
+	//fmt.Println(response.Body)
+	//fmt.Println(string(data))
+	//fmt.Println(response)
+
+	if err != nil {
+		fmt.Printf("ERROR %s\n", err)
+	}
+
+	//r := make(map[string]interface{})
+	//err = json.Unmarshal(data, &r)
+	//fmt.Println(string(data))
+
+	json.Unmarshal(data, &qcResponse)
+
+	fmt.Println(qcResponse.Data.CoinPrice)
+
+	return qcResponse.Data.CoinPrice
+
+}
+
+//func (svc *XRPService) GetAccountTransactions() {
+//
+//}
+
+func (svc *XRPService) GetAMMAccount(currency string, issuer string) (string, error) {
+
+	currency1 := map[string]string{"currency": "XRP"}
+	currency2 := map[string]string{"currency": currency, "issuer": issuer}
+	ammInfo := models.AMMInfo{}
+	request := xrpl.BaseRequest{"command": "amm_info",
+		"asset":  currency1,
+		"asset2": currency2,
+	}
+	response, err := svc.client.Request(request)
+	if err != nil {
+		fmt.Println("error", err, request)
+	}
+
+	jsonStr, err := json.Marshal(response)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(jsonStr, ammInfo)
+	return "none", nil
+}
+
+func (svc *XRPService) GetAMMPrices(currency1 string, issuer1 string, currency2 string, issuer2 string) {
+
+}
+
+func (svc *XRPService) GetAccountBalances(address string) (*models.XRPAccountBalances, error) {
+
+	// rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj
+	//var result XRPTrustlinesResponse
+	xrpBalancesResponse := models.XRPAccountBalances{}
+	xrpTokenBalance := models.XRPBalanceElem{}
+	trustlinesRequest := xrpl.BaseRequest{
+		"id":           2,
+		"command":      "account_lines",
+		"account":      address,
+		"ledger_index": "validated"}
+	response, err := svc.client.Request(trustlinesRequest)
+	xrpPrice := svc.FetchQcPrice("XRP")
+	xrpBalancesResponse.XRPPrice = xrpPrice
+	xrpBalancesResponse.Account = address
+	xrpBalancesResponse.XRPBalance = 50
+	fmt.Println(xrpPrice)
+	//jsonStr, err := json.Marshal(response["result"])
+	//fmt.Println(jsonStr)
+	//err = json.Marshal(response, &result)
+
+	//result = response
+	//fmt.Println(value)
+	if err != nil {
+
+		fmt.Println(err)
+		return nil, err
+	} else {
+		fmt.Println(response["result"])
+		balanceMap, ok := response["result"].(map[string]interface{})
+		if !ok {
+			fmt.Println("error")
+		}
+		linesArray, ok := balanceMap["lines"].([]interface{})
+		if !ok {
+			fmt.Println(ok)
+		}
+		fmt.Println(linesArray)
+		for i := 0; i < len(linesArray); i++ {
+			fmt.Println(linesArray[i])
+			elem := linesArray[i].(map[string]interface{})
+			if !ok {
+				fmt.Println(ok)
+			}
+			balanceFloat, err := strconv.ParseFloat(elem["balance"].(string), 64)
+			if err != nil {
+				fmt.Println(err)
+			}
+			//price, err := svc.GetPrice(client, elem["currency"].(string), elem["account"].(string))
+			//if err != nil {
+			//	fmt.Println(err)
+			//}
+			//price = price * xrpPrice
+			//value := price * balanceFloat
+			xrpTokenBalance.Issuer = elem["account"].(string)
+			xrpTokenBalance.Balance = balanceFloat
+			xrpTokenBalance.Symbol = elem["currency"].(string)
+			//xrpTokenBalance.Price = price
+			//xrpTokenBalance.Value = value
+			xrpTokenBalance.Name = "token_name"
+			fmt.Println(xrpTokenBalance)
+			xrpBalancesResponse.XRPTokens = append(xrpBalancesResponse.XRPTokens, &models.XRPBalanceElem{
+				Issuer:  elem["account"].(string),
+				Balance: balanceFloat,
+				Symbol:  elem["currency"].(string),
+				//Price:   price,
+				//Value:   value,
+				Name: "token_name",
+			})
+
+		}
+		return &xrpBalancesResponse, nil
+
+	}
+}
+
+func (svc *XRPService) GetAccountTransactions(address string) (xrpl.BaseResponse, error) {
+
+	transactionRequest := xrpl.BaseRequest{
+		"id":               2,
+		"command":          "account_tx",
+		"account":          address,
+		"ledger_index_min": -1,
+		"ledger_index_max": -1,
+		"binary":           false,
+		"limit":            2,
+		"forward":          false,
+	}
+	response, err := svc.client.Request(transactionRequest)
+	fmt.Println(response, err)
+
+	return response, err
+}
+
+func (svc *XRPService) GetDefiData(address string) (string, error) {
+
+	transactions, err := svc.GetAccountTransactions(address)
+	balances, err := svc.GetAccountBalances(address)
+	fmt.Println(transactions, balances)
+	return "success", err
+}

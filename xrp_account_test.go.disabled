@@ -1,0 +1,225 @@
+package xrp
+
+import (
+	"fmt"
+	"testing"
+
+	"qc-defi-graphql-server/internal/models"
+)
+
+func newTestXRPService() *XRPService {
+	svc := &XRPService{}
+	return svc
+}
+
+func TestGetAccountBalances(t *testing.T) {
+	service := newTestXRPService()
+	balances, err := service.GetAccountBalances("rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj")
+	if err != nil {
+		t.Errorf("GetAccountBalances failed: %v", err)
+		return
+	}
+
+	fmt.Printf("Account: %s\n", balances.Account)
+	fmt.Printf("XRP Balance: %f\n", balances.XRPBalance)
+	fmt.Printf("XRP Price: %f\n", balances.XRPPrice)
+	fmt.Printf("Number of tokens: %d\n", len(balances.XRPTokens))
+
+	for i, token := range balances.XRPTokens {
+		fmt.Printf("Token %d: %s (%s) - Balance: %f, Issuer: %s\n",
+			i, token.Symbol, token.Name, token.Balance, token.Issuer)
+	}
+}
+
+func TestGetAccountTransactions(t *testing.T) {
+	service := newTestXRPService()
+	response, err := service.GetAccountTransactions("rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj")
+	if err != nil {
+		t.Errorf("GetAccountTransactions failed: %v", err)
+		return
+	}
+
+	fmt.Printf("Transaction response: %+v\n", response)
+
+	// Check if response contains expected fields
+	if result, ok := response.(map[string]interface{}); ok {
+		if account, ok := result["account"]; ok {
+			fmt.Printf("Account: %s\n", account)
+		}
+		if transactions, ok := result["transactions"]; ok {
+			if txList, ok := transactions.([]interface{}); ok {
+				fmt.Printf("Number of transactions: %d\n", len(txList))
+			}
+		}
+	}
+}
+
+func TestFetchQcPrice(t *testing.T) {
+	service := newTestXRPService()
+	price := service.FetchQcPrice("XRP")
+	fmt.Printf("XRP Price: %f\n", price)
+
+	if price <= 0 {
+		t.Errorf("Expected positive XRP price, got %f", price)
+	}
+}
+
+func TestGetAccountBalancesInvalidAddress(t *testing.T) {
+	service := newTestXRPService()
+	_, err := service.GetAccountBalances("invalid_address")
+	if err == nil {
+		t.Error("Expected error for invalid address, got nil")
+	}
+}
+
+func TestGetAccountBalancesEmptyAddress(t *testing.T) {
+	service := newTestXRPService()
+	_, err := service.GetAccountBalances("")
+	if err == nil {
+		t.Error("Expected error for empty address, got nil")
+	}
+}
+
+func TestGetAccountTransactionsInvalidAddress(t *testing.T) {
+	service := newTestXRPService()
+	_, err := service.GetAccountTransactions("invalid_address")
+	if err == nil {
+		t.Error("Expected error for invalid address, got nil")
+	}
+}
+
+func TestGetAccountTransactionsEmptyAddress(t *testing.T) {
+	service := newTestXRPService()
+	_, err := service.GetAccountTransactions("")
+	if err == nil {
+		t.Error("Expected error for empty address, got nil")
+	}
+}
+
+func TestFetchQcPriceInvalidSymbol(t *testing.T) {
+	service := newTestXRPService()
+	price := service.FetchQcPrice("INVALID_SYMBOL")
+	fmt.Printf("Invalid symbol price: %f\n", price)
+	// This might return 0 or some default value depending on the API
+}
+
+func TestFetchQcPriceMultipleSymbols(t *testing.T) {
+	service := newTestXRPService()
+
+	symbols := []string{"XRP", "ETH", "BTC", "USDC"}
+	for _, symbol := range symbols {
+		price := service.FetchQcPrice(symbol)
+		fmt.Printf("%s Price: %f\n", symbol, price)
+	}
+}
+
+func TestGetAccountBalancesMultipleAddresses(t *testing.T) {
+	service := newTestXRPService()
+
+	// Test with different known XRP addresses
+	addresses := []string{
+		"rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj", // Known test address
+		"rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", // Another known address
+	}
+
+	for _, address := range addresses {
+		balances, err := service.GetAccountBalances(address)
+		if err != nil {
+			fmt.Printf("Error getting balances for %s: %v\n", address, err)
+			continue
+		}
+
+		fmt.Printf("Address: %s, XRP Balance: %f, Tokens: %d\n",
+			address, balances.XRPBalance, len(balances.XRPTokens))
+	}
+}
+
+func TestGetAccountTransactionsMultipleAddresses(t *testing.T) {
+	service := newTestXRPService()
+
+	// Test with different known XRP addresses
+	addresses := []string{
+		"rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj", // Known test address
+		"rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", // Another known address
+	}
+
+	for _, address := range addresses {
+		response, err := service.GetAccountTransactions(address)
+		if err != nil {
+			fmt.Printf("Error getting transactions for %s: %v\n", address, err)
+			continue
+		}
+
+		if responseMap, ok := response.(map[string]interface{}); ok {
+			fmt.Printf("Address: %s, Response keys: %d\n", address, len(responseMap))
+
+			// Check if response contains expected structure
+			if account, ok := responseMap["account"]; ok {
+				fmt.Printf("Account in response: %s\n", account)
+			}
+		}
+	}
+}
+
+func TestXRPAccountDataStructure(t *testing.T) {
+	// Test the data structures we created
+	balanceElem := &models.XRPBalanceElem{
+		Symbol:  "USD",
+		Issuer:  "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+		Name:    "USD Coin",
+		Balance: 100.0,
+		Price:   1.0,
+		Value:   100.0,
+	}
+
+	if balanceElem.Symbol != "USD" {
+		t.Errorf("Expected symbol USD, got %s", balanceElem.Symbol)
+	}
+
+	accountBalances := &models.XRPAccountBalances{
+		Account:    "rTest123",
+		XRPBalance: 50.0,
+		XRPPrice:   2.0,
+		XRPTokens:  []*models.XRPBalanceElem{balanceElem},
+	}
+
+	if accountBalances.Account != "rTest123" {
+		t.Errorf("Expected account rTest123, got %s", accountBalances.Account)
+	}
+
+	if len(accountBalances.XRPTokens) != 1 {
+		t.Errorf("Expected 1 token, got %d", len(accountBalances.XRPTokens))
+	}
+}
+
+func TestXRPAccountBalancesWithRealData(t *testing.T) {
+	service := newTestXRPService()
+
+	// Test with a real XRP address
+	address := "rMjRc6Xyz5KHHDizJeVU63ducoaqWb1NSj"
+	balances, err := service.GetAccountBalances(address)
+	if err != nil {
+		t.Skipf("Skipping test due to error: %v", err)
+		return
+	}
+
+	// Basic validation
+	if balances.Account != address {
+		t.Errorf("Expected account %s, got %s", address, balances.Account)
+	}
+
+	if balances.XRPBalance < 0 {
+		t.Errorf("Expected non-negative XRP balance, got %f", balances.XRPBalance)
+	}
+
+	// Log the results
+	t.Logf("Account: %s", balances.Account)
+	t.Logf("XRP Balance: %f", balances.XRPBalance)
+	t.Logf("XRP Price: %f", balances.XRPPrice)
+	t.Logf("Number of tokens: %d", len(balances.XRPTokens))
+
+	for i, token := range balances.XRPTokens {
+		t.Logf("Token %d: %s (%s) - Balance: %f, Issuer: %s",
+			i, token.Symbol, token.Name, token.Balance, token.Issuer)
+	}
+}

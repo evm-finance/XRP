@@ -1,0 +1,512 @@
+package xrp
+
+import (
+	"fmt"
+	"log"
+	"testing"
+	"time"
+)
+
+// TestEnhancedAMMMetadataExtraction demonstrates enhanced AMM transaction metadata extraction
+func TestEnhancedAMMMetadataExtraction(t *testing.T) {
+	log.Printf("🔍 Testing Enhanced AMM Metadata Extraction")
+
+	// Test 1: Parse AMMCreate transaction with enhanced metadata
+	t.Run("Enhanced AMMCreate Parsing", func(t *testing.T) {
+		ammCreateTx := &XRPTransaction{
+			TransactionType: "AMMCreate",
+			Hash:            "enhanced_amm_create_hash",
+			Account:         "rAMMCreator123",
+			Amount:          "1000000000", // 1000 XRP in drops
+			Fee:             "12000",      // 12,000 drops = 0.012 XRP
+			Date:            int(time.Now().Unix()),
+			LedgerIndex:     12345,
+			Meta: map[string]interface{}{
+				"TradingFee": 500, // 0.5%
+				"LPToken": map[string]interface{}{
+					"currency": "03930A19B5C75E2B7CC6D6A82B47DAD66C0E20E3",
+					"issuer":   "rAMMCreator123",
+					"value":    "1000000",
+				},
+				"Amount2": map[string]interface{}{
+					"currency": "USD",
+					"issuer":   "rUSDIssuer456",
+					"value":    "2200",
+				},
+			},
+		}
+
+		// Enhanced metadata extraction
+		metadata := extractEnhancedAMMMetadata(ammCreateTx)
+
+		t.Logf("✅ Enhanced AMMCreate Metadata:")
+		t.Logf("   Transaction Hash: %s", metadata.TransactionHash)
+		t.Logf("   Type: %s", metadata.TransactionType)
+		t.Logf("   Account: %s", metadata.Account)
+		t.Logf("   Fee: %.6f XRP", metadata.Fee)
+		t.Logf("   Asset1: %s (%s)", metadata.Asset1.Currency, metadata.Asset1.Issuer)
+		t.Logf("   Asset2: %s (%s)", metadata.Asset2.Currency, metadata.Asset2.Issuer)
+		t.Logf("   Amount1: %.6f", metadata.Amount1)
+		t.Logf("   Amount2: %.6f", metadata.Amount2)
+		t.Logf("   LP Tokens: %.6f", metadata.LPTokens)
+		t.Logf("   Trading Fee: %d", metadata.TradingFee)
+
+		if metadata.CreateData != nil {
+			t.Logf("   Create Data:")
+			t.Logf("     Initial Asset1 Amount: %.6f", metadata.CreateData.InitialAsset1Amount)
+			t.Logf("     Initial Asset2 Amount: %.6f", metadata.CreateData.InitialAsset2Amount)
+			t.Logf("     Initial LP Tokens: %.6f", metadata.CreateData.InitialLPTokens)
+			t.Logf("     Trading Fee: %d", metadata.CreateData.TradingFee)
+			t.Logf("     Initial Price: %.6f", metadata.CreateData.InitialPrice)
+		}
+
+		// Verify metadata extraction
+		if metadata.TransactionType != "AMMCreate" {
+			t.Errorf("Expected transaction type AMMCreate, got %s", metadata.TransactionType)
+		}
+		if metadata.Fee != 0.012 {
+			t.Errorf("Expected fee 0.012 XRP, got %.6f", metadata.Fee)
+		}
+		if metadata.TradingFee != 500 {
+			t.Errorf("Expected trading fee 500, got %d", metadata.TradingFee)
+		}
+	})
+
+	// Test 2: Parse AMMDeposit transaction with enhanced metadata
+	t.Run("Enhanced AMMDeposit Parsing", func(t *testing.T) {
+		ammDepositTx := &XRPTransaction{
+			TransactionType: "AMMDeposit",
+			Hash:            "enhanced_amm_deposit_hash",
+			Account:         "rAMMUser456",
+			Amount:          "500000000", // 500 XRP in drops
+			Fee:             "10000",     // 10,000 drops = 0.01 XRP
+			Date:            int(time.Now().Unix()),
+			LedgerIndex:     12346,
+			Meta: map[string]interface{}{
+				"LPToken": map[string]interface{}{
+					"value": "450000", // LP tokens received
+				},
+				"Amount2": map[string]interface{}{
+					"currency": "USD",
+					"issuer":   "rUSDIssuer456",
+					"value":    "1100", // $1100 worth of tokens
+				},
+			},
+		}
+
+		metadata := extractEnhancedAMMMetadata(ammDepositTx)
+
+		t.Logf("✅ Enhanced AMMDeposit Metadata:")
+		t.Logf("   Transaction Hash: %s", metadata.TransactionHash)
+		t.Logf("   Asset1: %s (%.6f)", metadata.Asset1.Currency, metadata.Amount1)
+		t.Logf("   Asset2: %s (%.6f)", metadata.Asset2.Currency, metadata.Amount2)
+		t.Logf("   LP Tokens Received: %.6f", metadata.LPTokens)
+
+		if metadata.DepositData != nil {
+			t.Logf("   Deposit Data:")
+			t.Logf("     Single Asset Deposit: %t", metadata.DepositData.SingleAssetDeposit)
+			t.Logf("     Deposit Asset1: %.6f", metadata.DepositData.DepositAsset1)
+			t.Logf("     Deposit Asset2: %.6f", metadata.DepositData.DepositAsset2)
+			t.Logf("     LP Tokens Received: %.6f", metadata.DepositData.LPTokensReceived)
+			t.Logf("     Effective Price: %.6f", metadata.DepositData.EffectivePrice)
+			t.Logf("     Price Impact: %.4f%%", metadata.DepositData.PriceImpact)
+		}
+	})
+}
+
+// TestAdvancedAMMMetrics demonstrates advanced AMM pool metrics calculation
+func TestAdvancedAMMMetrics(t *testing.T) {
+	log.Printf("📊 Testing Advanced AMM Metrics")
+
+	// Test 1: Calculate comprehensive pool metrics
+	t.Run("Pool Metrics Calculation", func(t *testing.T) {
+		// Mock pool data
+		poolMetrics := calculateMockPoolMetrics()
+
+		t.Logf("✅ Advanced Pool Metrics:")
+		t.Logf("   Pool Account: %s", poolMetrics.PoolAccount)
+		t.Logf("   Asset1: %s (Balance: %.6f)", poolMetrics.Asset1.Currency, poolMetrics.Asset1Balance)
+		t.Logf("   Asset2: %s (Balance: %.6f)", poolMetrics.Asset2.Currency, poolMetrics.Asset2Balance)
+		t.Logf("   Current Price: %.6f %s per %s", poolMetrics.CurrentPrice, poolMetrics.Asset1.Currency, poolMetrics.Asset2.Currency)
+
+		t.Logf("   💰 Liquidity Metrics:")
+		t.Logf("     Total Liquidity: $%.2f USD", poolMetrics.TotalLiquidityUSD)
+		t.Logf("     Asset1 Value: $%.2f USD", poolMetrics.Asset1ValueUSD)
+		t.Logf("     Asset2 Value: $%.2f USD", poolMetrics.Asset2ValueUSD)
+		t.Logf("     Liquidity Change 24h: %.2f%%", poolMetrics.LiquidityChange24h)
+
+		t.Logf("   📈 Trading Metrics:")
+		t.Logf("     Volume 24h: $%.2f", poolMetrics.Volume24h)
+		t.Logf("     Volume 7d: $%.2f", poolMetrics.Volume7d)
+		t.Logf("     Trade Count 24h: %d", poolMetrics.TradeCount24h)
+		t.Logf("     Unique Traders 24h: %d", poolMetrics.UniqueTraders24h)
+		t.Logf("     Avg Trade Size: $%.2f", poolMetrics.AvgTradeSize)
+
+		t.Logf("   💡 Advanced Metrics:")
+		t.Logf("     APY: %.2f%%", poolMetrics.APY)
+		t.Logf("     Volatility: %.2f%%", poolMetrics.Volatility)
+		t.Logf("     Impermanent Loss: %.2f%%", poolMetrics.ImpermanentLoss)
+		t.Logf("     Utilization Rate: %.2f%%", poolMetrics.UtilizationRate)
+
+		t.Logf("   ⚠️ Risk Metrics:")
+		t.Logf("     Risk Score: %.1f/100", poolMetrics.RiskScore)
+		t.Logf("     Liquidity Depth: $%.2f", poolMetrics.LiquidityDepth)
+		t.Logf("     Slippage Impact ($1K): %.3f%%", poolMetrics.SlippageImpact1)
+		t.Logf("     Slippage Impact ($10K): %.3f%%", poolMetrics.SlippageImpact10)
+
+		// Verify calculations
+		if poolMetrics.TotalLiquidityUSD <= 0 {
+			t.Error("Total liquidity should be positive")
+		}
+		if poolMetrics.APY < 0 || poolMetrics.APY > 1000 {
+			t.Error("APY should be between 0 and 1000%")
+		}
+		if poolMetrics.RiskScore < 0 || poolMetrics.RiskScore > 100 {
+			t.Error("Risk score should be between 0 and 100")
+		}
+	})
+
+	// Test 2: Market Summary Calculations
+	t.Run("Market Summary", func(t *testing.T) {
+		marketSummary := calculateMockMarketSummary()
+
+		t.Logf("✅ AMM Market Summary:")
+		t.Logf("   Total Pools: %d", marketSummary.TotalPools)
+		t.Logf("   Total Liquidity: $%.2f USD", marketSummary.TotalLiquidityUSD)
+		t.Logf("   Total Volume 24h: $%.2f", marketSummary.TotalVolume24h)
+		t.Logf("   Active Pools 24h: %d", marketSummary.ActivePools24h)
+		t.Logf("   Average APY: %.2f%%", marketSummary.AverageAPY)
+		t.Logf("   New Pools 24h: %d", marketSummary.NewPools24h)
+
+		t.Logf("   🏆 Top Performing Pools:")
+		for i, pool := range marketSummary.TopPerformingPools {
+			if i >= 3 { // Show top 3
+				break
+			}
+			t.Logf("     %d. %s: $%.2f liquidity, %.2f%% APY",
+				i+1, pool.PoolAccount, pool.TotalLiquidityUSD, pool.APY)
+		}
+	})
+
+	// Test 3: Volume Breakdown Analysis
+	t.Run("Volume Breakdown", func(t *testing.T) {
+		volumeBreakdown := calculateMockVolumeBreakdown()
+
+		t.Logf("✅ Volume Breakdown Analysis:")
+		t.Logf("   Small Trades (<$1K): $%.2f (%.1f%%)",
+			volumeBreakdown.SmallTrades,
+			(volumeBreakdown.SmallTrades/getTotalVolume(volumeBreakdown))*100)
+		t.Logf("   Medium Trades ($1K-$10K): $%.2f (%.1f%%)",
+			volumeBreakdown.MediumTrades,
+			(volumeBreakdown.MediumTrades/getTotalVolume(volumeBreakdown))*100)
+		t.Logf("   Large Trades (>$10K): $%.2f (%.1f%%)",
+			volumeBreakdown.LargeTrades,
+			(volumeBreakdown.LargeTrades/getTotalVolume(volumeBreakdown))*100)
+		t.Logf("   Whale Activity (>$100K): $%.2f (%.1f%%)",
+			volumeBreakdown.WhaleActivity,
+			(volumeBreakdown.WhaleActivity/getTotalVolume(volumeBreakdown))*100)
+	})
+}
+
+// Mock data generators for testing
+
+func extractEnhancedAMMMetadata(tx *XRPTransaction) *EnhancedAMMTransactionMetadata {
+	metadata := &EnhancedAMMTransactionMetadata{
+		TransactionHash: tx.Hash,
+		TransactionType: tx.TransactionType,
+		Account:         tx.Account,
+		LedgerIndex:     tx.LedgerIndex,
+		Timestamp:       time.Unix(int64(tx.Date), 0),
+	}
+
+	// Parse fee
+	if tx.Fee != "" {
+		if fee := parseFloatSafe(tx.Fee); fee > 0 {
+			metadata.Fee = fee / 1000000.0 // Convert drops to XRP
+		}
+	}
+
+	// Extract assets and amounts
+	if tx.Amount != nil {
+		metadata.Asset1, metadata.Amount1 = parseAssetAmountSafe(tx.Amount)
+	}
+
+	// Extract from metadata
+	if meta, ok := tx.Meta.(map[string]interface{}); ok {
+		// Extract Amount2
+		if amount2Field, exists := meta["Amount2"]; exists {
+			metadata.Asset2, metadata.Amount2 = parseAssetAmountSafe(amount2Field)
+		}
+
+		// Extract trading fee
+		if tradingFee, exists := meta["TradingFee"]; exists {
+			if fee, ok := tradingFee.(int); ok {
+				metadata.TradingFee = fee
+			}
+		}
+
+		// Extract LP tokens
+		if lpToken, exists := meta["LPToken"]; exists {
+			if lpMap, ok := lpToken.(map[string]interface{}); ok {
+				if value, ok := lpMap["value"].(string); ok {
+					metadata.LPTokens = parseFloatSafe(value)
+				}
+			}
+		}
+	}
+
+	// Create type-specific metadata
+	switch tx.TransactionType {
+	case "AMMCreate":
+		metadata.CreateData = &EnhancedAMMCreateMetadata{
+			InitialAsset1Amount: metadata.Amount1,
+			InitialAsset2Amount: metadata.Amount2,
+			InitialLPTokens:     metadata.LPTokens,
+			TradingFee:          metadata.TradingFee,
+			CreatedAt:           metadata.Timestamp,
+		}
+		if metadata.Amount2 > 0 {
+			metadata.CreateData.InitialPrice = metadata.Amount1 / metadata.Amount2
+		}
+	case "AMMDeposit":
+		metadata.DepositData = &EnhancedAMMDepositMetadata{
+			DepositAsset1:      metadata.Amount1,
+			DepositAsset2:      metadata.Amount2,
+			LPTokensReceived:   metadata.LPTokens,
+			SingleAssetDeposit: (metadata.Amount1 == 0) != (metadata.Amount2 == 0),
+		}
+		if metadata.Amount2 > 0 {
+			metadata.DepositData.EffectivePrice = metadata.Amount1 / metadata.Amount2
+			metadata.DepositData.PriceImpact = calculateMockPriceImpact(metadata.Amount1, metadata.Amount2)
+		}
+	}
+
+	return metadata
+}
+
+func calculateMockPoolMetrics() *EnhancedAMMPoolMetrics {
+	return &EnhancedAMMPoolMetrics{
+		PoolAccount:       "rAMMPool123456789abcdef",
+		Asset1:            XRPAsset{Currency: "XRP", Issuer: ""},
+		Asset2:            XRPAsset{Currency: "USD", Issuer: "rUSDIssuer456"},
+		Asset1Balance:     50000.0,                           // 50,000 XRP
+		Asset2Balance:     110000.0,                          // $110,000 USD
+		LPTokenSupply:     74161.984,                         // sqrt(50000 * 110000)
+		TradingFee:        0.0005,                            // 0.05%
+		CurrentPrice:      2.20,                              // $2.20 per XRP
+		TotalLiquidityUSD: 220000.0,                          // $220,000 total
+		Asset1ValueUSD:    110000.0,                          // $110,000 in XRP
+		Asset2ValueUSD:    110000.0,                          // $110,000 in USD
+		Volume24h:         22000.0,                           // $22,000 daily volume
+		Volume7d:          132000.0,                          // $132,000 weekly volume
+		Volume30d:         528000.0,                          // $528,000 monthly volume
+		TradeCount24h:     15,                                // 15 trades per day
+		TradeCount7d:      105,                               // 105 trades per week
+		AvgTradeSize:      1466.67,                           // Average $1,466.67 per trade
+		UniqueTraders24h:  8,                                 // 8 unique traders
+		APY:               18.25,                             // 18.25% APY
+		Volatility:        15.0,                              // 15% volatility
+		ImpermanentLoss:   2.3,                               // 2.3% impermanent loss
+		UtilizationRate:   0.1,                               // 10% utilization
+		RiskScore:         25.5,                              // 25.5/100 risk score
+		LiquidityDepth:    2200.0,                            // $2,200 depth at 1% impact
+		SlippageImpact1:   0.227,                             // 0.227% slippage for $1K
+		SlippageImpact10:  2.273,                             // 2.273% slippage for $10K
+		CreatedAt:         time.Now().AddDate(0, -2, 0),      // Created 2 months ago
+		LastUpdated:       time.Now().Add(-10 * time.Minute), // Updated 10 min ago
+		DataFreshness:     10,                                // 10 minutes old
+	}
+}
+
+func calculateMockMarketSummary() *EnhancedAMMMarketSummary {
+	topPools := []*EnhancedAMMPoolMetrics{
+		calculateMockPoolMetrics(),
+		{
+			PoolAccount:       "rAMMPool987654321fedcba",
+			Asset1:            XRPAsset{Currency: "XRP", Issuer: ""},
+			Asset2:            XRPAsset{Currency: "BTC", Issuer: "rBTCIssuer789"},
+			TotalLiquidityUSD: 180000.0,
+			APY:               25.4,
+		},
+		{
+			PoolAccount:       "rAMMPoolabcdef123456789",
+			Asset1:            XRPAsset{Currency: "XRP", Issuer: ""},
+			Asset2:            XRPAsset{Currency: "ETH", Issuer: "rETHIssuer123"},
+			TotalLiquidityUSD: 150000.0,
+			APY:               22.1,
+		},
+	}
+
+	return &EnhancedAMMMarketSummary{
+		TotalPools:         45,
+		TotalLiquidityUSD:  2850000.0, // $2.85M total
+		TotalVolume24h:     285000.0,  // $285K daily volume
+		TotalTraders24h:    156,       // 156 unique traders
+		AverageAPY:         21.93,     // 21.93% average APY
+		TopPerformingPools: topPools,
+		NewPools24h:        3,  // 3 new pools
+		ActivePools24h:     28, // 28 active pools
+	}
+}
+
+func calculateMockVolumeBreakdown() *EnhancedVolumeBreakdown {
+	totalVolume := 22000.0 // $22,000 daily volume
+	return &EnhancedVolumeBreakdown{
+		SmallTrades:   totalVolume * 0.40, // $8,800
+		MediumTrades:  totalVolume * 0.35, // $7,700
+		LargeTrades:   totalVolume * 0.20, // $4,400
+		WhaleActivity: totalVolume * 0.05, // $1,100
+	}
+}
+
+// Helper functions
+
+func parseFloatSafe(s interface{}) float64 {
+	switch v := s.(type) {
+	case string:
+		if val := parseFloatStringSafe(v); val > 0 {
+			return val
+		}
+	case float64:
+		return v
+	case int:
+		return float64(v)
+	}
+	return 0
+}
+
+func parseFloatStringSafe(s string) float64 {
+	if val, err := strconv.ParseFloat(s, 64); err == nil {
+		return val
+	}
+	return 0
+}
+
+func parseAssetAmountSafe(field interface{}) (XRPAsset, float64) {
+	var asset XRPAsset
+	var amount float64
+
+	switch v := field.(type) {
+	case string:
+		// XRP amount in drops
+		if amt := parseFloatSafe(v); amt > 0 {
+			asset = XRPAsset{Currency: "XRP"}
+			amount = amt / 1000000.0 // Convert drops to XRP
+		}
+	case map[string]interface{}:
+		// Token amount
+		if currency, ok := v["currency"].(string); ok {
+			asset.Currency = currency
+		}
+		if issuer, ok := v["issuer"].(string); ok {
+			asset.Issuer = issuer
+		}
+		if value, ok := v["value"].(string); ok {
+			amount = parseFloatSafe(value)
+		}
+	}
+
+	return asset, amount
+}
+
+func calculateMockPriceImpact(amount1, amount2 float64) float64 {
+	// Simple price impact calculation
+	totalValue := amount1 + amount2
+	if totalValue > 10000 {
+		return 0.5 // 0.5% for large trades
+	} else if totalValue > 1000 {
+		return 0.1 // 0.1% for medium trades
+	}
+	return 0.01 // 0.01% for small trades
+}
+
+func getTotalVolume(vb *EnhancedVolumeBreakdown) float64 {
+	return vb.SmallTrades + vb.MediumTrades + vb.LargeTrades + vb.WhaleActivity
+}
+
+// Enhanced data structures for testing (these would be moved to the main files)
+
+type EnhancedAMMTransactionMetadata struct {
+	TransactionHash string                      `json:"transaction_hash"`
+	TransactionType string                      `json:"transaction_type"`
+	Account         string                      `json:"account"`
+	LedgerIndex     int                         `json:"ledger_index"`
+	Timestamp       time.Time                   `json:"timestamp"`
+	Fee             float64                     `json:"fee"`
+	Asset1          XRPAsset                    `json:"asset1,omitempty"`
+	Asset2          XRPAsset                    `json:"asset2,omitempty"`
+	Amount1         float64                     `json:"amount1,omitempty"`
+	Amount2         float64                     `json:"amount2,omitempty"`
+	LPTokens        float64                     `json:"lp_tokens,omitempty"`
+	TradingFee      int                         `json:"trading_fee,omitempty"`
+	CreateData      *EnhancedAMMCreateMetadata  `json:"create_data,omitempty"`
+	DepositData     *EnhancedAMMDepositMetadata `json:"deposit_data,omitempty"`
+}
+
+type EnhancedAMMCreateMetadata struct {
+	InitialAsset1Amount float64   `json:"initial_asset1_amount"`
+	InitialAsset2Amount float64   `json:"initial_asset2_amount"`
+	InitialLPTokens     float64   `json:"initial_lp_tokens"`
+	TradingFee          int       `json:"trading_fee"`
+	InitialPrice        float64   `json:"initial_price"`
+	CreatedAt           time.Time `json:"created_at"`
+}
+
+type EnhancedAMMDepositMetadata struct {
+	SingleAssetDeposit bool    `json:"single_asset_deposit"`
+	DepositAsset1      float64 `json:"deposit_asset1"`
+	DepositAsset2      float64 `json:"deposit_asset2"`
+	LPTokensReceived   float64 `json:"lp_tokens_received"`
+	EffectivePrice     float64 `json:"effective_price"`
+	PriceImpact        float64 `json:"price_impact"`
+}
+
+type EnhancedAMMPoolMetrics struct {
+	PoolAccount       string    `json:"pool_account"`
+	Asset1            XRPAsset  `json:"asset1"`
+	Asset2            XRPAsset  `json:"asset2"`
+	Asset1Balance     float64   `json:"asset1_balance"`
+	Asset2Balance     float64   `json:"asset2_balance"`
+	LPTokenSupply     float64   `json:"lp_token_supply"`
+	TradingFee        float64   `json:"trading_fee"`
+	CurrentPrice      float64   `json:"current_price"`
+	TotalLiquidityUSD float64   `json:"total_liquidity_usd"`
+	Asset1ValueUSD    float64   `json:"asset1_value_usd"`
+	Asset2ValueUSD    float64   `json:"asset2_value_usd"`
+	Volume24h         float64   `json:"volume_24h"`
+	Volume7d          float64   `json:"volume_7d"`
+	Volume30d         float64   `json:"volume_30d"`
+	TradeCount24h     int       `json:"trade_count_24h"`
+	TradeCount7d      int       `json:"trade_count_7d"`
+	AvgTradeSize      float64   `json:"avg_trade_size"`
+	UniqueTraders24h  int       `json:"unique_traders_24h"`
+	APY               float64   `json:"apy"`
+	Volatility        float64   `json:"volatility"`
+	ImpermanentLoss   float64   `json:"impermanent_loss"`
+	UtilizationRate   float64   `json:"utilization_rate"`
+	RiskScore         float64   `json:"risk_score"`
+	LiquidityDepth    float64   `json:"liquidity_depth"`
+	SlippageImpact1   float64   `json:"slippage_impact_1"`
+	SlippageImpact10  float64   `json:"slippage_impact_10"`
+	CreatedAt         time.Time `json:"created_at"`
+	LastUpdated       time.Time `json:"last_updated"`
+	DataFreshness     int       `json:"data_freshness_minutes"`
+}
+
+type EnhancedAMMMarketSummary struct {
+	TotalPools         int                       `json:"total_pools"`
+	TotalLiquidityUSD  float64                   `json:"total_liquidity_usd"`
+	TotalVolume24h     float64                   `json:"total_volume_24h"`
+	TotalTraders24h    int                       `json:"total_traders_24h"`
+	AverageAPY         float64                   `json:"average_apy"`
+	TopPerformingPools []*EnhancedAMMPoolMetrics `json:"top_performing_pools"`
+	NewPools24h        int                       `json:"new_pools_24h"`
+	ActivePools24h     int                       `json:"active_pools_24h"`
+}
+
+type EnhancedVolumeBreakdown struct {
+	SmallTrades   float64 `json:"small_trades"`
+	MediumTrades  float64 `json:"medium_trades"`
+	LargeTrades   float64 `json:"large_trades"`
+	WhaleActivity float64 `json:"whale_activity"`
+}

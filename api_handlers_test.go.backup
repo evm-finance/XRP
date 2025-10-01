@@ -1,0 +1,742 @@
+package xrp
+
+import (
+	"fmt"
+	"testing"
+	"time"
+
+	"github.com/shopspring/decimal"
+	"gorm.io/gorm"
+	"qc-defi-graphql-server/configs"
+)
+
+// APIHandlerTestSuite provides comprehensive testing for all API handlers
+type APIHandlerTestSuite struct {
+	config            *configs.ConfigRepo
+	xrpDB             *gorm.DB
+	xrpService        *XRPService
+	screenerService   *ScreenerService
+	ammService        AMMServiceInterface
+	enhancedLedgerSvc *EnhancedLedgerService
+
+	connMgr *ConnectionManager
+}
+
+// NewAPIHandlerTestSuite creates a new test suite with real database connections
+func NewAPIHandlerTestSuite(t *testing.T) *APIHandlerTestSuite {
+	// Load configuration
+	conf, err := configs.NewConfigRepo("../../.env")
+	if err != nil {
+		t.Fatalf("❌ Failed to load config: %v", err)
+	}
+
+	// Get database connections
+	xrpDB := conf.XRPDB()
+	if xrpDB == nil {
+		t.Fatalf("❌ Failed to get XRP database connection")
+	}
+
+	// Initialize XRPL connection manager
+	xrplWssUrl := conf.EnvVars().RippleRpcClientWssUrl
+	if xrplWssUrl == "" {
+		xrplWssUrl = "wss://s1.ripple.com"
+	}
+	connMgr := NewConnectionManager(xrplWssUrl, 5, conf.Logger())
+
+	// Initialize services
+	xrpService := NewXRPServiceWithConnectionManager(connMgr)
+	if err := xrpService.SetDatabase(xrpDB); err != nil {
+		t.Fatalf("❌ Failed to set database on XRP service: %v", err)
+	}
+
+	screenerService := NewScreenerService(xrpDB)
+	ammService := NewAMMService(xrpDB, connMgr)
+	enhancedLedgerSvc := NewEnhancedLedgerService(xrpDB, connMgr, conf.RedisDB())
+
+	return &APIHandlerTestSuite{
+		config:            conf,
+		xrpDB:             xrpDB,
+		xrpService:        xrpService,
+		screenerService:   screenerService,
+		ammService:        ammService,
+		enhancedLedgerSvc: enhancedLedgerSvc,
+		connMgr:           connMgr,
+	}
+}
+
+// TestTokensEndpoint tests the /api/xrp/tokens endpoint handler logic
+func TestTokensEndpoint(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing Tokens Endpoint Handler")
+	t.Log("=================================")
+
+	// Test the actual service method that the handler calls
+	tokens, err := suite.xrpService.GetTokenList()
+	if err != nil {
+		t.Errorf("❌ GetTokenList failed: %v", err)
+		return
+	}
+
+	t.Logf("✅ Retrieved %d tokens from database", len(tokens))
+
+	// Validate token data structure
+	if len(tokens) > 0 {
+		token := tokens[0]
+		t.Logf("📊 Sample token: %s (%s)", token.TokenName, token.Currency)
+		t.Logf("   Price: $%.6f", token.Price)
+		t.Logf("   Market Cap: $%.2f", token.Marketcap)
+		t.Logf("   Supply: %.2f", token.Supply)
+
+		// Validate required fields
+		if token.Currency == "" {
+			t.Error("❌ Token missing currency")
+		}
+		if token.IssuerAddress == "" && token.Currency != "XRP" {
+			t.Error("❌ Non-XRP token missing issuer address")
+		}
+	}
+
+	// Test database query performance
+	start := time.Now()
+	_, err = suite.xrpService.GetTokenList()
+	duration := time.Since(start)
+
+	if duration > 500*time.Millisecond {
+		t.Logf("⚠️  Slow query: %v (consider optimization)", duration)
+	} else {
+		t.Logf("⚡ Fast query: %v", duration)
+	}
+}
+
+// TestScreenerEndpoint tests the /api/xrp/screener endpoint handler logic
+func TestScreenerEndpoint(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing Screener Endpoint Handler")
+	t.Log("===================================")
+
+	// Test the actual screener service method
+	screenerData, err := suite.screenerService.GetOptimizedScreenerData(50, 0)
+	if err != nil {
+		t.Errorf("❌ GetOptimizedScreenerData failed: %v", err)
+		return
+	}
+
+	t.Logf("✅ Retrieved %d screener tokens", len(screenerData))
+
+	// Validate screener data quality
+	tokensWithPrices := 0
+	for _, token := range screenerData {
+		if token.Price > 0 {
+			tokensWithPrices++
+		}
+	}
+
+	priceSuccessRate := float64(tokensWithPrices) / float64(len(screenerData)) * 100
+	t.Logf("💰 Tokens with prices: %d/%d (%.1f%%)", tokensWithPrices, len(screenerData), priceSuccessRate)
+
+	if priceSuccessRate < 10 {
+		t.Error("❌ Low price success rate - screener may need debugging")
+	}
+
+	// Test pagination
+	page2Data, err := suite.screenerService.GetOptimizedScreenerData(50, 50)
+	if err != nil {
+		t.Errorf("❌ Pagination test failed: %v", err)
+	} else {
+		t.Logf("✅ Pagination working: page 2 has %d tokens", len(page2Data))
+	}
+}
+
+// TestAMMPoolsEndpoint tests the /api/xrp/amm/pools endpoint handler logic
+func TestAMMPoolsEndpoint(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing AMM Pools Endpoint Handler")
+	t.Log("====================================")
+
+	// Test getting all AMM pools
+	pools, err := suite.ammService.GetAllAMMPools()
+	if err != nil {
+		t.Errorf("❌ GetAllAMMPools failed: %v", err)
+		return
+	}
+
+	t.Logf("✅ Retrieved %d AMM pools from database", len(pools))
+
+	// Validate pool data
+	if len(pools) > 0 {
+		pool := pools[0]
+		t.Logf("📊 Sample pool: %s", pool.Account)
+		t.Logf("   Asset1: %s %s", pool.Asset1Amount, pool.Asset1Currency)
+		t.Logf("   Asset2: %s %s", pool.Asset2Amount, pool.Asset2Currency)
+		t.Logf("   Liquidity: $%.2f", pool.LiquidityUSD)
+
+		// Validate required fields
+		if pool.Account == "" {
+			t.Error("❌ Pool missing account")
+		}
+		if pool.Asset1Currency == "" {
+			t.Error("❌ Pool missing asset1 currency")
+		}
+	}
+
+	// Test top pools functionality
+	topPools, err := suite.ammService.GetTopAMMPools(10)
+	if err != nil {
+		t.Errorf("❌ GetTopAMMPools failed: %v", err)
+	} else {
+		t.Logf("✅ Top pools query returned %d pools", len(topPools))
+	}
+}
+
+// TestTransactionEndpoint tests the /api/xrp/transaction/{hash} endpoint handler logic
+func TestTransactionEndpoint(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing Transaction Endpoint Handler")
+	t.Log("======================================")
+
+	// Get a sample transaction hash from the database first
+	var sampleHash string
+	err := suite.xrpDB.Raw("SELECT hash FROM xrpTransactions WHERE hash IS NOT NULL AND hash != '' LIMIT 1").Scan(&sampleHash).Error
+	if err != nil || sampleHash == "" {
+		t.Log("⚠️  No transaction hashes in database - testing with dummy hash")
+		sampleHash = "1234567890ABCDEF"
+	}
+
+	t.Logf("🔍 Testing with transaction hash: %s", sampleHash)
+
+	// Test the transaction retrieval logic
+	transaction, err := suite.xrpService.GetTransaction(sampleHash)
+	if err != nil {
+		t.Logf("⚠️  GetTransaction failed (expected if hash doesn't exist): %v", err)
+	} else {
+		t.Logf("✅ Transaction retrieved: %+v", transaction)
+	}
+
+	// Test with a known invalid hash
+	_, err = suite.xrpService.GetTransaction("invalid_hash")
+	if err == nil {
+		t.Error("❌ Expected error for invalid hash but got success")
+	} else {
+		t.Logf("✅ Properly handled invalid hash: %v", err)
+	}
+}
+
+// TestLedgerEndpoint tests the /api/xrp/ledger/{id} endpoint handler logic
+func TestLedgerEndpoint(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing Ledger Endpoint Handler")
+	t.Log("=================================")
+
+	// Get current ledger index
+	currentLedger, err := suite.enhancedLedgerSvc.GetCurrentLedgerIndex()
+	if err != nil {
+		t.Errorf("❌ Failed to get current ledger index: %v", err)
+		return
+	}
+
+	t.Logf("📊 Current ledger index: %d", currentLedger)
+
+	// Test getting recent ledger
+	testLedgerIndex := currentLedger - 1
+	ledger, err := suite.enhancedLedgerSvc.GetLedger(testLedgerIndex)
+	if err != nil {
+		t.Errorf("❌ GetLedger failed for index %d: %v", testLedgerIndex, err)
+	} else {
+		t.Logf("✅ Ledger %d retrieved successfully", testLedgerIndex)
+		t.Logf("   Hash: %s", ledger.LedgerHash)
+		t.Logf("   Close Time: %s", ledger.CloseTime)
+		t.Logf("   Transaction Count: %d", ledger.TransactionCount)
+	}
+
+	// Test getting ledger transactions
+	transactions, err := suite.enhancedLedgerSvc.GetLedgerTransactions(testLedgerIndex, 10)
+	if err != nil {
+		t.Errorf("❌ GetLedgerTransactions failed: %v", err)
+	} else {
+		t.Logf("✅ Retrieved %d transactions from ledger %d", len(transactions), testLedgerIndex)
+	}
+}
+
+// TestAccountBalancesEndpoint tests the account balances endpoint handler logic
+func TestAccountBalancesEndpoint(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing Account Balances Endpoint Handler")
+	t.Log("===========================================")
+
+	// Test with a known XRP address
+	testAddress := "rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo"
+
+	balances, err := suite.xrpService.GetAccountBalances(testAddress)
+	if err != nil {
+		t.Errorf("❌ GetAccountBalances failed for %s: %v", testAddress, err)
+		return
+	}
+
+	t.Logf("✅ Account balances retrieved for %s", testAddress)
+	t.Logf("   XRP Balance: %s", balances.XRPBalance)
+	t.Logf("   XRP Price: $%.6f", balances.XRPPrice)
+	t.Logf("   Token Count: %d", len(balances.XRPTokens))
+
+	// Validate balance data
+	if balances.Account != testAddress {
+		t.Errorf("❌ Account mismatch: expected %s, got %s", testAddress, balances.Account)
+	}
+
+	if balances.XRPPrice <= 0 {
+		t.Error("❌ Invalid XRP price")
+	}
+
+	// Test with invalid address
+	_, err = suite.xrpService.GetAccountBalances("invalid_address")
+	if err == nil {
+		t.Error("❌ Expected error for invalid address but got success")
+	} else {
+		t.Logf("✅ Properly handled invalid address: %v", err)
+	}
+}
+
+// TestPriceEndpoint tests the /api/xrp/price endpoint handler logic
+func TestPriceEndpoint(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing Price Endpoint Handler")
+	t.Log("================================")
+
+	// Test XRP price calculation
+	priceService := NewPriceServiceWithDBAndConn(suite.xrpDB, suite.connMgr)
+
+	xrpPrice, err := priceService.GetXRPLPrice()
+	if err != nil {
+		t.Errorf("❌ GetXRPLPrice failed: %v", err)
+		return
+	}
+
+	t.Logf("✅ XRP Price: $%.6f", xrpPrice)
+
+	if xrpPrice.LessThanOrEqual(decimal.Zero) {
+		t.Error("❌ XRP price should be greater than 0")
+	}
+
+	if xrpPrice.GreaterThan(decimal.NewFromFloat(100)) {
+		t.Error("❌ XRP price seems unreasonably high")
+	}
+
+	// Test token price calculation
+	testCurrency := "MAG"
+	testIssuer := "rXmagwMmnFtVet3uL26Q2iwk287SRvVMJ"
+
+	tokenPrice, err := priceService.GetTokenPriceViaTwoStepConversion(testCurrency, testIssuer)
+	if err != nil {
+		t.Logf("⚠️  Token price calculation failed (may not have AMM pool): %v", err)
+	} else {
+		t.Logf("✅ %s price: $%.6f", testCurrency, tokenPrice)
+	}
+}
+
+// TestAMMUpdateStatusEndpoint tests the AMM update status endpoint
+func TestAMMUpdateStatusEndpoint(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing AMM Update Status Endpoint")
+	t.Log("====================================")
+
+	// Create AMM update job to test status
+	priceService := NewPriceServiceWithDBAndConn(suite.xrpDB, suite.connMgr)
+	priceCollector := NewAMMPriceCollector(suite.xrpDB, suite.ammService.(*AMMService), priceService)
+	ammUpdateJob := NewSimpleAMMUpdateJob(suite.xrpDB, suite.ammService.(*AMMService), priceCollector, 2*time.Minute)
+
+	// Start the job
+	if err := ammUpdateJob.Start(); err != nil {
+		t.Errorf("❌ Failed to start AMM update job: %v", err)
+		return
+	}
+
+	// Get status
+	stats := ammUpdateJob.GetStats()
+	t.Logf("✅ AMM Update Job Status:")
+	t.Logf("   Running: %v", stats.Running)
+	t.Logf("   Update Count: %d", stats.UpdateCount)
+	t.Logf("   Error Count: %d", stats.ErrorCount)
+	t.Logf("   Update Interval: %v", stats.UpdateInterval)
+
+	// Stop the job
+	if err := ammUpdateJob.Stop(); err != nil {
+		t.Errorf("⚠️  Failed to stop AMM update job: %v", err)
+	}
+}
+
+// TestScreenerUpdateStatusEndpoint tests the screener update status endpoint
+func TestScreenerUpdateStatusEndpoint(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing Screener Update Status Endpoint")
+	t.Log("=========================================")
+
+	// Create screener update job to test status
+	priceService := NewPriceServiceWithDBAndConn(suite.xrpDB, suite.connMgr)
+	screenerJob := NewScreenerUpdateJob(suite.xrpDB, priceService, 15*time.Minute)
+
+	// Start the job
+	if err := screenerJob.Start(); err != nil {
+		t.Errorf("❌ Failed to start screener update job: %v", err)
+		return
+	}
+
+	// Get status
+	stats := screenerJob.GetStats()
+	t.Logf("✅ Screener Update Job Status:")
+	t.Logf("   Running: %v", stats.Running)
+	t.Logf("   Update Count: %d", stats.UpdateCount)
+	t.Logf("   Error Count: %d", stats.ErrorCount)
+	t.Logf("   Update Interval: %v", stats.UpdateInterval)
+
+	// Stop the job
+	if err := screenerJob.Stop(); err != nil {
+		t.Errorf("⚠️  Failed to stop screener update job: %v", err)
+	}
+}
+
+// TestTopAMMPoolsEndpoint tests the /api/xrp/amm/top-pools endpoint handler logic
+func TestTopAMMPoolsEndpoint(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing Top AMM Pools Endpoint Handler")
+	t.Log("========================================")
+
+	// Test getting top pools
+	topPools, err := suite.ammService.GetTopAMMPools(10)
+	if err != nil {
+		t.Errorf("❌ GetTopAMMPools failed: %v", err)
+		return
+	}
+
+	t.Logf("✅ Retrieved %d top AMM pools", len(topPools))
+
+	// Validate pool data
+	if len(topPools) > 0 {
+		pool := topPools[0]
+		t.Logf("📊 Top pool: %s", pool.Account)
+		t.Logf("   Liquidity: $%.2f", pool.LiquidityUSD)
+		t.Logf("   Trading Fee: %d", pool.TradingFee)
+
+		// Validate liquidity ordering (should be descending)
+		if len(topPools) > 1 {
+			if topPools[0].LiquidityUSD < topPools[1].LiquidityUSD {
+				t.Error("❌ Top pools not properly ordered by liquidity")
+			} else {
+				t.Log("✅ Pools properly ordered by liquidity")
+			}
+		}
+	}
+
+	// Test with different limits
+	smallList, err := suite.ammService.GetTopAMMPools(3)
+	if err != nil {
+		t.Errorf("❌ GetTopAMMPools with limit 3 failed: %v", err)
+	} else {
+		t.Logf("✅ Limited query returned %d pools", len(smallList))
+		if len(smallList) > 3 {
+			t.Error("❌ Limit not respected")
+		}
+	}
+}
+
+// TestHealthCheckEndpoint tests the health check endpoints
+func TestHealthCheckEndpoint(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing Health Check Endpoint Handler")
+	t.Log("=======================================")
+
+	// Test database connectivity
+	err := suite.xrpDB.Exec("SELECT 1").Error
+	if err != nil {
+		t.Errorf("❌ Database health check failed: %v", err)
+	} else {
+		t.Log("✅ Database connection healthy")
+	}
+
+	// Test table existence
+	tables := []string{"xrpTokens", "xrpAmm_normalized", "xrpScreener", "xrpTransactions", "xrpLedgers"}
+	for _, table := range tables {
+		var count int64
+		err := suite.xrpDB.Table(table).Count(&count).Error
+		if err != nil {
+			t.Errorf("❌ Table %s not accessible: %v", table, err)
+		} else {
+			t.Logf("✅ Table %s: %d records", table, count)
+		}
+	}
+
+	// Test XRPL connection
+	_, err = suite.connMgr.GetConnection()
+	if err != nil {
+		t.Errorf("❌ XRPL connection failed: %v", err)
+	} else {
+		t.Log("✅ XRPL connection healthy")
+	}
+}
+
+// TestMonitoringEndpoints tests the monitoring endpoints
+func TestMonitoringEndpoints(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing Monitoring Endpoints")
+	t.Log("==============================")
+
+	// Test getting current system status
+	t.Log("📊 System Status Check:")
+
+	// Check database responsiveness
+	start := time.Now()
+	var dbTime string
+	err := suite.xrpDB.Raw("SELECT NOW()").Scan(&dbTime).Error
+	dbDuration := time.Since(start)
+
+	if err != nil {
+		t.Errorf("❌ Database response check failed: %v", err)
+	} else {
+		t.Logf("✅ Database response time: %v", dbDuration)
+	}
+
+	// Check recent activity
+	var recentActivity struct {
+		RecentTransactions int64 `gorm:"column:recent_transactions"`
+		RecentLedgers      int64 `gorm:"column:recent_ledgers"`
+		RecentAMMUpdates   int64 `gorm:"column:recent_amm_updates"`
+	}
+
+	suite.xrpDB.Raw(`
+		SELECT 
+			(SELECT COUNT(*) FROM xrpTransactions WHERE created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)) as recent_transactions,
+			(SELECT COUNT(*) FROM xrpLedgers WHERE created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)) as recent_ledgers,
+			(SELECT COUNT(*) FROM xrpAmm_normalized WHERE last_updated > UNIX_TIMESTAMP() - 3600) as recent_amm_updates
+	`).Scan(&recentActivity)
+
+	t.Logf("📈 Recent Activity (last hour):")
+	t.Logf("   Transactions: %d", recentActivity.RecentTransactions)
+	t.Logf("   Ledgers: %d", recentActivity.RecentLedgers)
+	t.Logf("   AMM Updates: %d", recentActivity.RecentAMMUpdates)
+}
+
+// TestUserPositionsEndpoint tests the /api/xrp/user-positions endpoint handler logic
+func TestUserPositionsEndpoint(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing User Positions Endpoint Handler")
+	t.Log("=========================================")
+
+	testAddress := "rMV5cxLAKs8SuoZ8Ly8geDSnXgf9gui6Fo"
+
+	// Test user positions logic (this would call the actual service method)
+	positions, err := suite.ammService.GetUserAMMPositions(testAddress)
+	if err != nil {
+		t.Logf("⚠️  GetUserAMMPositions failed (user may not have positions): %v", err)
+	} else {
+		t.Logf("✅ User positions retrieved: %d positions", len(positions))
+
+		if len(positions) > 0 {
+			pos := positions[0]
+			t.Logf("📊 Sample position: Pool %s", pos.PoolAccount)
+			t.Logf("   LP Tokens: %s", pos.LPTokenAmount)
+		}
+	}
+}
+
+// TestNetworkInfoEndpoint tests the /api/network-info endpoint
+func TestNetworkInfoEndpoint(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing Network Info Endpoint Handler")
+	t.Log("=======================================")
+
+	// Test network information retrieval
+	networkInfo, err := suite.enhancedLedgerSvc.GetNetworkInfo()
+	if err != nil {
+		t.Errorf("❌ GetNetworkInfo failed: %v", err)
+		return
+	}
+
+	t.Logf("✅ Network info retrieved:")
+	t.Logf("   Network ID: %s", networkInfo.NetworkID)
+	t.Logf("   Current Ledger: %d", networkInfo.LedgerIndex)
+	t.Logf("   Reserve Base: %d", networkInfo.ReserveBase)
+	t.Logf("   Reserve Inc: %d", networkInfo.ReserveInc)
+}
+
+// Helper function to run all comprehensive tests
+func TestAllAPIHandlers(t *testing.T) {
+	t.Log("🚀 Running Comprehensive API Handler Test Suite")
+	t.Log("===============================================")
+
+	// Run all test categories
+	t.Run("TokensEndpoint", TestTokensEndpoint)
+	t.Run("ScreenerEndpoint", TestScreenerEndpoint)
+	t.Run("AMMPoolsEndpoint", TestAMMPoolsEndpoint)
+	t.Run("TransactionEndpoint", TestTransactionEndpoint)
+	t.Run("LedgerEndpoint", TestLedgerEndpoint)
+	t.Run("AccountBalancesEndpoint", TestAccountBalancesEndpoint)
+	t.Run("PriceEndpoint", TestPriceEndpoint)
+	t.Run("AMMUpdateStatusEndpoint", TestAMMUpdateStatusEndpoint)
+	t.Run("ScreenerUpdateStatusEndpoint", TestScreenerUpdateStatusEndpoint)
+	t.Run("TopAMMPoolsEndpoint", TestTopAMMPoolsEndpoint)
+	t.Run("HealthCheckEndpoint", TestHealthCheckEndpoint)
+	t.Run("MonitoringEndpoints", TestMonitoringEndpoints)
+	t.Run("UserPositionsEndpoint", TestUserPositionsEndpoint)
+	t.Run("NetworkInfoEndpoint", TestNetworkInfoEndpoint)
+
+	t.Log("\n🎉 All API Handler Tests Completed!")
+}
+
+// TestSpecificTokenEndpoint tests individual token endpoint with real production scenarios
+func TestSpecificTokenEndpoint(t *testing.T) {
+	suite := NewAPIHandlerTestSuite(t)
+
+	t.Log("🧪 Testing Specific Token Endpoint Handler (Production Issues)")
+	t.Log("=============================================================")
+
+	// Test the ARMY token that's causing 500 errors in production
+	testCurrency := "ARMY"
+	testIssuer := "rGG3wQ4kUzd7Jnmk1n5NWPZjjut62kCBfC"
+
+	t.Logf("🔍 Testing problematic token: %s/%s", testCurrency, testIssuer)
+
+	// First, check if this token exists in our database
+	var tokenExists bool
+	err := suite.xrpDB.Raw(`
+		SELECT EXISTS(
+			SELECT 1 FROM xrpTokens 
+			WHERE currency = ? AND issuer = ?
+		) as token_exists
+	`, testCurrency, testIssuer).Scan(&tokenExists).Error
+
+	if err != nil {
+		t.Errorf("❌ Database query to check token existence failed: %v", err)
+		return
+	}
+
+	t.Logf("📊 Token %s/%s exists in database: %v", testCurrency, testIssuer, tokenExists)
+
+	// Test the actual service method that the endpoint calls
+	var token struct {
+		Currency    string  `json:"currency"`
+		Issuer      string  `json:"issuer"`
+		Name        string  `json:"name"`
+		Description string  `json:"description"`
+		Supply      string  `json:"supply"`
+		Trustlines  int64   `json:"trustlines"`
+		Holders     int64   `json:"holders"`
+		Price       float64 `json:"price"`
+		MarketCap   float64 `json:"marketcap"`
+		Volume24h   float64 `json:"volume24h"`
+		Volume7d    float64 `json:"volume7d"`
+		Icon        string  `json:"icon"`
+		Weblinks    string  `json:"weblinks"`
+	}
+
+	// This is the exact query from the endpoint handler
+	query := `
+		SELECT currency, issuer, token_name as name, description, supply_xrpl as supply, trustlines, holders, 
+			   price, marketcap, volume_24h as volume24h, volume_24h as volume7d, icon, weblinks
+		FROM xrpTokens 
+		WHERE currency = ? AND issuer = ?
+	`
+
+	err = suite.xrpDB.Raw(query, testCurrency, testIssuer).Scan(&token).Error
+	if err != nil {
+		t.Logf("❌ Database query failed (this reproduces the 500 error): %v", err)
+
+		// Let's diagnose what's wrong with the query
+		t.Log("🔍 Diagnosing database schema issues...")
+
+		// Check what columns actually exist in xrpTokens table
+		var columns []struct {
+			ColumnName string `gorm:"column:COLUMN_NAME"`
+		}
+
+		err = suite.xrpDB.Raw(`
+			SELECT COLUMN_NAME 
+			FROM INFORMATION_SCHEMA.COLUMNS 
+			WHERE TABLE_NAME = 'xrpTokens' AND TABLE_SCHEMA = DATABASE()
+			ORDER BY ORDINAL_POSITION
+		`).Scan(&columns).Error
+
+		if err != nil {
+			t.Errorf("❌ Failed to get table schema: %v", err)
+		} else {
+			t.Log("📋 Actual xrpTokens table columns:")
+			for _, col := range columns {
+				t.Logf("   - %s", col.ColumnName)
+			}
+		}
+
+		// Check if ARMY token exists with any column name variations
+		var searchResults []struct {
+			Currency string `json:"currency"`
+			Issuer   string `json:"issuer"`
+			Name     string `json:"token_name"`
+		}
+
+		err = suite.xrpDB.Raw(`
+			SELECT currency, issuer, token_name
+			FROM xrpTokens 
+			WHERE currency LIKE '%ARMY%' OR token_name LIKE '%ARMY%'
+			LIMIT 5
+		`).Scan(&searchResults).Error
+
+		if err != nil {
+			t.Errorf("❌ Failed to search for ARMY token: %v", err)
+		} else {
+			t.Logf("🔍 ARMY token search results (%d found):", len(searchResults))
+			for _, result := range searchResults {
+				t.Logf("   Currency: %s, Issuer: %s, Name: %s", result.Currency, result.Issuer, result.Name)
+			}
+		}
+
+	} else {
+		t.Logf("✅ Token query successful: %+v", token)
+
+		// Validate token data
+		if token.Currency == "" {
+			t.Error("❌ Token currency is empty")
+		}
+		if token.Issuer == "" {
+			t.Error("❌ Token issuer is empty")
+		}
+	}
+
+	// Test other problematic currency formats
+	testCases := []struct {
+		name     string
+		currency string
+		issuer   string
+	}{
+		{"XRP Native", "XRP", ""},
+		{"USD Ripple", "USD", "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq"},
+		{"Hex Currency", "41524D5900000000000000000000000000000000", "rGG3wQ4kUzd7Jnmk1n5NWPZjjut62kCBfC"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var testToken struct {
+				Currency string `json:"currency"`
+				Issuer   string `json:"issuer"`
+			}
+
+			query := "SELECT currency, issuer FROM xrpTokens WHERE currency = ? AND issuer = ?"
+			err := suite.xrpDB.Raw(query, tc.currency, tc.issuer).Scan(&testToken).Error
+
+			if err != nil {
+				t.Logf("⚠️  Query failed for %s: %v", tc.name, err)
+			} else {
+				t.Logf("✅ Found token for %s: %s/%s", tc.name, testToken.Currency, testToken.Issuer)
+			}
+		})
+	}
+}

@@ -1,0 +1,208 @@
+package xrp
+
+import (
+	"fmt"
+	"qc-defi-graphql-server/internal/database"
+	"testing"
+	"time"
+)
+
+func TestAMMPriceCollection(t *testing.T) {
+	// Set up test environment
+	dbService := database.NewDatabaseCreateService()
+	db, err := dbService.GetConnectionXRPDB()
+	if err != nil {
+		t.Fatalf("Failed to get database connection: %v", err)
+	}
+
+	// Create services
+	ammService := NewAMMService(db)
+	priceService := NewPriceService()
+	priceCollector := NewAMMPriceCollector(db, ammService, priceService)
+
+	// Test price collection from AMM pools
+	fmt.Println("\n🧪 Testing AMM price collection...")
+
+	result, err := priceCollector.CollectPricesFromAMMPools()
+	if err != nil {
+		t.Fatalf("Failed to collect prices: %v", err)
+	}
+
+	// Print results
+	fmt.Printf("\n📊 Price Collection Results:\n")
+	fmt.Printf("   Total pools processed: %d\n", result.TotalTokens)
+	fmt.Printf("   Successfully priced: %d\n", result.PricedTokens)
+	fmt.Printf("   Failed to price: %d\n", result.FailedTokens)
+	fmt.Printf("   Collection time: %v\n", result.CollectionTime)
+
+	// Print summary
+	if result.Summary != nil {
+		fmt.Printf("\n📈 Summary:\n")
+		fmt.Printf("   Total liquidity: $%.2f\n", result.Summary["total_liquidity"])
+		fmt.Printf("   Average price: $%.6f\n", result.Summary["average_price"])
+		fmt.Printf("   Min price: $%.6f\n", result.Summary["min_price"])
+		fmt.Printf("   Max price: $%.6f\n", result.Summary["max_price"])
+		fmt.Printf("   Success rate: %.1f%%\n", result.Summary["success_rate"])
+
+		if sourceBreakdown, ok := result.Summary["source_breakdown"].(map[string]int); ok {
+			fmt.Printf("   Source breakdown:\n")
+			for source, count := range sourceBreakdown {
+				fmt.Printf("     %s: %d tokens\n", source, count)
+			}
+		}
+	}
+
+	// Print some sample prices
+	fmt.Printf("\n💰 Sample Token Prices:\n")
+	count := 0
+	for key, price := range result.Prices {
+		if count >= 10 { // Limit to first 10
+			break
+		}
+		fmt.Printf("   %s: $%.6f USD (%.6f XRP) [%s]\n",
+			key, price.PriceUSD, price.PriceXRP, price.Source)
+		count++
+	}
+
+	// Print errors if any
+	if len(result.Errors) > 0 {
+		fmt.Printf("\n❌ Errors encountered:\n")
+		for token, errorMsg := range result.Errors {
+			fmt.Printf("   %s: %s\n", token, errorMsg)
+		}
+	}
+
+	// Test individual token price retrieval
+	if len(result.Prices) > 0 {
+		fmt.Printf("\n🔍 Testing individual price retrieval:\n")
+		// Just test XRP price directly
+		price, err := priceCollector.GetTokenPrice("XRP", "")
+		if err == nil {
+			fmt.Printf("   XRP price: $%.6f USD\n", price.PriceUSD)
+		}
+	}
+
+	// Test storing prices to database
+	fmt.Printf("\n💾 Testing price storage to database...")
+	err = priceCollector.StorePricesToDatabase(result.Prices)
+	if err != nil {
+		fmt.Printf("   ❌ Failed to store prices: %v\n", err)
+	} else {
+		fmt.Printf("   ✅ Successfully stored %d prices to database\n", len(result.Prices))
+	}
+
+	// Test price history retrieval
+	fmt.Printf("\n📜 Testing price history retrieval...")
+	if len(result.Prices) > 0 {
+		// Just test XRP price history
+		history, err := priceCollector.GetPriceHistory("XRP", "", 5)
+		if err == nil {
+			fmt.Printf("   ✅ Retrieved %d historical prices for XRP\n", len(history))
+		} else {
+			fmt.Printf("   ❌ Failed to retrieve price history: %v\n", err)
+		}
+	}
+
+	fmt.Printf("\n✅ AMM price collection test completed successfully!\n")
+}
+
+func TestAMMPriceCollectionWithSpecificTokens(t *testing.T) {
+	// Set up test environment
+	dbService := database.NewDatabaseCreateService()
+	db, err := dbService.GetConnectionXRPDB()
+	if err != nil {
+		t.Fatalf("Failed to get database connection: %v", err)
+	}
+
+	// Create services
+	ammService := NewAMMService(db)
+	priceService := NewPriceService()
+	priceCollector := NewAMMPriceCollector(db, ammService, priceService)
+
+	// Test specific tokens that we know exist
+	fmt.Println("\n🧪 Testing price collection for specific tokens...")
+
+	// Test XRP price
+	xrpPrice, err := priceCollector.GetTokenPrice("XRP", "")
+	if err != nil {
+		fmt.Printf("❌ Failed to get XRP price: %v\n", err)
+	} else {
+		fmt.Printf("✅ XRP price: $%.6f USD\n", xrpPrice.PriceUSD)
+	}
+
+	// Test RLUSD price
+	rlusdPrice, err := priceCollector.GetTokenPrice("RLUSD", RLUSDIssuer)
+	if err != nil {
+		fmt.Printf("❌ Failed to get RLUSD price: %v\n", err)
+	} else {
+		fmt.Printf("✅ RLUSD price: $%.6f USD\n", rlusdPrice.PriceUSD)
+	}
+
+	// Test SOLO price (if available)
+	soloPrice, err := priceCollector.GetTokenPrice("SOLO", "rsoLo2SVP9GNrfpVfwUo4nm3LoMwV2dLyJ")
+	if err != nil {
+		fmt.Printf("❌ Failed to get SOLO price: %v\n", err)
+	} else {
+		fmt.Printf("✅ SOLO price: $%.6f USD (%.6f XRP)\n", soloPrice.PriceUSD, soloPrice.PriceXRP)
+	}
+
+	// Test BTC price (if available)
+	btcPrice, err := priceCollector.GetTokenPrice("BTC", "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B")
+	if err != nil {
+		fmt.Printf("❌ Failed to get BTC price: %v\n", err)
+	} else {
+		fmt.Printf("✅ BTC price: $%.6f USD (%.6f XRP)\n", btcPrice.PriceUSD, btcPrice.PriceXRP)
+	}
+
+	fmt.Printf("\n✅ Specific token price test completed!\n")
+}
+
+func TestAMMPriceCollectionPerformance(t *testing.T) {
+	// Set up test environment
+	dbService := database.NewDatabaseCreateService()
+	db, err := dbService.GetConnectionXRPDB()
+	if err != nil {
+		t.Fatalf("Failed to get database connection: %v", err)
+	}
+
+	// Create services
+	ammService := NewAMMService(db)
+	priceService := NewPriceService()
+	priceCollector := NewAMMPriceCollector(db, ammService, priceService)
+
+	// Test performance with multiple runs
+	fmt.Println("\n🧪 Testing price collection performance...")
+
+	var totalTime time.Duration
+	numRuns := 3
+
+	for i := 0; i < numRuns; i++ {
+		fmt.Printf("   Run %d/%d...\n", i+1, numRuns)
+
+		start := time.Now()
+		result, err := priceCollector.CollectPricesFromAMMPools()
+		duration := time.Since(start)
+		totalTime += duration
+
+		if err != nil {
+			fmt.Printf("   ❌ Run %d failed: %v\n", i+1, err)
+			continue
+		}
+
+		fmt.Printf("   ✅ Run %d: %d prices in %v\n", i+1, result.PricedTokens, duration)
+	}
+
+	avgTime := totalTime / time.Duration(numRuns)
+	fmt.Printf("\n📊 Performance Summary:\n")
+	fmt.Printf("   Average collection time: %v\n", avgTime)
+	fmt.Printf("   Total time for %d runs: %v\n", numRuns, totalTime)
+
+	// Test cache performance
+	fmt.Printf("\n🔍 Testing cache performance...")
+	start := time.Now()
+	allPrices := priceCollector.GetAllPrices()
+	cacheTime := time.Since(start)
+	fmt.Printf("   Cache retrieval time: %v for %d prices\n", cacheTime, len(allPrices))
+
+	fmt.Printf("\n✅ Performance test completed!\n")
+}
